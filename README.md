@@ -94,4 +94,4 @@ This ensures authentic, safe, and enjoyable travel across Algeria.
 
 ---
 
-## 🗂️ Project Structure 
+##  Project Structure 
