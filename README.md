@@ -1,6 +1,6 @@
-# 🌍 Tourism Platform for Connecting Travelers, Guides, and Agencies in Algeria
+#  Tourism Platform for Connecting Travelers, Guides, and Agencies in Algeria
 
-### 🧭 Group 7 - Team 2  
+###  Group 7 - Team 2  
 **Leader:** Wassim Elorabi  
 **Members:**  
 - Mohamed Abdelillah Chadli  
@@ -10,7 +10,7 @@
 
 ---
 
-## 🧩 Project Overview
+##  Project Overview
 This project aims to build a **web platform that connects travelers, local guides, and travel agencies across Algeria.**  
 It helps users explore attractions, discover verified tours, contact local guides or agencies, and share their travel experiences in a community-driven space.
 
@@ -18,12 +18,12 @@ The platform simplifies travel planning, promotes authentic tourism, and enhance
 
 ---
 
-## 🎯 Mission Statement
+##  Mission Statement
 To provide a **centralized, trustworthy, and user-friendly platform** that bridges the gap between travelers and Algeria’s local tourism ecosystem.
 
 ---
 
-## ⚙️ Problem Statement
+##  Problem Statement
 Travelers often struggle to find **reliable information, local guides, and trusted travel agencies** when exploring Algeria.
 
 ### Why this problem matters:
@@ -33,7 +33,7 @@ Travelers often struggle to find **reliable information, local guides, and trust
 
 ---
 
-## 💡 Our Solution
+##  Our Solution
 Our platform connects **travelers, guides, and agencies** in one place — offering:
 - Verified listings  
 - User reviews  
@@ -45,43 +45,43 @@ This ensures authentic, safe, and enjoyable travel across Algeria.
 
 ---
 
-## 🧱 Core Functionalities
-### 👤 Traveler Account
+##  Core Functionalities
+###  Traveler Account
 - Explore attractions and activities  
 - Filter by category, region, or budget  
 - Contact guides or agencies  
 - Rate and review services  
 - Book trips  
 
-### 🏢 Agency Account
+###  Agency Account
 - Create profiles and tour programs  
 - Manage bookings and inquiries  
 - View traveler feedback  
 
-### 🧭 Guide Account
+###  Guide Account
 - Offer personalized tours  
 - List available activities  
 - Connect directly with travelers  
 
-### 💬 Community Section
+###  Community Section
 - Rate destinations and activities  
 - View top-rated places in Algeria  
 - Share travel stories and tips  
 
-### 🔎 Categorical Search
+###  Categorical Search
 - Filter by region, activity type, provider type (guide/agency), or budget  
 
 ---
 
-## 🧞‍♂️ Wishlist Features
-- 🗺️ Interactive map showing attractions and nearby guides/agencies  
-- 💳 Secure online booking and payment integration  
-- 🌐 Multi-language support (Arabic, French, English)  
-- 🤖 AI-based recommendation system suggesting tours or guides based on user interests  
+##  Wishlist Features
+-  Interactive map showing attractions and nearby guides/agencies  
+-  Secure online booking and payment integration  
+-  Multi-language support (Arabic, French, English)  
+-  AI-based recommendation system suggesting tours or guides based on user interests  
 
 ---
 
-## 🧰 Tech Stack
+##  Tech Stack
 | Area | Technologies |
 |------|---------------|
 | **Frontend** ||
