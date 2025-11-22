@@ -21,6 +21,12 @@ export interface Tour {
   duration: string;
   location: string;
   category: string;
+  groupSize: string;
+  guide?: {
+    name: string;
+    rating: number;
+    toursCount: number;
+  };
 }
 
 export interface TourCardProps {

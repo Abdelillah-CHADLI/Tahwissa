@@ -9,6 +9,7 @@ import RequestsPage from './pages/RequestsPage';
 import ProfilePage from './pages/ProfilePage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import GuideProfilePage from './pages/GuideProfilePage';
 
 function AppContent() {
   const location = useLocation();
@@ -30,6 +31,7 @@ function AppContent() {
           <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
           <Route path={ROUTES.SIGN_IN} element={<SignInPage />} />
           <Route path={ROUTES.SIGN_UP} element={<SignUpPage />} />
+          <Route path={ROUTES.GUIDE_PROFILE} element={<GuideProfilePage />} />
         </Routes>
       </main>
     </div>
