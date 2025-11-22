@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Star, Calendar } from 'lucide-react';
+import { MapPin, Star, Calendar, Users } from 'lucide-react';
 import type { TourCardProps } from '../../types/explore';
 import { colors } from '../../assets/colors';
 
@@ -53,6 +53,11 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps & { index?: number
           <div className="flex items-center">
             <Calendar className="w-4 h-4 mr-1" />
             <span>{tour.duration}</span>
+          </div>
+
+          <div className="flex items-center">
+            <Users className="w-4 h-4 mr-1" />
+            <span>{tour.groupSize}</span>
           </div>
         </div>
 

@@ -9,7 +9,7 @@ export const colors = {
   
   // Secondary Colors
   secondary: {
-    green: '#c8eb81',
+    green: '#c8f688',
     caramel: '#c3be92',
   },
   
