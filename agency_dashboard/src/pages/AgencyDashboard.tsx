@@ -56,7 +56,7 @@ export function AgencyDashboard() {
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                     className={`
             fixed lg:sticky top-0 h-screen bg-white border-r border-gray-200 z-40
-            w-72 flex flex-col
+            w-72 flex flex-col pt-16 lg:pt-0
             ${isSidebarOpen ? "block" : "hidden lg:block"}
           `}
                 >
