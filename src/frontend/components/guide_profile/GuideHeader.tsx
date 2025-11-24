@@ -34,7 +34,7 @@ const GuideHeader = ({ guide }: GuideHeaderProps) => {
     <div className="bg-white border-b">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="flex-shrink-0">
+          <div className="shrink-0">
             {hasImage ? (
               <img 
                 src={guide.image} 

@@ -1,3 +1,5 @@
+import agencyImage from '../assets/imgs/agency.jpeg';
+
 export interface Agency {
   id: string;
   name: string;
@@ -22,7 +24,7 @@ export const agencies: Agency[] = [
     tours: 156,
     teamSize: '15-20 employees',
     verified: true,
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=400&fit=crop'
+    image: agencyImage
   },
   {
     id: '2',
@@ -34,7 +36,7 @@ export const agencies: Agency[] = [
     tours: 98,
     teamSize: '10-15 employees',
     verified: true,
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=400&fit=crop'
+    image: agencyImage
   },
   {
     id: '3',
@@ -46,7 +48,7 @@ export const agencies: Agency[] = [
     tours: 72,
     teamSize: '8-10 employees',
     verified: true,
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=400&fit=crop'
+    image: agencyImage
   },
   {
     id: '4',
@@ -58,7 +60,7 @@ export const agencies: Agency[] = [
     tours: 89,
     teamSize: '12-15 employees',
     verified: true,
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=400&fit=crop'
+    image: agencyImage
   },
   {
     id: '5',
@@ -70,7 +72,7 @@ export const agencies: Agency[] = [
     tours: 45,
     teamSize: '6-8 employees',
     verified: true,
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=400&fit=crop'
+    image: agencyImage
   },
   {
     id: '6',
@@ -82,6 +84,6 @@ export const agencies: Agency[] = [
     tours: 67,
     teamSize: '8-12 employees',
     verified: true,
-    image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800&h=400&fit=crop'
+    image: agencyImage
   }
 ];

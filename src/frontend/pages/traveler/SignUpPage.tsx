@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { ArrowLeft, Mail, Lock, User, Briefcase, Users } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, User, Briefcase, Users, MapPin, Phone } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../utils/routes';
@@ -12,21 +12,60 @@ export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [fullName, setFullName] = useState('');
+  const [location, setLocation] = useState('');
+  const [personalPhone, setPersonalPhone] = useState('');
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleCreateAccount = () => {
-    console.log('Create account with:', {
-      accountType,
-      agencyName,
-      contactPerson,
-      phoneNumber,
-      email,
-      password,
-      confirmPassword
-    });
+    if (!email || !password || !confirmPassword) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (accountType === 'agency' && (!agencyName || !contactPerson || !phoneNumber)) {
+      setError('Please fill in all agency details');
+      return;
+    }
+
+    if (accountType === 'traveler' && !fullName) {
+      setError('Please enter your full name');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    setTimeout(() => {
+      localStorage.setItem('user', JSON.stringify({
+        email,
+        accountType,
+        agencyName: accountType === 'agency' ? agencyName : undefined,
+        contactPerson: accountType === 'agency' ? contactPerson : undefined,
+        fullName: accountType === 'traveler' ? fullName : undefined,
+        location: accountType === 'traveler' ? location : undefined,
+        phone: accountType === 'traveler' ? personalPhone : phoneNumber
+      }));
+      
+      navigate(ROUTES.PROFILE_COMPLETION, {
+        state: {
+          accountType,
+          signupData: { accountType }
+        }
+      });
+      
+      setIsLoading(false);
+    }, 1000);
   };
-
-
 
   const handleBackToHome = () => {
     navigate(ROUTES.HOME);
@@ -34,6 +73,12 @@ export default function SignUpPage() {
 
   const handleSignIn = () => {
     navigate(ROUTES.SIGN_IN);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleCreateAccount();
+    }
   };
 
   return (
@@ -59,6 +104,12 @@ export default function SignUpPage() {
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Create an Account</h1>
             <p className="text-gray-600">Join thousands of travelers exploring Algeria</p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center">{error}</p>
+            </div>
+          )}
 
           <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-2 gap-1 mb-6">
             <button
@@ -86,8 +137,7 @@ export default function SignUpPage() {
             </button>
           </div>
 
-          {/* Form */}
-          <div className="space-y-5">
+          <div className="space-y-5" onKeyPress={handleKeyPress}>
             {accountType === 'agency' && (
               <>
                 <div>
@@ -103,6 +153,7 @@ export default function SignUpPage() {
                       onChange={(e) => setAgencyName(e.target.value)}
                       placeholder="Your Agency or Guide Name"
                       className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                      disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -119,6 +170,7 @@ export default function SignUpPage() {
                       onChange={(e) => setContactPerson(e.target.value)}
                       placeholder="Full Name"
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                      disabled={isLoading}
                     />
                   </div>
                   
@@ -133,7 +185,68 @@ export default function SignUpPage() {
                       onChange={(e) => setPhoneNumber(e.target.value)}
                       placeholder="+213 XXX XXX XXX"
                       className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                      disabled={isLoading}
                     />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {accountType === 'traveler' && (
+              <>
+                <div>
+                  <label htmlFor="fullName" className="block text-sm font-semibold text-gray-900 mb-2">
+                    Full Name *
+                  </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      id="fullName"
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Your full name"
+                      className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                      disabled={isLoading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="location" className="block text-sm font-semibold text-gray-900 mb-2">
+                      Location (Optional)
+                    </label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="location"
+                        type="text"
+                        value={location}
+                        onChange={(e) => setLocation(e.target.value)}
+                        placeholder="City, Country"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                        disabled={isLoading}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="personalPhone" className="block text-sm font-semibold text-gray-900 mb-2">
+                      Phone (Optional)
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <input
+                        id="personalPhone"
+                        type="tel"
+                        value={personalPhone}
+                        onChange={(e) => setPersonalPhone(e.target.value)}
+                        placeholder="+213 XXX XXX XXX"
+                        className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
                 </div>
               </>
@@ -141,7 +254,7 @@ export default function SignUpPage() {
 
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
-                Email
+                Email *
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -152,13 +265,14 @@ export default function SignUpPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder={accountType === 'agency' ? 'agency@example.com' : 'your.email@example.com'}
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-gray-900 mb-2">
-                Password
+                Password *
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -169,13 +283,14 @@ export default function SignUpPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a strong password"
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-900 mb-2">
-                Confirm Password
+                Confirm Password *
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -186,34 +301,37 @@ export default function SignUpPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <button
               onClick={handleCreateAccount}
-              className="w-full bg-[#348086] hover:bg-[#2a6970] text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg"
+              disabled={isLoading}
+              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md"
             >
-              <Users className="w-5 h-5" />
-              {accountType === 'agency' ? 'Create Agency Account' : 'Create Account'}
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Users className="w-5 h-5" />
+              )}
+              {isLoading ? 'Creating Account...' : (accountType === 'agency' ? 'Create Agency Account' : 'Create Account')}
             </button>
           </div>
-
-
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Already have an account?{' '}
             <button
               onClick={handleSignIn}
               className="text-[#348086] hover:text-[#2a6970] font-semibold transition-colors"
+              disabled={isLoading}
             >
               Sign in
             </button>
           </p>
         </div>
       </motion.div>
-
-
     </div>
   );
 }
