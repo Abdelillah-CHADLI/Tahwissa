@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import { ROUTES } from './utils/routes';
 import HomePage from './pages/traveler/HomePage';
@@ -13,21 +13,34 @@ import GuideProfilePage from './pages/traveler/GuideProfilePage';
 import NotificationsPage from './pages/traveler/NotificationsPage';
 import AddPostPage from './pages/traveler/AddPostPage';
 import DetailsPage from './pages/traveler/DetailsPage';
+import { ProfileCompletionPage } from './pages/traveler/ProfileCompletionPage';
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
+  
   const isAuthPage = location.pathname === ROUTES.SIGN_IN || 
                      location.pathname === ROUTES.SIGN_UP || 
-                     location.pathname === ROUTES.PROFILE;
+                     location.pathname === ROUTES.PROFILE_COMPLETION;
+  
   const showHeader = !isAuthPage;
+
+  const handleProfileComplete = () => {
+    const accountType = location.state?.accountType || 'traveler';
+    
+    if (accountType === 'agency' || accountType === 'guide') {
+      navigate('/agency');
+    } else {
+      navigate(ROUTES.HOME);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       {showHeader && <Header />}
       <main>
         <Routes>
-          <Route path="index.html" element={<Navigate to={ROUTES.HOME} replace />} />
-          <Route path="" element={<HomePage />} />
+          <Route index element={<HomePage />} />
           <Route path="explore" element={<ExplorePage />} />
           <Route path="guides" element={<GuidesPage />} />
           <Route path="community" element={<CommunityPage />} />
@@ -39,6 +52,16 @@ function AppContent() {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="add-post" element={<AddPostPage />} />
           <Route path="details" element={<DetailsPage />} />
+          <Route 
+            path="profile-completion" 
+            element={
+              <ProfileCompletionPage 
+                onComplete={handleProfileComplete}
+                {...(location.state || {})}
+              />
+            } 
+          />
+          <Route path="*" element={<Navigate to="/traveler" replace />} />
         </Routes>
       </main>
     </div>

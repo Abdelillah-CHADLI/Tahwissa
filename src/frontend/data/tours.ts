@@ -1,4 +1,7 @@
 import type { Tour } from '../types/explore';
+import tour1Image from '../assets/imgs/tour1.jpeg';
+import tour2Image from '../assets/imgs/tour2.jpeg';
+import tour3Image from '../assets/imgs/tour3.jpeg';
 
 export const tours: Tour[] = [
   {
@@ -10,7 +13,7 @@ export const tours: Tour[] = [
     rating: 4.9,
     price: 45000,
     category: "Adventure",
-    image: 'https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800',
+    image: tour1Image,
     groupSize: "4-12 people"
   },
   {
@@ -22,7 +25,7 @@ export const tours: Tour[] = [
     rating: 4.8,
     price: 28000,
     category: "Hiking",
-    image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800',
+    image: tour2Image,
     groupSize: "6-10 people"
   },
   {
@@ -34,7 +37,7 @@ export const tours: Tour[] = [
     rating: 5.0,
     price: 18000,
     category: "Cultural",
-    image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800',
+    image: tour1Image,
     groupSize: "4-8 people"
   },
   {
@@ -46,7 +49,7 @@ export const tours: Tour[] = [
     rating: 4.7,
     price: 35000,
     category: "Adventure",
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSeuzSa4oIXAdSFa_R-vWO2e1pCbShOgdlCnQ&s',
+    image: tour1Image,
     groupSize: "8-15 people"
   },
   {
@@ -58,7 +61,7 @@ export const tours: Tour[] = [
     rating: 4.9,
     price: 22000,
     category: "Astronomy",
-    image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=800',
+    image: tour1Image,
     groupSize: "6-12 people"
   },
   {
@@ -70,7 +73,7 @@ export const tours: Tour[] = [
     rating: 4.8,
     price: 32000,
     category: "Cultural",
-    image: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=800",
+    image: tour3Image,
     groupSize: "4-10 people"
   }
 ];

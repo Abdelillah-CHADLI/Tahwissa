@@ -1,3 +1,5 @@
+import guideImage from '../assets/imgs/guide.png';
+
 export interface Guide {
   id: string;
   name: string;
@@ -24,7 +26,7 @@ export const guides: Guide[] = [
     experience: '8 years',
     languages: ['Arabic', 'French', 'English'],
     verified: true,
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'
+    image: guideImage
   },
   {
     id: '102',
@@ -37,7 +39,7 @@ export const guides: Guide[] = [
     experience: '6 years',
     languages: ['Arabic', 'French', 'Spanish'],
     verified: true,
-    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face'
+    image: guideImage
   },
   {
     id: '103',
@@ -50,7 +52,7 @@ export const guides: Guide[] = [
     experience: '10 years',
     languages: ['Arabic', 'French', 'English'],
     verified: true,
-    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face'
+    image: guideImage
   },
   {
     id: '104',
@@ -63,7 +65,7 @@ export const guides: Guide[] = [
     experience: '5 years',
     languages: ['Arabic', 'French', 'Italian'],
     verified: true,
-    image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=400&fit=crop&crop=face'
+    image: guideImage
   },
   {
     id: '105',
@@ -76,7 +78,7 @@ export const guides: Guide[] = [
     experience: '7 years',
     languages: ['Arabic', 'French', 'German'],
     verified: true,
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=400&fit=crop&crop=face'
+    image: guideImage
   },
   {
     id: '106',
@@ -89,6 +91,6 @@ export const guides: Guide[] = [
     experience: '4 years',
     languages: ['Arabic', 'French', 'English', 'Spanish'],
     verified: true,
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop&crop=face'
+    image: guideImage
   }
 ];

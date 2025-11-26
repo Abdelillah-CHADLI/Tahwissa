@@ -5,6 +5,7 @@ import ToursSection from "../../components/guide_profile/ToursSection";
 import ContactSection from "../../components/guide_profile/ContactSection";
 import { colors } from "../../assets/colors";
 import { tours } from "../../data/tours";
+import guideImage from '../../assets/imgs/guide.png';
 
 const GuideProfilePage = () => {
   const [activeSection, setActiveSection] = useState<
@@ -30,7 +31,7 @@ const GuideProfilePage = () => {
     ],
     type: "guide" as const,
     image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80", // Add profile image
+      guideImage,
   };
 
   const handleTourClick = (tourId: string) => {
@@ -58,7 +59,6 @@ const GuideProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <button
@@ -109,7 +109,6 @@ const GuideProfilePage = () => {
         </div>
       </div>
 
-      {/* content */}
       <div className="max-w-7xl mx-auto px-6 py-8">{renderActiveSection()}</div>
     </div>
   );

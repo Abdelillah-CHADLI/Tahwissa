@@ -1,19 +1,15 @@
-// Color palette for Tahwissa
 export const colors = {
-  // Primary Colors
   primary: {
     green: '#348086',
     teal: '#37b1bc',
     darkTeal: '#2a6970',
   },
   
-  // Secondary Colors
   secondary: {
     green: '#c8f688',
     caramel: '#c3be92',
   },
   
-  // Neutral Colors
   neutral: {
     white: '#ffffff',
     gray: {
@@ -31,7 +27,6 @@ export const colors = {
     black: '#000000',
   },
   
-  // Semantic Colors
   semantic: {
     success: '#10b981',
     warning: '#f59e0b',
@@ -39,7 +34,6 @@ export const colors = {
     info: '#3b82f6',
   },
   
-  // Status Colors
   status: {
     active: '#10b981',
     pending: '#f59e0b',
@@ -47,7 +41,6 @@ export const colors = {
     featured: '#c8eb81',
   },
 
-  // UI Specific Colors
   ui: {
     border: {
       light: '#e5e7eb',
@@ -68,7 +61,6 @@ export const colors = {
   }
 } as const;
 
-// Direct color exports for easy access
 export const {
   primary,
   secondary,
@@ -78,7 +70,6 @@ export const {
   ui
 } = colors;
 
-// Helper function to use colors in className (for Tailwind)
 export const colorClasses = {
   primary: {
     bg: 'bg-[#348086]',
@@ -104,6 +95,5 @@ export const colorClasses = {
   },
 } as const;
 
-// Type exports
 export type ColorPalette = typeof colors;
 export type ColorClasses = typeof colorClasses;

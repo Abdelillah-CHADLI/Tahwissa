@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import SearchSection from "../../components/guides_agencies/SearchSection";
 import TabNavigation from "../../components/guides_agencies/TabNavigation";
 import AgencyCard from "../../components/guides_agencies/AgencyCard";
