@@ -12,7 +12,7 @@ export function AgencyDashboard() {
         const handleResize = () => {
             setIsDesktop(window.innerWidth >= 1024);
         };
-        
+
         handleResize();
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
@@ -22,8 +22,8 @@ export function AgencyDashboard() {
         { path: "/agency", label: "Dashboard", icon: LayoutDashboard, end: true },
         { path: "/agency/profile", label: "Agency Profile", icon: Building2 },
         { path: "/agency/tour-programs", label: "Tour Programs", icon: Package },
-        { path: "/agency/add-tour", label: "Add Tour Program", icon: Calendar },
-        { path: "/agency/tour-details", label: "Tour Details", icon: Star },
+        { path: "/agency/bookings", label: "Bookings", icon: Calendar },
+        { path: "/agency/reviews", label: "Reviews & Ratings", icon: Star },
         { path: "/agency/settings", label: "Settings", icon: Settings },
     ];
 
@@ -76,7 +76,7 @@ export function AgencyDashboard() {
                                 </div>
                             </div>
                         </div>
-                        
+
                         <nav className="space-y-1">
                             {menuItems.map((item) => (
                                 <NavLink

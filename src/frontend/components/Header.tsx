@@ -29,12 +29,12 @@ const Header = () => {
             transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
             className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50"
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            <div className="max-w-7xl mx-auto px-4 sm:px-3 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
                     {/* Logo - Responsive but keeps desktop style */}
                     <Link
                         to={ROUTES.HOME}
-                        className="flex items-center space-x-3 group"
+                        className="flex items-center space-x-2 sm:space-x-3 group"
                     >
                         <motion.div 
                             className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-lg sm:rounded-xl flex items-center justify-center shadow-md"
@@ -46,93 +46,101 @@ const Header = () => {
                                     scale: { duration: 0.2 }
                                 }
                             }}
+                            className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-xl flex items-center justify-center shadow-md"
+                            whileHover={{ scale: 1.05, rotate: 5 }}
                             transition={{ type: "spring", stiffness: 300 }}
                         >
                             <Compass className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                            <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </motion.div>
                         <div className="flex flex-col">
                             <h1 className="text-lg sm:text-xl font-bold text-gray-900">Tahwissa</h1>
                             <p className="text-gray-500 text-xs hidden sm:block">Your Travel Companion</p>
+                        <div className="hidden sm:flex flex-col">
+                            <h1 className="text-xl font-bold text-gray-900">Tahwissa</h1>
+                            <p className="text-gray-500 text-xs">Your Travel Companion</p>
                         </div>
                     </Link>
 
                     {/* Desktop Navigation - Unchanged */}
                     <nav className="hidden lg:flex items-center space-x-8">
+                    <nav className="flex items-center space-x-2 sm:space-x-4 md:space-x-8">
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.HOME}
-                                className={`flex items-center space-x-2 transition-colors pb-1 border-b-2 ${isActive(ROUTES.HOME)
+                                className={`flex items-center space-x-1 sm:space-x-2 transition-colors pb-1 border-b-2 px-1 sm:px-0 ${isActive(ROUTES.HOME)
                                     ? 'text-[#348086] border-[#348086]'
                                     : 'text-gray-600 border-transparent hover:text-[#348086] hover:border-[#348086]'
                                     }`}
                             >
                                 <Home className="w-4 h-4" />
-                                <span className="text-sm font-medium">Home</span>
+                                <span className="text-sm font-medium hidden md:inline">Home</span>
                             </Link>
                         </motion.div>
 
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.EXPLORE}
-                                className={`flex items-center space-x-2 transition-colors pb-1 border-b-2 ${isActive(ROUTES.EXPLORE)
+                                className={`flex items-center space-x-1 sm:space-x-2 transition-colors pb-1 border-b-2 px-1 sm:px-0 ${isActive(ROUTES.EXPLORE)
                                     ? 'text-[#348086] border-[#348086]'
                                     : 'text-gray-600 border-transparent hover:text-[#348086] hover:border-[#348086]'
                                     }`}
                             >
                                 <Search className="w-4 h-4" />
-                                <span className="text-sm font-medium">Explore</span>
+                                <span className="text-sm font-medium hidden md:inline">Explore</span>
                             </Link>
                         </motion.div>
 
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.GUIDES}
-                                className={`flex items-center space-x-2 transition-colors pb-1 border-b-2 ${isActive(ROUTES.GUIDES)
+                                className={`flex items-center space-x-1 sm:space-x-2 transition-colors pb-1 border-b-2 px-1 sm:px-0 ${isActive(ROUTES.GUIDES)
                                     ? 'text-[#348086] border-[#348086]'
                                     : 'text-gray-600 border-transparent hover:text-[#348086] hover:border-[#348086]'
                                     }`}
                             >
                                 <Users className="w-4 h-4" />
-                                <span className="text-sm font-medium">Guides & Agencies</span>
+                                <span className="text-sm font-medium hidden lg:inline">Guides & Agencies</span>
                             </Link>
                         </motion.div>
 
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.COMMUNITY}
-                                className={`flex items-center space-x-2 transition-colors pb-1 border-b-2 ${isActive(ROUTES.COMMUNITY)
+                                className={`flex items-center space-x-1 sm:space-x-2 transition-colors pb-1 border-b-2 px-1 sm:px-0 ${isActive(ROUTES.COMMUNITY)
                                     ? 'text-[#348086] border-[#348086]'
                                     : 'text-gray-600 border-transparent hover:text-[#348086] hover:border-[#348086]'
                                     }`}
                             >
                                 <MessageSquare className="w-4 h-4" />
-                                <span className="text-sm font-medium">Community</span>
+                                <span className="text-sm font-medium hidden md:inline">Community</span>
                             </Link>
                         </motion.div>
 
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.REQUESTS}
-                                className={`flex items-center space-x-2 transition-colors pb-1 border-b-2 ${isActive(ROUTES.REQUESTS)
+                                className={`flex items-center space-x-1 sm:space-x-2 transition-colors pb-1 border-b-2 px-1 sm:px-0 ${isActive(ROUTES.REQUESTS)
                                     ? 'text-[#348086] border-[#348086]'
                                     : 'text-gray-600 border-transparent hover:text-[#348086] hover:border-[#348086]'
                                     }`}
                             >
                                 <ClipboardList className="w-4 h-4" />
-                                <span className="text-sm font-medium">My Requests</span>
+                                <span className="text-sm font-medium hidden md:inline">My Requests</span>
                             </Link>
                         </motion.div>
                     </nav>
 
                     {/* Desktop User Section - Unchanged */}
                     <div className="hidden lg:flex items-center space-x-6">
+                    <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
                         <motion.button 
                             whileHover={{ scale: 1.05, y: -1 }}
                             whileTap={{ scale: 0.95 }}
-                            className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
+                            className="p-1.5 sm:p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
                         >
-                            <Bell className="w-5 h-5" />
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                            <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                            <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                         </motion.button>
 
                         <motion.div
@@ -141,7 +149,7 @@ const Header = () => {
                         >
                             <Link
                                 to={ROUTES.PROFILE}
-                                className="flex items-center justify-center w-10 h-10 bg-[#348086] text-white rounded-full font-semibold text-sm hover:bg-[#2a6970] transition-colors ml-2"
+                                className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] text-white rounded-full font-semibold text-xs sm:text-sm hover:bg-[#2a6970] transition-colors"
                             >
                                 TR
                             </Link>
