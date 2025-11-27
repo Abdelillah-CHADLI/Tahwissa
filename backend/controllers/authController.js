@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import  "../services/userService.js";
+import  {getUser} from "../services/userService.js";
+
 import { supabase } from "../config/supabasedb.js";
 import { insertUser } from "../services/userService.js";
 // Fetch all users
