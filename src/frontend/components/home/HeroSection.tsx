@@ -10,7 +10,7 @@ interface HeroSectionProps {
 export default function HeroSection({ onNavigate }: HeroSectionProps) {
     return (
         <motion.section
-            className="relative h-[90vh] overflow-hidden"
+            className="relative h-[70vh] sm:h-[80vh] lg:h-[90vh] overflow-hidden"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8 }}
@@ -27,15 +27,15 @@ export default function HeroSection({ onNavigate }: HeroSectionProps) {
                 <div className="absolute inset-0 bg-linear-to-r from-[#348086]/90 via-[#348086]/50 to-[#348086]/10" />
             </div>
 
-            <div className="relative z-10 container mx-auto px-6 h-full flex flex-col justify-center max-w-7xl">
+            <div className="relative z-10 container mx-auto px-4 sm:px-6 h-full flex flex-col justify-center max-w-7xl">
                 <motion.div
-                    className="max-w-2xl"
+                    className="max-w-2xl text-center lg:text-left"
                     initial={{ x: -100, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
                     transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
                 >
                     <motion.h1
-                        className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight"
+                        className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
@@ -44,7 +44,7 @@ export default function HeroSection({ onNavigate }: HeroSectionProps) {
                     </motion.h1>
 
                     <motion.p
-                        className="text-xl text-white/95 mb-8 leading-relaxed"
+                        className="text-base sm:text-lg md:text-xl text-white/95 mb-6 sm:mb-8 leading-relaxed max-w-3xl"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
@@ -55,30 +55,30 @@ export default function HeroSection({ onNavigate }: HeroSectionProps) {
                     </motion.p>
 
                     <motion.div
-                        className="flex flex-wrap gap-4"
+                        className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
                         initial={{ y: 20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
                     >
                         <button
                             onClick={() => onNavigate(ROUTES.EXPLORE)}
-                            className="bg-[#cbf492] hover:bg-[#b8e678] text-gray-900 px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                            className="bg-[#cbf492] hover:bg-[#b8e678] text-gray-900 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
                         >
-                            Start Exploring <ArrowRight className="w-5 h-5" />
+                            Start Exploring <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
 
                         <button
                             onClick={() => onNavigate(ROUTES.SIGN_IN)}
-                            className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105"
+                            className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
                         >
-                            <LogIn className="w-5 h-5" /> Sign In
+                            <LogIn className="w-4 h-4 sm:w-5 sm:h-5" /> Sign In
                         </button>
 
                         <button
                             onClick={() => onNavigate(ROUTES.SIGN_UP)}
-                            className="bg-white border-2 border-[#348086] text-[#348086] hover:bg-[#348086] hover:text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-2 transition-all duration-300 hover:scale-105"
+                            className="bg-white border-2 border-[#348086] text-[#348086] hover:bg-[#348086] hover:text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
                         >
-                            <Users className="w-5 h-5" /> Sign Up
+                            <Users className="w-4 h-4 sm:w-5 sm:h-5" /> Sign Up
                         </button>
                     </motion.div>
                 </motion.div>

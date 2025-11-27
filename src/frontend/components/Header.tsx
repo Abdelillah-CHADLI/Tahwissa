@@ -1,40 +1,63 @@
 import { motion } from 'motion/react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Users, MessageSquare, ClipboardList, Bell, Compass } from 'lucide-react';
+import { Home, Search, Users, MessageSquare, ClipboardList, Bell, Compass, Menu, X } from 'lucide-react';
 import { ROUTES } from '../utils/routes';
+import { useState } from 'react';
 
 const Header = () => {
     const location = useLocation();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const isActive = (path: string) => location.pathname === path;
+
+    const navItems = [
+        { path: ROUTES.HOME, icon: Home, label: 'Home' },
+        { path: ROUTES.EXPLORE, icon: Search, label: 'Explore' },
+        { path: ROUTES.GUIDES, icon: Users, label: 'Guides & Agencies' },
+        { path: ROUTES.COMMUNITY, icon: MessageSquare, label: 'Community' },
+        { path: ROUTES.REQUESTS, icon: ClipboardList, label: 'My Requests' },
+    ];
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
 
     return (
         <motion.header
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
-            className="bg-white border-b border-gray-200 shadow-sm"
+            className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50"
         >
-            <div className="max-w-7xl mx-auto px-6 py-3">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
+                    {/* Logo - Responsive but keeps desktop style */}
                     <Link
                         to={ROUTES.HOME}
                         className="flex items-center space-x-3 group"
                     >
                         <motion.div 
-                            className="w-10 h-10 bg-[#348086] rounded-xl flex items-center justify-center shadow-md"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
+                            className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-lg sm:rounded-xl flex items-center justify-center shadow-md"
+                            whileHover={{ 
+                                scale: 1.05, 
+                                rotate: 360,
+                                transition: { 
+                                    rotate: { duration: 0.6, ease: "easeInOut" },
+                                    scale: { duration: 0.2 }
+                                }
+                            }}
                             transition={{ type: "spring", stiffness: 300 }}
                         >
-                            <Compass className="w-6 h-6 text-white" />
+                            <Compass className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                         </motion.div>
                         <div className="flex flex-col">
-                            <h1 className="text-xl font-bold text-gray-900">Tahwissa</h1>
-                            <p className="text-gray-500 text-xs">Your Travel Companion</p>
+                            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Tahwissa</h1>
+                            <p className="text-gray-500 text-xs hidden sm:block">Your Travel Companion</p>
                         </div>
                     </Link>
 
-                    <nav className="flex items-center space-x-8">
+                    {/* Desktop Navigation - Unchanged */}
+                    <nav className="hidden lg:flex items-center space-x-8">
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.HOME}
@@ -101,7 +124,8 @@ const Header = () => {
                         </motion.div>
                     </nav>
 
-                    <div className="flex items-center space-x-6">
+                    {/* Desktop User Section - Unchanged */}
+                    <div className="hidden lg:flex items-center space-x-6">
                         <motion.button 
                             whileHover={{ scale: 1.05, y: -1 }}
                             whileTap={{ scale: 0.95 }}
@@ -123,7 +147,94 @@ const Header = () => {
                             </Link>
                         </motion.div>
                     </div>
+
+                    {/* Mobile Menu Button - Shows on tablets & phones */}
+                    <div className="flex lg:hidden items-center space-x-4">
+                        <motion.button 
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
+                        >
+                            <Bell className="w-5 h-5" />
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={toggleMobileMenu}
+                            className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            {isMobileMenuOpen ? (
+                                <X className="w-5 h-5" />
+                            ) : (
+                                <Menu className="w-5 h-5" />
+                            )}
+                        </motion.button>
+                    </div>
                 </div>
+
+                {/* Mobile Menu - Shows on tablets & phones */}
+                <motion.div
+                    initial={false}
+                    animate={{ 
+                        height: isMobileMenuOpen ? 'auto' : 0,
+                        opacity: isMobileMenuOpen ? 1 : 0
+                    }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="lg:hidden overflow-hidden border-t border-gray-200 mt-3"
+                >
+                    <nav className="py-4">
+                        <div className="flex flex-col space-y-3">
+                            {navItems.map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <motion.div
+                                        key={item.path}
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: isMobileMenuOpen ? 1 : 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <Link
+                                            to={item.path}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
+                                                isActive(item.path)
+                                                    ? 'bg-[#348086] text-white'
+                                                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#348086]'
+                                            }`}
+                                        >
+                                            <Icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.label}</span>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+                            
+                            {/* Mobile User Profile */}
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: isMobileMenuOpen ? 1 : 0 }}
+                                transition={{ duration: 0.3, delay: 0.1 }}
+                                className="flex items-center space-x-3 p-3 border-t border-gray-200 pt-4 mt-2"
+                            >
+                                <Link
+                                    to={ROUTES.PROFILE}
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    className="flex items-center space-x-3 w-full"
+                                >
+                                    <div className="flex items-center justify-center w-10 h-10 bg-[#348086] text-white rounded-full font-semibold text-sm">
+                                        TR
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-gray-900">Traveler</span>
+                                        <span className="text-sm text-gray-500">View Profile</span>
+                                    </div>
+                                </Link>
+                            </motion.div>
+                        </div>
+                    </nav>
+                </motion.div>
             </div>
         </motion.header>
     );
