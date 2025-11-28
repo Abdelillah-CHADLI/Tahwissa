@@ -5,10 +5,10 @@ const PORT = 5000;
 
 
 const authRoutes = require("./routes/authRoutes"); 
-const bookingroutes = require('./routes/booking'); 
-const tourRoutes = require("./routes/tourRoutes"); 
-const profileRoutes = require("./routes/profileRoutes"); 
-const managerRoutes = require("./routes/managerRoutes"); 
+const bookingroutes = require('./routes/booking');
+const tourRoutes = require("./routes/tourRoutes");
+const profileRoutes = require("./routes/profileRoutes");
+const managerRoutes = require("./routes/managerRoutes");
 
 
 
@@ -21,6 +21,8 @@ app.use('/api', bookingroutes)
 app.use("/tour", tourRoutes);
 app.use("/profile1" , profileRoutes);
 app.use("/manager" , managerRoutes);
+
+
 
 app.get("/", (req, res) => {
   res.send("Hello from backend!");

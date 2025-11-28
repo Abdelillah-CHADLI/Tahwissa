@@ -10,12 +10,33 @@ const {
   browseAgencies,
   browseTours,
   addBooking,
-  getUserBookings
+  getUserBookings,
+  addTour
 } = require('../controllers/bookingController');
 
 const router = express.Router();
 
 router.use(express.json());
+
+
+// Add this route
+router.post('/tours', async (req, res) => {
+  try {
+    const tourData = req.body;
+    // Note: For images, you'd typically use multer middleware to handle file uploads
+    // e.g., const upload = multer(); router.post('/tours', upload.array('images'), async (req, res) => { ... }
+    // Here, assuming images are processed separately or passed as base64/buffer in req.body.images
+    const images = req.files ? req.files.map(file => ({
+      name: file.originalname,
+      content: file.buffer,
+      mimeType: file.mimetype
+    })) : []; // Placeholder; adjust based on your upload setup
+    const newTour = await addTour(tourData, images);
+    res.status(201).json({ success: true, data: newTour });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 router.get('/bookings', async (req, res) => {
   try {

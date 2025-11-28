@@ -1,5 +1,106 @@
 //yacine
-import { supabase } from "../config/supabasedb.js";
+import {supabase} from "../config/supabasedb.js";
+
+
+
+export async function addTour(tourData, images = []) {
+  const {
+    tour_title,
+    location,
+    price,
+    group_size,
+    duration,
+    agency_id,
+    guide_id,
+    tour_details,
+    tour_included,
+    start_date,
+    category
+  } = tourData;
+
+  // Validate required fields
+  if (!tour_title || !location || !price || !start_date) {
+    throw new Error('Missing required fields: tour_title, location, price, start_date');
+  }
+
+  // Validate exclusive agency or guide (exactly one)
+  const hasAgency = !!agency_id;
+  const hasGuide = !!guide_id;
+  if (hasAgency && hasGuide) {
+    throw new Error('Tour cannot be associated with both an agency and a guide');
+  }
+  if (!hasAgency && !hasGuide) {
+    throw new Error('Tour must be associated with either an agency or a guide');
+  }
+
+  // Insert the tour record
+  const { data: newTour, error: insertError } = await supabase
+    .from('tours')
+    .insert({
+      tour_title,
+      location,
+      price,
+      group_size,
+      duration,
+      agency_id: hasAgency ? agency_id : null,
+      guide_id: hasGuide ? guide_id : null,
+      tour_details,
+      tour_included,
+      start_date,
+      category
+    })
+    .select()
+    .single();
+
+  if (insertError) throw new Error(`Failed to add tour: ${insertError.message}`);
+
+  // Handle image uploads if provided (assuming images is an array of { name: string, content: Buffer, mimeType: string })
+  const imageUrls = [];
+  if (images && images.length > 0) {
+    const bucket = 'tour-images'; // Assume a bucket named 'tour-images' exists in Supabase Storage
+    for (const image of images) {
+      const fileName = `${newTour.tour_id}-${image.name}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(fileName, image.content, {
+          contentType: image.mimeType,
+          upsert: true
+        });
+
+      if (uploadError) {
+        // Optionally, continue or throw; here we log but proceed
+        console.error(`Failed to upload image ${fileName}: ${uploadError.message}`);
+        continue;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      // Insert into tour_images
+      const { error: imageInsertError } = await supabase
+        .from('tour_images')
+        .insert({
+          tour_id: newTour.tour_id,
+          image_url: publicUrl
+        });
+
+      if (imageInsertError) {
+        console.error(`Failed to insert image URL for ${fileName}: ${imageInsertError.message}`);
+        continue;
+      }
+
+      imageUrls.push(publicUrl);
+    }
+  }
+
+  // Return the new tour with image URLs
+  return {
+    ...newTour,
+    images: imageUrls
+  };
+}
 
 export async function getBookingsByFilter(filter = {}) {
   const { agencyId, guideId, travellerName, status } = filter;
