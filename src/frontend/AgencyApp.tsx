@@ -6,8 +6,6 @@ import { AgencyTourPrograms } from './pages/agency/AgencyTourPrograms';
 import { AgencyBookingPage } from './pages/agency/AgencyBookingPage';
 import { AgencyReviewsPage } from './pages/agency/AgencyReviewsPage';
 import { AgencyAddTourProgram } from './pages/agency/AgencyAddTourPrograms';
-import { ToursPageDetails } from './pages/agency/ToursPageDetails';
-import { AgencySettings } from './pages/agency/AgencySettings';
 import './App.css';
 
 function AgencyApp() {
