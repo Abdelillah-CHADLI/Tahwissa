@@ -13,21 +13,22 @@ import GuideProfilePage from './pages/traveler/GuideProfilePage';
 import NotificationsPage from './pages/traveler/NotificationsPage';
 import AddPostPage from './pages/traveler/AddPostPage';
 import DetailsPage from './pages/traveler/DetailsPage';
+import { BookingPage } from './pages/traveler/BookingPage';
 import { ProfileCompletionPage } from './pages/traveler/ProfileCompletionPage';
 
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  
-  const isAuthPage = location.pathname === ROUTES.SIGN_IN || 
-                     location.pathname === ROUTES.SIGN_UP || 
-                     location.pathname === ROUTES.PROFILE_COMPLETION;
-  
+
+  const isAuthPage = location.pathname === ROUTES.SIGN_IN ||
+    location.pathname === ROUTES.SIGN_UP ||
+    location.pathname === ROUTES.PROFILE_COMPLETION;
+
   const showHeader = !isAuthPage;
 
   const handleProfileComplete = () => {
     const accountType = location.state?.accountType || 'traveler';
-    
+
     if (accountType === 'agency' || accountType === 'guide') {
       navigate('/agency');
     } else {
@@ -52,14 +53,15 @@ function AppContent() {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="add-post" element={<AddPostPage />} />
           <Route path="details" element={<DetailsPage />} />
-          <Route 
-            path="profile-completion" 
+          <Route path="booking" element={<BookingPage />} />
+          <Route
+            path="profile-completion"
             element={
-              <ProfileCompletionPage 
+              <ProfileCompletionPage
                 onComplete={handleProfileComplete}
                 {...(location.state || {})}
               />
-            } 
+            }
           />
           <Route path="*" element={<Navigate to="/traveler" replace />} />
         </Routes>

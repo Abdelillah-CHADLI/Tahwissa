@@ -12,5 +12,5 @@ export const ROUTES = {
   SIGN_UP: '/traveler/signup',
   GUIDE_PROFILE: '/traveler/guide-profile',
   PROFILE_COMPLETION: '/traveler/profile-completion',
-  
+
 } as const;

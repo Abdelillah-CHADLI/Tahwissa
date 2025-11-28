@@ -10,18 +10,18 @@ function DayByDayScheduleTab() {
     return (
         <div className="space-y-6">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Day-by-Day Itinerary</h2>
-            
+
             {mockDaySchedule.map((day) => (
                 <div key={day.id} className="border border-gray-200 rounded-xl p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 bg-gray-50">
                     <div className="flex items-start gap-2 sm:gap-3 lg:gap-4">
                         <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-[#4d8b8b] text-white rounded-full flex items-center justify-center font-bold text-base sm:text-lg">
                             {day.id}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0 space-y-3">
                             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{day.title}</h3>
                             <p className="text-sm sm:text-base text-gray-600">{day.description}</p>
-                            
+
                             <div>
                                 <h4 className="text-sm font-medium text-gray-700 mb-2">Activities:</h4>
                                 <ul className="space-y-1.5">
@@ -33,7 +33,7 @@ function DayByDayScheduleTab() {
                                     ))}
                                 </ul>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                                 {day.meals && (
                                     <div className="bg-white rounded-lg p-3 border border-gray-200">
@@ -116,6 +116,12 @@ const DetailsPage = () => {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'schedule' | 'included'>('schedule');
 
+    const handleBookNow = () => {
+        const fullPath = `/traveler/booking`;
+        console.log("Attempting to navigate to:", fullPath);
+        navigate(fullPath);
+    };
+
     return (
         <div className="w-full overflow-x-hidden min-w-0">
             <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
@@ -169,21 +175,19 @@ const DetailsPage = () => {
                         <div className="flex border-b border-gray-200 bg-gray-50">
                             <button
                                 onClick={() => setActiveTab('schedule')}
-                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${
-                                    activeTab === 'schedule'
-                                        ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
-                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
+                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${activeTab === 'schedule'
+                                    ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                    }`}
                             >
                                 Day-by-Day Schedule
                             </button>
                             <button
                                 onClick={() => setActiveTab('included')}
-                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${
-                                    activeTab === 'included'
-                                        ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
-                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
+                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${activeTab === 'included'
+                                    ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                    }`}
                             >
                                 What's Included
                             </button>
@@ -202,7 +206,7 @@ const DetailsPage = () => {
                 <div className="space-y-4 h-fit sticky top-20">
                     <div className="bg-white border border-gray-200 rounded-xl shadow-md p-4 sm:p-6">
                         <h2 className="text-sm font-semibold mb-4">Book This Tour</h2>
-                        {mockTours.slice(0,1).map(tour => (
+                        {mockTours.slice(0, 1).map(tour => (
                             <div key={tour.id} className="space-y-4">
                                 <div className="flex flex-row gap-2">
                                     <div className="text-3xl font-bold text-[#4d8b8b]">{tour.price} DZD</div>
@@ -211,7 +215,7 @@ const DetailsPage = () => {
                             </div>
                         ))}
                         <div className="bg-gray-300 h-px my-4"></div>
-                        {mockTours.slice(0,1).map(tour => (
+                        {mockTours.slice(0, 1).map(tour => (
                             <div key={tour.id} className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm text-gray-600">Duration</div>
@@ -219,7 +223,7 @@ const DetailsPage = () => {
                                 </div>
                             </div>
                         ))}
-                        {mockTours.slice(0,1).map(tour => (
+                        {mockTours.slice(0, 1).map(tour => (
                             <div key={tour.id} className="space-y-4 py-2">
                                 <div className="flex items-center justify-between">
                                     <div className="text-sm text-gray-600">Group Size</div>
@@ -228,7 +232,10 @@ const DetailsPage = () => {
                             </div>
                         ))}
                         <div className="bg-gray-300 h-px my-4"></div>
-                        <button className="w-full bg-[#4d8b8b] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#274345] transition-colors flex items-center justify-center text-sm">
+                        <button
+                            onClick={handleBookNow}
+                            className="w-full bg-[#4d8b8b] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#274345] transition-colors flex items-center justify-center text-sm"
+                        >
                             <Calendar className="w-5 h-5 mr-2" />
                             Book Now
                         </button>

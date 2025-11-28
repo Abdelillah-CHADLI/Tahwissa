@@ -5,7 +5,9 @@ import { AgencyEditProfile } from './pages/agency/AgencyEditProfile';
 import { AgencyTourPrograms } from './pages/agency/AgencyTourPrograms';
 import { AgencyBookingPage } from './pages/agency/AgencyBookingPage';
 import { AgencyReviewsPage } from './pages/agency/AgencyReviewsPage';
+import { AgencySettings } from './pages/agency/AgencySettings';
 import { AgencyAddTourProgram } from './pages/agency/AgencyAddTourPrograms';
+import { AdminPage } from './pages/agency/AdminPage';
 import './App.css';
 
 function AgencyApp() {
@@ -18,8 +20,8 @@ function AgencyApp() {
         <Route path="bookings" element={<AgencyBookingPage />} />
         <Route path="reviews" element={<AgencyReviewsPage />} />
         <Route path="settings" element={<AgencySettings />} />
+        <Route path="admin" element={<AdminPage />} />
         <Route path="add-tour" element={<AgencyAddTourProgram />} />
-        <Route path="tour-details" element={<ToursPageDetails />} />
       </Route>
     </Routes>
   );
