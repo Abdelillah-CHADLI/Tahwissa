@@ -17,9 +17,7 @@ function AgencyApp() {
         <Route path="tour-programs" element={<AgencyTourPrograms />} />
         <Route path="bookings" element={<AgencyBookingPage />} />
         <Route path="reviews" element={<AgencyReviewsPage />} />
-        <Route path="settings" element={<AgencySettings />} />
         <Route path="add-tour" element={<AgencyAddTourProgram />} />
-        <Route path="tour-details" element={<ToursPageDetails />} />
       </Route>
     </Routes>
   );

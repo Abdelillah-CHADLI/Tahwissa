@@ -1,27 +1,68 @@
 import { motion } from 'motion/react';
-import { Mail, Phone, MapPin, Globe, Upload, Save } from 'lucide-react';
-import { useState, type ChangeEvent } from 'react';
+import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from 'lucide-react';
+import { useState, useEffect, type ChangeEvent } from 'react';
+import { profileService } from '../../services/api';
 
 export function AgencyEditProfile() {
-    // State for form data, easy to connect with backend later
+    // Get agency ID from localStorage or props (hardcoded for now)
+    const agencyId = localStorage.getItem('agencyId') || '1';
+    
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
+    
+    // State for form data
     const [formData, setFormData] = useState({
-        agencyName: 'Explore Algeria Tours',
-        agencyEmail: 'contact@explorealgeriatours.dz',
-        agencyPhone: '+213 23 456 7890',
-        agencyWebsite: 'https://www.explorealgeriatours.dz',
-        description: 'Explore Algeria Tours is a premier travel agency specializing in authentic Algerian experiences.',
-        location: 'Algiers, Algeria',
-        emergencyPhone: '+213 23 456 7899',
-        supportEmail: 'support@explorealgeriatours.dz',
-        workingHours: 'Mon-Sat'
+        agency_name: '',
+        agency_email: '',
+        agency_phone: '',
+        agency_website: '',
+        description: '',
+        location: '',
+        emergency_phone: '',
+        support_email: '',
+        working_hours: ''
     });
 
     // State for logo, easy to handle file upload later
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
-    const [selectedLocations, setSelectedLocations] = useState([
-        'Algiers', 'Oran', 'Constantine', 'Tamanrasset', 'Béjaïa',
-        'Tlemcen', 'Annaba', 'Djurdjura'
-    ]);
+    const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+    
+    // Fetch profile data on mount
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const response = await profileService.getProfile(agencyId, 'Agency');
+                const profile = response.profile;
+                
+                setFormData({
+                    agency_name: profile.agency_name || '',
+                    agency_email: profile.agency_email || '',
+                    agency_phone: profile.agency_phone || '',
+                    agency_website: profile.agency_website || '',
+                    description: profile.description || '',
+                    location: profile.location || '',
+                    emergency_phone: profile.emergency_phone || '',
+                    support_email: profile.support_email || '',
+                    working_hours: profile.working_hours || ''
+                });
+                
+                if (profile.service_locations) {
+                    setSelectedLocations(profile.service_locations);
+                }
+            } catch (err) {
+                console.error('Failed to fetch profile:', err);
+                setError('Failed to load profile data. Please refresh the page.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchProfile();
+    }, [agencyId]);
 
     const availableLocations = [
         'Algiers', 'Oran', 'Constantine', 'Tamanrasset', 'Béjaïa',
@@ -54,27 +95,74 @@ export function AgencyEditProfile() {
         }
     };
 
-    const handleSave = () => {
-        // Prepare data for backend
-        const dataToSend = {
-            ...formData,
-            serviceLocations: selectedLocations,
-            logo: logoPreview // send file or URL
-        };
-        console.log('Data to send to backend:', dataToSend);
-        alert('Profile saved successfully');
-        // TODO: Make API call to save data
+    const handleSave = async () => {
+        try {
+            setSaving(true);
+            setError(null);
+            setSuccess(false);
+            
+            // Prepare data for backend
+            const dataToSend = {
+                ...formData,
+                service_locations: selectedLocations,
+                // logo upload would need separate handling or form-data
+            };
+            
+            await profileService.updateProfile(agencyId, dataToSend, 'Agency');
+            setSuccess(true);
+            
+            // Show success message
+            setTimeout(() => setSuccess(false), 3000);
+        } catch (err) {
+            console.error('Failed to update profile:', err);
+            setError('Failed to update profile. Please try again.');
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleCancel = () => {
-        // Reset to original
-        console.log('Cancel clicked');
+        // Reload the page to reset form
+        window.location.reload();
     };
 
+    // Loading state
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-[#375E5E]" />
+                    <p className="text-gray-600">Loading profile...</p>
+                </div>
+            </div>
+        );
+    }
+    
     return (
         <div className="min-h-screen bg-gray-50 p-6">
+            {/* Error Alert */}
+            {error && (
+                <div className="max-w-5xl mx-auto mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-red-800 font-medium">Error</p>
+                        <p className="text-red-600 text-sm">{error}</p>
+                    </div>
+                </div>
+            )}
+            
+            {/* Success Alert */}
+            {success && (
+                <div className="max-w-5xl mx-auto mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                    <Save className="w-5 h-5 text-green-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                        <p className="text-green-800 font-medium">Success</p>
+                        <p className="text-green-600 text-sm">Profile updated successfully!</p>
+                    </div>
+                </div>
+            )}
             <div className="space-y-6 max-w-5xl mx-auto">
-                {/* Agency Information Card */}
+                {/* Agency Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -125,13 +213,13 @@ export function AgencyEditProfile() {
                             {/* Basic Information */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="agencyName" className="block text-sm font-medium text-gray-900">
+                                    <label htmlFor="agency_name" className="block text-sm font-medium text-gray-900">
                                         Agency Name *
                                     </label>
                                     <input
-                                        id="agencyName"
+                                        id="agency_name"
                                         placeholder="Enter agency name"
-                                        value={formData.agencyName}
+                                        value={formData.agency_name}
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                     />
@@ -147,7 +235,7 @@ export function AgencyEditProfile() {
                                             id="agencyEmail"
                                             type="email"
                                             placeholder="contact@agency.com"
-                                            value={formData.agencyEmail}
+                                            value={formData.agency_email}
                                             onChange={handleInputChange}
                                             className="w-full pl-10 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                         />
@@ -164,7 +252,7 @@ export function AgencyEditProfile() {
                                             id="agencyPhone"
                                             type="tel"
                                             placeholder="+213 XX XXX XXXX"
-                                            value={formData.agencyPhone}
+                                            value={formData.agency_phone}
                                             onChange={handleInputChange}
                                             className="w-full pl-10 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                         />
@@ -181,7 +269,7 @@ export function AgencyEditProfile() {
                                             id="agencyWebsite"
                                             type="url"
                                             placeholder="https://www.agency.com"
-                                            value={formData.agencyWebsite}
+                                            value={formData.agency_website}
                                             onChange={handleInputChange}
                                             className="w-full pl-10 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                         />
@@ -268,28 +356,28 @@ export function AgencyEditProfile() {
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                    <label htmlFor="emergencyPhone" className="block text-sm font-medium text-gray-900">
+                                    <label htmlFor="emergency_phone" className="block text-sm font-medium text-gray-900">
                                         Emergency Contact
                                     </label>
                                     <input
-                                        id="emergencyPhone"
+                                        id="emergency_phone"
                                         type="tel"
                                         placeholder="+213 XX XXX XXXX"
-                                        value={formData.emergencyPhone}
+                                        value={formData.emergency_phone}
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                     />
                                 </div>
 
                                 <div className="space-y-2">
-                                    <label htmlFor="supportEmail" className="block text-sm font-medium text-gray-900">
+                                    <label htmlFor="support_email" className="block text-sm font-medium text-gray-900">
                                         Support Email
                                     </label>
                                     <input
-                                        id="supportEmail"
+                                        id="support_email"
                                         type="email"
                                         placeholder="support@agency.com"
-                                        value={formData.supportEmail}
+                                        value={formData.support_email}
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                     />
@@ -297,13 +385,13 @@ export function AgencyEditProfile() {
                             </div>
 
                             <div className="space-y-2">
-                                <label htmlFor="workingHours" className="block text-sm font-medium text-gray-900">
+                                <label htmlFor="working_hours" className="block text-sm font-medium text-gray-900">
                                     Working Hours
                                 </label>
                                 <input
-                                    id="workingHours"
+                                    id="working_hours"
                                     placeholder="e.g., Mon-Fri: 9AM-6PM, Sat: 10AM-4PM"
-                                    value={formData.workingHours}
+                                    value={formData.working_hours}
                                     onChange={handleInputChange}
                                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                                 />
@@ -327,10 +415,20 @@ export function AgencyEditProfile() {
                     </button>
                     <button
                         onClick={handleSave}
-                        className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors inline-flex items-center gap-2"
+                        disabled={saving}
+                        className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 transition-colors inline-flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Save className="w-4 h-4" />
-                        Save Changes
+                        {saving ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="w-4 h-4" />
+                                Save Changes
+                            </>
+                        )}
                     </button>
                 </motion.div>
             </div>
