@@ -1,6 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
-// Create axios instance with base URL
+// Base axios instance
 const api = axios.create({
   baseURL: 'http://localhost:5000',
   headers: {
@@ -9,10 +9,9 @@ const api = axios.create({
   timeout: 10000,
 });
 
-// Request interceptor for adding auth tokens if needed
+// Add auth token to requests
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Add token from localStorage if exists
     const token = localStorage.getItem('token');
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -24,15 +23,13 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for handling errors
+// Handle response errors
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response) {
-      // Server responded with error status
       console.error('API Error:', error.response.data);
     } else if (error.request) {
-      // no response
       console.error('Network Error:', error.request);
     } else {
       console.error('Error:', error.message);
@@ -43,19 +40,18 @@ api.interceptors.response.use(
 
 export default api;
 
-// API service functions
 export const profileService = {
-  // Get profile (Agency or Guide)
+  // Fetch profile data
   getProfile: async (id: string, typeOfProfile: 'Agency' | 'Guide') => {
-    const response = await api.get(`/profile/${id}`, {
+    const response = await api.get(`/profile1/${id}`, {
       params: { TypeOfProfile: typeOfProfile }
     });
     return response.data;
   },
 
-  // Update profile
+  // Update profile data
   updateProfile: async (id: string, data: Record<string, unknown>, typeOfProfile: 'Agency' | 'Guide') => {
-    const response = await api.put(`/profile/${id}`, {
+    const response = await api.put(`/profile1/${id}`, {
       ...data,
       TypeOfProfile: typeOfProfile
     });
@@ -64,7 +60,7 @@ export const profileService = {
 };
 
 export const tourService = {
-  // Get tours
+  // Fetch all tours
   getTours: async (limit?: number) => {
     const response = await api.get('/tour/gettours', {
       params: { limit }
@@ -72,13 +68,19 @@ export const tourService = {
     return response.data;
   },
 
-  // Search tours
+  // Search tours with criteria
   searchTours: async (searchParams: Record<string, unknown>) => {
     const response = await api.post('/tour/searchTours', searchParams);
     return response.data;
   },
 
-  // Browse tours with filters
+  // Create a new tour
+  createTour: async (tourData: FormData | Record<string, unknown>) => {
+    const response = await api.post('/tour/create', tourData);
+    return response.data;
+  },
+
+  // Filter and browse tours
   browseTours: async (page: number = 1, size: number = 10, filters?: {
     cat?: string[];
     regions?: string[];
@@ -100,7 +102,7 @@ export const tourService = {
 };
 
 export const bookingService = {
-  // Get bookings by filter
+  // Fetch bookings with filters
   getBookings: async (filters: {
     agencyId?: string;
     guideId?: string;
@@ -111,7 +113,7 @@ export const bookingService = {
     return response.data;
   },
 
-  // Create booking
+  // Create a new booking
   createBooking: async (bookingData: {
     traveller_id: string;
     tour_id: string;
@@ -120,7 +122,7 @@ export const bookingService = {
     return response.data;
   },
 
-  // Get user bookings
+  // Fetch bookings for a specific user
   getUserBookings: async (userId: string) => {
     const response = await api.get('/api/bookings/explore', {
       params: { userId }
@@ -130,7 +132,7 @@ export const bookingService = {
 };
 
 export const reviewService = {
-  // Add review
+  // Submit a review
   addReview: async (reviewData: {
     tour_id: string;
     traveller_id: string;
@@ -141,7 +143,7 @@ export const reviewService = {
     return response.data;
   },
 
-  // Get reviews for a tour
+  // Fetch reviews for a tour
   getReviewsByTour: async (tourId: string) => {
     const response = await api.get(`/api/reviews/${tourId}`);
     return response.data;
@@ -149,7 +151,7 @@ export const reviewService = {
 };
 
 export const agencyService = {
-  // Browse agencies
+  // List agencies with pagination
   browseAgencies: async (page: number = 1, size: number = 10) => {
     const response = await api.get('/api/agencies/browse', {
       params: { page, size }
@@ -157,7 +159,7 @@ export const agencyService = {
     return response.data;
   },
 
-  // Search agencies
+  // Search agencies by name
   searchAgencies: async (search: string, limit: number = 10) => {
     const response = await api.get('/api/agencies', {
       params: { search, limit }
@@ -167,7 +169,7 @@ export const agencyService = {
 };
 
 export const guideService = {
-  // Search guides
+  // Search guides by name
   searchGuides: async (search: string, limit: number = 10) => {
     const response = await api.get('/api/guides', {
       params: { search, limit }

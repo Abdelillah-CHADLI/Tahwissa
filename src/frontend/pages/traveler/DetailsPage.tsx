@@ -4,24 +4,25 @@ import { ArrowLeft, MapPin, Users, Clock, Star, CheckCircle, XCircle, Shield, Ca
 import { useState, useEffect } from "react";
 import { mockDaySchedule, mockTourInclusions } from "../../data/mockDetails";
 import { mockAgencyProvider } from "../../data/mockAgency";
+import { mockTours } from "../../data/mockTours";
 import { tourService, bookingService, profileService } from "../../services/api";
 
 function DayByDayScheduleTab() {
     return (
         <div className="space-y-6">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">Day-by-Day Itinerary</h2>
-            
+
             {mockDaySchedule.map((day) => (
                 <div key={day.id} className="border border-gray-200 rounded-xl p-3 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 bg-gray-50">
                     <div className="flex items-start gap-2 sm:gap-3 lg:gap-4">
                         <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 bg-[#4d8b8b] text-white rounded-full flex items-center justify-center font-bold text-base sm:text-lg">
                             {day.id}
                         </div>
-                        
+
                         <div className="flex-1 min-w-0 space-y-3">
                             <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{day.title}</h3>
                             <p className="text-sm sm:text-base text-gray-600">{day.description}</p>
-                            
+
                             <div>
                                 <h4 className="text-sm font-medium text-gray-700 mb-2">Activities:</h4>
                                 <ul className="space-y-1.5">
@@ -33,7 +34,7 @@ function DayByDayScheduleTab() {
                                     ))}
                                 </ul>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                                 {day.meals && (
                                     <div className="bg-white rounded-lg p-3 border border-gray-200">
@@ -130,22 +131,43 @@ const DetailsPage = () => {
                 setLoading(true);
                 setError(null);
                 
-                // Fetch tours (in real app, would fetch specific tour by ID)
-                const toursResponse = await tourService.getTours(1);
-                const tours = toursResponse.data || [];
-                const tour = tours[0] || {};
+                let tour: Record<string, unknown> = {};
+                
+                try {
+                    // Fetch tours (in real app, we would fetch specific tour by ID)
+                    const toursResponse = await tourService.getTours(1);
+                    const tours = toursResponse.data || [];
+                    tour = tours[0] || {};
+                } catch {
+                    console.warn('Failed to fetch tour from API, using mock data');
+                }
+
+                // Fallback to mock data if API returned empty or failed
+                if (!tour.id && !tour.tour_id) {
+                    tour = mockTours[0] as unknown as Record<string, unknown>;
+                }
+                
                 setTourData(tour);
                 
                 // Fetch provider data if available
                 if (tour.agency_id || tour.guide_id) {
-                    const providerId = String(tour.agency_id || tour.guide_id);
-                    const providerType = tour.agency_id ? 'Agency' : 'Guide';
-                    const providerResponse = await profileService.getProfile(providerId, providerType);
-                    setProviderData(providerResponse.profile);
+                    try {
+                        const providerId = String(tour.agency_id || tour.guide_id);
+                        const providerType = tour.agency_id ? 'Agency' : 'Guide';
+                        const providerResponse = await profileService.getProfile(providerId, providerType);
+                        setProviderData(providerResponse.profile);
+                    } catch {
+                        console.warn('Failed to fetch provider, using mock data');
+                        setProviderData(mockAgencyProvider as unknown as Record<string, unknown>);
+                    }
+                } else {
+                     setProviderData(mockAgencyProvider as unknown as Record<string, unknown>);
                 }
             } catch (err) {
                 console.error('Failed to fetch tour data:', err);
-                setError('Failed to load tour details. Please try again.');
+                // Final fallback
+                setTourData(mockTours[0] as unknown as Record<string, unknown>);
+                setProviderData(mockAgencyProvider as unknown as Record<string, unknown>);
             } finally {
                 setLoading(false);
             }
@@ -264,21 +286,19 @@ const DetailsPage = () => {
                         <div className="flex border-b border-gray-200 bg-gray-50">
                             <button
                                 onClick={() => setActiveTab('schedule')}
-                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${
-                                    activeTab === 'schedule'
-                                        ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
-                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
+                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${activeTab === 'schedule'
+                                    ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                    }`}
                             >
                                 Day-by-Day Schedule
                             </button>
                             <button
                                 onClick={() => setActiveTab('included')}
-                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${
-                                    activeTab === 'included'
-                                        ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
-                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                                }`}
+                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${activeTab === 'included'
+                                    ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                    }`}
                             >
                                 What's Included
                             </button>

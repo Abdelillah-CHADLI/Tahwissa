@@ -1,9 +1,9 @@
 import { useState } from "react";
-import RequestCard from "../../components/requests/RequestCard";
-import StatsCards from "../../components/requests/StatsCards";
-import TabsNavigation from "../../components/requests/TabsNavigation";
-import EmptyState from "../../components/requests//EmptyState";
-import PageHeader from "../../components/requests//PageHeader";
+import RequestCard from "../../components/traveler/requests/RequestCard";
+import StatsCards from "../../components/traveler/requests/StatsCards";
+import TabsNavigation from "../../components/traveler/requests/TabsNavigation";
+import EmptyState from "../../components/traveler/requests/EmptyState";
+import PageHeader from "../../components/traveler/requests/PageHeader";
 import { requests } from "../../data/requests";
 
 function RequestsPage() {

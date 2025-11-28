@@ -19,7 +19,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use('/api', bookingroutes)
 app.use("/tour", tourRoutes);
-app.use("/profile" , profileRoutes);
+app.use("/profile1" , profileRoutes);
 app.use("/manager" , managerRoutes);
 
 app.get("/", (req, res) => {

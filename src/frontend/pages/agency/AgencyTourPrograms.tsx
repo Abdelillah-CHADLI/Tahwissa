@@ -3,6 +3,7 @@ import { Plus, Search, Filter, Loader2, AlertCircle} from 'lucide-react';
 import {useState, useEffect, type SetStateAction} from "react";
 import { tourService } from "../../services/api";
 import { TourCard } from '../../types/tourcard';
+import { mockTours } from '../../data/mockTours';
 
 interface TourType {
     tour_id?: number;
@@ -36,10 +37,15 @@ export function AgencyTourPrograms() {
                 setLoading(true);
                 setError(null);
                 const response = await tourService.getTours();
-                setTours(response.data || []);
+                if (response.data && response.data.length > 0) {
+                    setTours(response.data);
+                } else {
+                    // Fallback to mock data if API returns empty
+                    setTours(mockTours);
+                }
             } catch (err) {
-                console.error('Failed to fetch tours:', err);
-                setError('Failed to load tours. Please try again.');
+                console.error('Failed to fetch tours, using mock data:', err);
+                setTours(mockTours);
             } finally {
                 setLoading(false);
             }
@@ -73,7 +79,6 @@ export function AgencyTourPrograms() {
         }
     }
 
-    // Filter tours (client-side for now)
     const filteredTours = query 
         ? tours.filter(t => 
             t.title?.toLowerCase().includes(query.toLowerCase()) ||

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { motion } from "motion/react";
-import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X, Shield } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { profileService } from '../../services/api';
+import { mockAgencyProvider } from '../../data/mockAgency';
 
 export function AgencyDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
+    const [agencyProfile, setAgencyProfile] = useState<any>(mockAgencyProvider);
     const location = useLocation();
 
     useEffect(() => {
@@ -18,6 +21,22 @@ export function AgencyDashboard() {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                // Hardcoded ID '1' for now as per other pages
+                const data = await profileService.getProfile('1', 'Agency');
+                if (data) {
+                    setAgencyProfile(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch agency profile:', error);
+                // Fallback to mock data is already set as initial state
+            }
+        };
+        fetchProfile();
+    }, []);
+
     const menuItems = [
         { path: "/agency", label: "Dashboard", icon: LayoutDashboard, end: true },
         { path: "/agency/profile", label: "Agency Profile", icon: Building2 },
@@ -25,6 +44,7 @@ export function AgencyDashboard() {
         { path: "/agency/bookings", label: "Bookings", icon: Calendar },
         { path: "/agency/reviews", label: "Reviews & Ratings", icon: Star },
         { path: "/agency/settings", label: "Settings", icon: Settings },
+        { path: "/agency/admin", label: "Admin Panel", icon: Shield },
     ];
 
     const currentMenuItem = menuItems.find(item => item.path === location.pathname) || menuItems[0];
@@ -63,16 +83,18 @@ export function AgencyDashboard() {
                                 <Building2 className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                                <h1 className="font-bold text-gray-900 leading-tight">Explore Algeria Tours</h1>
+                                <h1 className="font-bold text-gray-900 leading-tight">{agencyProfile.name || "Explore Algeria Tours"}</h1>
                                 <p className="text-xs text-gray-500 mt-0.5">Travel Agency</p>
                                 <div className="flex items-center gap-2 mt-2">
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-medium border border-green-100">
                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
                                         Active
                                     </span>
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#375E5E] text-white text-[10px] font-medium">
-                                        Verified
-                                    </span>
+                                    {agencyProfile.verified && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#375E5E] text-white text-[10px] font-medium">
+                                            Verified
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -128,7 +150,7 @@ export function AgencyDashboard() {
                                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
                                 </button>
                                 <div className="w-8 h-8 rounded-full bg-[#375E5E] flex items-center justify-center text-white font-medium text-sm">
-                                    AM
+                                    {agencyProfile.name ? agencyProfile.name.substring(0, 2).toUpperCase() : "AM"}
                                 </div>
                             </div>
                         </div>

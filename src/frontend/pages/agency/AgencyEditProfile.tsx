@@ -2,9 +2,10 @@ import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { profileService } from '../../services/api';
+import { mockAgencyProvider } from '../../data/mockAgency';
 
 export function AgencyEditProfile() {
-    // Get agency ID from localStorage or props (hardcoded for now)
+    // Hardcoded ID for now
     const agencyId = localStorage.getItem('agencyId') || '1';
     
     const [loading, setLoading] = useState(true);
@@ -12,7 +13,6 @@ export function AgencyEditProfile() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
     
-    // State for form data
     const [formData, setFormData] = useState({
         agency_name: '',
         agency_email: '',
@@ -25,11 +25,10 @@ export function AgencyEditProfile() {
         working_hours: ''
     });
 
-    // State for logo, easy to handle file upload later
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
     
-    // Fetch profile data on mount
+    // Load profile data
     useEffect(() => {
         const fetchProfile = async () => {
             try {
@@ -38,24 +37,44 @@ export function AgencyEditProfile() {
                 const response = await profileService.getProfile(agencyId, 'Agency');
                 const profile = response.profile;
                 
-                setFormData({
-                    agency_name: profile.agency_name || '',
-                    agency_email: profile.agency_email || '',
-                    agency_phone: profile.agency_phone || '',
-                    agency_website: profile.agency_website || '',
-                    description: profile.description || '',
-                    location: profile.location || '',
-                    emergency_phone: profile.emergency_phone || '',
-                    support_email: profile.support_email || '',
-                    working_hours: profile.working_hours || ''
-                });
-                
-                if (profile.service_locations) {
-                    setSelectedLocations(profile.service_locations);
+                if (profile) {
+                    setFormData({
+                        agency_name: profile.agency_name || '',
+                        agency_email: profile.email || '', 
+                        agency_phone: profile.phone_number || '',
+                        agency_website: profile.website || '',
+                        description: profile.description || '',
+                        location: profile.main_office_location || '',
+                        emergency_phone: profile.emergency_contact || '',
+                        support_email: profile.support_email || '',
+                        working_hours: profile.working_hours || ''
+                    });
+                    
+                    if (profile.service_locations) {
+                        if (typeof profile.service_locations === 'string') {
+                            setSelectedLocations(profile.service_locations.split(',').map((s: string) => s.trim()));
+                        } else if (Array.isArray(profile.service_locations)) {
+                            setSelectedLocations(profile.service_locations);
+                        }
+                    }
+                } else {
+                    throw new Error("Profile not found");
                 }
             } catch (err) {
-                console.error('Failed to fetch profile:', err);
-                setError('Failed to load profile data. Please refresh the page.');
+                console.error('Failed to fetch profile, using mock data:', err);
+                // Use mock data on failure
+                setFormData({
+                    agency_name: mockAgencyProvider.name,
+                    agency_email: mockAgencyProvider.email,
+                    agency_phone: mockAgencyProvider.phone,
+                    agency_website: 'https://www.saharaadventures.dz',
+                    description: mockAgencyProvider.description,
+                    location: `${mockAgencyProvider.location.city}, ${mockAgencyProvider.location.country}`,
+                    emergency_phone: mockAgencyProvider.phone,
+                    support_email: mockAgencyProvider.email,
+                    working_hours: 'Mon-Fri: 9AM-6PM'
+                });
+                setSelectedLocations(['Tamanrasset', 'Djanet']);
             } finally {
                 setLoading(false);
             }
@@ -101,17 +120,22 @@ export function AgencyEditProfile() {
             setError(null);
             setSuccess(false);
             
-            // Prepare data for backend
             const dataToSend = {
-                ...formData,
-                service_locations: selectedLocations,
-                // logo upload would need separate handling or form-data
+                TypeOfProfile: "Agency",
+                agency_name: formData.agency_name,
+                emergency_contact: formData.emergency_phone,
+                support_email: formData.support_email,
+                working_hours: formData.working_hours,
+                service_locations: selectedLocations.join(', '),
+                main_office_location: formData.location,
+                website: formData.agency_website,
+                description: formData.description,
+                // Note: email is not updatable
             };
             
             await profileService.updateProfile(agencyId, dataToSend, 'Agency');
             setSuccess(true);
             
-            // Show success message
             setTimeout(() => setSuccess(false), 3000);
         } catch (err) {
             console.error('Failed to update profile:', err);
