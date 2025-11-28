@@ -29,7 +29,7 @@ const Header = () => {
             transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
             className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50"
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-3 sm:px-6 py-3">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
                     {/* Logo - Responsive but keeps desktop style */}
                     <Link
@@ -37,7 +37,7 @@ const Header = () => {
                         className="flex items-center space-x-2 sm:space-x-3 group"
                     >
                         <motion.div 
-                            className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-lg sm:rounded-xl flex items-center justify-center shadow-md"
+                            className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-xl flex items-center justify-center shadow-md"
                             whileHover={{ 
                                 scale: 1.05, 
                                 rotate: 360,
@@ -46,25 +46,17 @@ const Header = () => {
                                     scale: { duration: 0.2 }
                                 }
                             }}
-                            className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-xl flex items-center justify-center shadow-md"
-                            whileHover={{ scale: 1.05, rotate: 5 }}
-                            transition={{ type: "spring", stiffness: 300 }}
                         >
-                            <Compass className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                             <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </motion.div>
                         <div className="flex flex-col">
                             <h1 className="text-lg sm:text-xl font-bold text-gray-900">Tahwissa</h1>
                             <p className="text-gray-500 text-xs hidden sm:block">Your Travel Companion</p>
-                        <div className="hidden sm:flex flex-col">
-                            <h1 className="text-xl font-bold text-gray-900">Tahwissa</h1>
-                            <p className="text-gray-500 text-xs">Your Travel Companion</p>
                         </div>
                     </Link>
 
-                    {/* Desktop Navigation - Unchanged */}
+                    {/* Desktop Navigation */}
                     <nav className="hidden lg:flex items-center space-x-8">
-                    <nav className="flex items-center space-x-2 sm:space-x-4 md:space-x-8">
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.HOME}
@@ -131,9 +123,8 @@ const Header = () => {
                         </motion.div>
                     </nav>
 
-                    {/* Desktop User Section - Unchanged */}
+                    {/* Desktop User Section */}
                     <div className="hidden lg:flex items-center space-x-6">
-                    <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
                         <motion.button 
                             whileHover={{ scale: 1.05, y: -1 }}
                             whileTap={{ scale: 0.95 }}
