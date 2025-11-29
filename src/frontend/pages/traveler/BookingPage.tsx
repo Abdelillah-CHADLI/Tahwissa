@@ -7,6 +7,7 @@ import { PaymentForm } from "../../components/traveler/booking/PaymentForm";
 import { ConfirmationStep } from "../../components/traveler/booking/ConfirmationStep";
 import { BookingSummary } from "../../components/traveler/booking/BookingSummary";
 import { BookingSuccessPage } from "../../components/traveler/booking/BookingSuccessPage";
+import { bookingService } from "../../services/api";
 
 interface FormData {
     firstName: string;
@@ -51,11 +52,10 @@ export function BookingPage() {
         image: "https://images.unsplash.com/photo-1670015239006-610536cc0593",
     };
 
+    // --- Handlers ---
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
-
-    const totalPrice = tour.price * parseInt(formData.numberOfPeople || "1");
 
     const handleNext = () => {
         if (step < 3) setStep(step + 1);
@@ -67,8 +67,20 @@ export function BookingPage() {
         }
     };
 
-    const handleConfirm = () => {
-        setShowSuccess(true);
+    const handleConfirm = async () => {
+        try {
+            const travellerId = localStorage.getItem('userId') || 'default-id';
+
+            await bookingService.createBooking({
+                traveller_id: travellerId,
+                tour_id: tour.id.toString(),
+            });
+
+            setShowSuccess(true);
+        } catch (error) {
+            console.error('Booking failed:', error);
+            alert('Failed to create booking');
+        }
     };
 
     const handleNavigate = (page: string) => {
@@ -87,7 +99,10 @@ export function BookingPage() {
         }
     };
 
-    // Show success page if booking is confirmed
+    // --- Calculations ---
+    const totalPrice = tour.price * parseInt(formData.numberOfPeople || "1");
+
+    // --- Success State ---
     if (showSuccess) {
         return <BookingSuccessPage onNavigate={handleNavigate} />;
     }
@@ -95,9 +110,13 @@ export function BookingPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <button className="rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-md text-shadow-black font-semibold hover:bg-lime-300 flex items-center mb-4 sm:mb-6 transition-colors" onClick={() => handleNavigate('details')}>
+                <button
+                    className="rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-md text-shadow-black font-semibold hover:bg-lime-300 flex items-center mb-4 sm:mb-6 transition-colors"
+                    onClick={() => handleNavigate('details')}
+                >
                     <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 inline-block mr-2" />
-                    Back to Explore</button>
+                    Back to Explore
+                </button>
 
                 <ProgressSteps step={step} />
 

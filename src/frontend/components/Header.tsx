@@ -3,19 +3,19 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Search, Users, MessageSquare, ClipboardList, Bell, Compass, Menu, X } from 'lucide-react';
 import { ROUTES } from '../utils/routes';
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext'; 
+import { useAuth } from '../contexts/AuthContext';
 
 const Header = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { user } = useAuth(); 
+    const { user } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const isActive = (path: string) => location.pathname === path;
 
     const handleProfileClick = (e: React.MouseEvent) => {
         if (!user) {
-            e.preventDefault(); 
+            e.preventDefault();
             navigate(ROUTES.SIGN_IN);
         }
     };
@@ -37,30 +37,24 @@ const Header = () => {
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, type: "spring", stiffness: 100 }}
-            className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50"
+            className="bg-white border-b border-gray-200 shadow-sm"
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+            <div className="max-w-7xl mx-auto px-3 sm:px-6 py-3">
                 <div className="flex items-center justify-between">
                     <Link
                         to={ROUTES.HOME}
                         className="flex items-center space-x-2 sm:space-x-3 group"
                     >
-                        <motion.div 
+                        <motion.div
                             className="w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] rounded-xl flex items-center justify-center shadow-md"
-                            whileHover={{ 
-                                scale: 1.05, 
-                                rotate: 360,
-                                transition: { 
-                                    rotate: { duration: 0.6, ease: "easeInOut" },
-                                    scale: { duration: 0.2 }
-                                }
-                            }}
+                            whileHover={{ scale: 1.05, rotate: 5 }}
+                            transition={{ type: "spring", stiffness: 300 }}
                         >
                             <Compass className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                         </motion.div>
-                        <div className="flex flex-col">
-                            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Tahwissa</h1>
-                            <p className="text-gray-500 text-xs hidden sm:block">Your Travel Companion</p>
+                        <div className="hidden sm:flex flex-col">
+                            <h1 className="text-xl font-bold text-gray-900">Tahwissa</h1>
+                            <p className="text-gray-500 text-xs">Your Travel Companion</p>
                         </div>
                     </Link>
 
@@ -132,7 +126,7 @@ const Header = () => {
                     </nav>
 
                     <div className="hidden lg:flex items-center space-x-6">
-                        <motion.button 
+                        <motion.button
                             whileHover={{ scale: 1.05, y: -1 }}
                             whileTap={{ scale: 0.95 }}
                             className="p-1.5 sm:p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
@@ -156,7 +150,7 @@ const Header = () => {
                     </div>
 
                     <div className="flex lg:hidden items-center space-x-4">
-                        <motion.button 
+                        <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
@@ -182,7 +176,7 @@ const Header = () => {
 
                 <motion.div
                     initial={false}
-                    animate={{ 
+                    animate={{
                         height: isMobileMenuOpen ? 'auto' : 0,
                         opacity: isMobileMenuOpen ? 1 : 0
                     }}
@@ -203,11 +197,10 @@ const Header = () => {
                                         <Link
                                             to={item.path}
                                             onClick={() => setIsMobileMenuOpen(false)}
-                                            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${
-                                                isActive(item.path)
+                                            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${isActive(item.path)
                                                     ? 'bg-[#348086] text-white'
                                                     : 'text-gray-600 hover:bg-gray-100 hover:text-[#348086]'
-                                            }`}
+                                                }`}
                                         >
                                             <Icon className="w-5 h-5" />
                                             <span className="font-medium">{item.label}</span>
@@ -215,7 +208,7 @@ const Header = () => {
                                     </motion.div>
                                 );
                             })}
-                            
+
                             <motion.div
                                 initial={{ x: -20, opacity: 0 }}
                                 animate={{ x: 0, opacity: isMobileMenuOpen ? 1 : 0 }}
