@@ -155,24 +155,6 @@ export const bookingService = {
     return response.data;
   },
 };
-
-export const reviewService = {
-  addReview: async (reviewData: {
-    tour_id: string;
-    traveller_id: string;
-    comment?: string;
-    review_score: number;
-  }) => {
-    const response = await api.post('/api/reviews', reviewData);
-    return response.data;
-  },
-
-  getReviewsByTour: async (tourId: string) => {
-    const response = await api.get(`/api/reviews/${tourId}`);
-    return response.data;
-  },
-};
-
 export const agencyService = {
   browseAgencies: async (page: number = 1, size: number = 10) => {
     const response = await api.get('/api/agencies/browse', {
