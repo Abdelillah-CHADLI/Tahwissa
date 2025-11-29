@@ -119,7 +119,10 @@ export function DashboardOverview() {
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium text-gray-900">Recent Bookings</h2>
-                <button className="text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors">
+                <button 
+                  onClick={() => navigate('/agency/bookings')}
+                  className="text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors"
+                >
                   View All
                 </button>
               </div>
@@ -182,8 +185,8 @@ export function DashboardOverview() {
             {/* Card Content */}
             <div className="p-6">
               <div className="space-y-8">
-                {data.popularTours.map((tour) => (
-                  <div key={tour.name}>
+                {data.popularTours.map((tour, index) => (
+                  <div key={`tour-${index}-${tour.name}`}>
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <h4 className="font-medium text-gray-900 mb-2">{tour.name}</h4>

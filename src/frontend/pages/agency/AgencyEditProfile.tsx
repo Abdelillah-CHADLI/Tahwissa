@@ -34,16 +34,16 @@ export function AgencyEditProfile() {
             try {
                 setLoading(true);
                 setError(null);
-                const response = await profileService.getProfile(agencyId, 'Agency');
-                const profile = response.profile;
+                const response = await profileService.getProfile(agencyId, 'agency');
+                const profile = response.data;
                 
                 if (profile) {
                     setFormData({
                         agency_name: profile.agency_name || '',
-                        agency_email: profile.email || '', 
+                        agency_email: profile.agency_email || profile.email || '', 
                         agency_phone: profile.phone_number || '',
                         agency_website: profile.website || '',
-                        description: profile.description || '',
+                        description: profile.agency_description || profile.description || '',
                         location: profile.main_office_location || '',
                         emergency_phone: profile.emergency_contact || '',
                         support_email: profile.support_email || '',
@@ -60,9 +60,8 @@ export function AgencyEditProfile() {
                 } else {
                     throw new Error("Profile not found");
                 }
-            } catch (err) {
-                console.error('Failed to fetch profile, using mock data:', err);
-                // Use mock data on failure
+            } catch {
+                // Use fallback mock data
                 setFormData({
                     agency_name: mockAgencyProvider.name,
                     agency_email: mockAgencyProvider.email,
@@ -121,7 +120,6 @@ export function AgencyEditProfile() {
             setSuccess(false);
             
             const dataToSend = {
-                TypeOfProfile: "Agency",
                 agency_name: formData.agency_name,
                 emergency_contact: formData.emergency_phone,
                 support_email: formData.support_email,
@@ -130,15 +128,13 @@ export function AgencyEditProfile() {
                 main_office_location: formData.location,
                 website: formData.agency_website,
                 description: formData.description,
-                // Note: email is not updatable
             };
             
-            await profileService.updateProfile(agencyId, dataToSend, 'Agency');
+            await profileService.updateProfile(agencyId, dataToSend, 'agency');
             setSuccess(true);
             
             setTimeout(() => setSuccess(false), 3000);
-        } catch (err) {
-            console.error('Failed to update profile:', err);
+        } catch {
             setError('Failed to update profile. Please try again.');
         } finally {
             setSaving(false);

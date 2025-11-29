@@ -10,10 +10,9 @@ const api = axios.create({
   //withCredentials: true,
 });
 
-// Request interceptor - we don't need to manually add tokens (cookies are automatic)
+// Request interceptor
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Cookies are sent automatically with withCredentials: true
     return config;
   },
   (error: AxiosError) => {
@@ -39,26 +38,24 @@ api.interceptors.response.use(
 export default api;
 
 export const profileService = {
-  // Fetch profile data - CORRECT ENDPOINT
   getProfile: async (id: string, type: 'agency' | 'guide') => {
     const response = await api.get(`/api/profile/${id}`, {
-      params: { type } // lowercase 'type' as per documentation
+      params: { type }
     });
     return response.data;
   },
 
-  // Update profile data
   updateProfile: async (id: string, data: Record<string, unknown>, type: 'agency' | 'guide') => {
-    const response = await api.put(`/api/profile/${id}`, {
+    const TypeOfProfile = type === 'agency' ? 'Agency' : 'Guide';
+    const response = await api.put(`/profile1/${id}`, {
       ...data,
-      type // lowercase 'type' as per documentation
+      TypeOfProfile
     });
     return response.data;
   },
 };
 
 export const tourService = {
-  // Fetch all tours
   getTours: async (limit?: number) => {
     const response = await api.get('/tour/gettours', {
       params: { limit }
@@ -66,7 +63,23 @@ export const tourService = {
     return response.data;
   },
 
-  // Search tours with criteria - FIXED to match backend
+  getAgencyTours: async (agencyId: string) => {
+    const response = await api.get('/api/tours/browse', {
+      params: { provider: 'agency', size: 100 }
+    });
+    const result = response.data?.data || response.data;
+    const tours = result?.tours || [];
+    return tours.filter((tour: Record<string, unknown>) => String(tour.agency_id) === agencyId);
+  },
+
+  getTourById: async (tourId: string) => {
+    const response = await api.get('/tour/gettours');
+    const tours = Array.isArray(response.data) ? response.data : [];
+    return tours.find((t: Record<string, unknown>) => 
+      String(t.tour_id) === tourId || String(t.id) === tourId
+    ) || null;
+  },
+
   searchTours: async (searchParams: {
     name?: string;
     region?: string;
@@ -78,13 +91,24 @@ export const tourService = {
     return response.data;
   },
 
-  // Create a new tour
-  createTour: async (tourData: FormData | Record<string, unknown>) => {
-    const response = await api.post('/tour/create', tourData);
+  createTour: async (tourData: Record<string, unknown>) => {
+    const agencyId = localStorage.getItem('agencyId') || '1';
+    const backendData = {
+      tour_title: tourData.title,
+      location: tourData.location,
+      price: Number(tourData.price) || 0,
+      group_size: tourData.groupSize,
+      duration: tourData.duration,
+      agency_id: agencyId,
+      tour_details: tourData.days || tourData.description,
+      tour_included: tourData.included,
+      start_date: new Date().toISOString().split('T')[0],
+      category: tourData.category
+    };
+    const response = await api.post('/api/tours', backendData);
     return response.data;
   },
 
-  // Filter and browse tours
   browseTours: async (page: number = 1, size: number = 10, filters?: {
     cat?: string[];
     regions?: string[];
@@ -106,7 +130,6 @@ export const tourService = {
 };
 
 export const bookingService = {
-  // Fetch bookings with filters
   getBookings: async (filters: {
     agencyId?: string;
     guideId?: string;
@@ -114,10 +137,9 @@ export const bookingService = {
     status?: string;
   }) => {
     const response = await api.get('/api/bookings', { params: filters });
-    return response.data;
+    return response.data?.data || response.data || [];
   },
 
-  // Create a new booking
   createBooking: async (bookingData: {
     traveller_id: string;
     tour_id: string;
@@ -126,7 +148,6 @@ export const bookingService = {
     return response.data;
   },
 
-  // Fetch bookings for a specific user
   getUserBookings: async (userId: string) => {
     const response = await api.get('/api/bookings/explore', {
       params: { userId }
@@ -135,8 +156,24 @@ export const bookingService = {
   },
 };
 
+export const reviewService = {
+  addReview: async (reviewData: {
+    tour_id: string;
+    traveller_id: string;
+    comment?: string;
+    review_score: number;
+  }) => {
+    const response = await api.post('/api/reviews', reviewData);
+    return response.data;
+  },
+
+  getReviewsByTour: async (tourId: string) => {
+    const response = await api.get(`/api/reviews/${tourId}`);
+    return response.data;
+  },
+};
+
 export const agencyService = {
-  // List agencies with pagination
   browseAgencies: async (page: number = 1, size: number = 10) => {
     const response = await api.get('/api/agencies/browse', {
       params: { page, size }
@@ -144,7 +181,6 @@ export const agencyService = {
     return response.data;
   },
 
-  // Search agencies by name
   searchAgencies: async (search: string, limit: number = 10) => {
     const response = await api.get('/api/agencies', {
       params: { search, limit }
@@ -154,7 +190,6 @@ export const agencyService = {
 };
 
 export const guideService = {
-  // Search guides by name
   searchGuides: async (search: string, limit: number = 10) => {
     const response = await api.get('/api/guides', {
       params: { search, limit }

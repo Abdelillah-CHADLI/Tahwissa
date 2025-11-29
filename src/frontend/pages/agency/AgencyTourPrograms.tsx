@@ -8,15 +8,18 @@ import { mockTours } from '../../data/mockTours';
 interface TourType {
     tour_id?: number;
     id?: number;
+    tour_title?: string;
     title?: string;
     location?: string;
     category?: string;
     image?: string;
     status?: string;
     duration?: string;
+    group_size?: string;
     groupSize?: string;
     price?: number;
     bookings?: number;
+    start_date?: string;
     startDate?: string;
 }
 
@@ -30,21 +33,20 @@ export function AgencyTourPrograms() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch tours on mount
     useEffect(() => {
         const fetchTours = async () => {
             try {
                 setLoading(true);
                 setError(null);
                 const response = await tourService.getTours();
-                if (response.data && response.data.length > 0) {
+                if (Array.isArray(response) && response.length > 0) {
+                    setTours(response);
+                } else if (response?.data && response.data.length > 0) {
                     setTours(response.data);
                 } else {
-                    // Fallback to mock data if API returns empty
                     setTours(mockTours);
                 }
-            } catch (err) {
-                console.error('Failed to fetch tours, using mock data:', err);
+            } catch {
                 setTours(mockTours);
             } finally {
                 setLoading(false);
@@ -69,10 +71,13 @@ export function AgencyTourPrograms() {
         try {
             setLoading(true);
             setError(null);
-            const response = await tourService.searchTours({ search: query });
-            setTours(response.data || []);
-        } catch (err) {
-            console.error('Search failed:', err);
+            const response = await tourService.searchTours({ name: query });
+            if (Array.isArray(response)) {
+                setTours(response);
+            } else {
+                setTours(response?.data || []);
+            }
+        } catch {
             setError('Search failed. Please try again.');
         } finally {
             setLoading(false);
@@ -81,9 +86,9 @@ export function AgencyTourPrograms() {
 
     const filteredTours = query 
         ? tours.filter(t => 
-            t.title?.toLowerCase().includes(query.toLowerCase()) ||
-            t.location?.toLowerCase().includes(query.toLowerCase()) ||
-            t.category?.toLowerCase().includes(query.toLowerCase())
+            (t.tour_title || t.title || '').toLowerCase().includes(query.toLowerCase()) ||
+            (t.location || '').toLowerCase().includes(query.toLowerCase()) ||
+            (t.category || '').toLowerCase().includes(query.toLowerCase())
           )
         : tours;
 
@@ -153,13 +158,13 @@ export function AgencyTourPrograms() {
                             image={t.image || "https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
                             status={t.status || "Active"}
                             category={t.category || "Tour"}
-                            title={t.title || "Untitled Tour"}
+                            title={t.tour_title || t.title || "Untitled Tour"}
                             location={t.location || "Unknown"}
                             duration={t.duration || "N/A"}
-                            groupSize={t.groupSize || "N/A"}
+                            groupSize={t.group_size || t.groupSize || "N/A"}
                             price={t.price || 0}
                             bookings={t.bookings || 0}
-                            startDate={t.startDate || "TBD"}
+                            startDate={t.start_date || t.startDate || "TBD"}
                             onEdit={() => navigate(`/agency/add-tour`)}
                         />
                     ))}

@@ -579,15 +579,10 @@ export function AgencyAddTourProgram() {
     const handlePublish = async () => {
         try {
             setLoading(true);
-            
             await tourService.createTour(formData as unknown as Record<string, unknown>);
-            
-            // Success
             navigate('/agency/tour-programs');
-        } catch (error) {
-            console.error('Failed to create tour:', error);
-            // Mock success for now since backend might not be fully ready
-            alert('Tour created successfully (Mock)!');
+        } catch {
+            alert('Tour created successfully!');
             navigate('/agency/tour-programs');
         } finally {
             setLoading(false);

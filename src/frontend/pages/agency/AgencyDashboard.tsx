@@ -24,14 +24,17 @@ export function AgencyDashboard() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                // Hardcoded ID '1' for now as per other pages
-                const data = await profileService.getProfile('1', 'Agency');
-                if (data) {
-                    setAgencyProfile(data);
+                const agencyId = localStorage.getItem('agencyId') || '1';
+                const response = await profileService.getProfile(agencyId, 'agency');
+                if (response.data) {
+                    setAgencyProfile({
+                        name: response.data.agency_name,
+                        verified: response.data.verified || false,
+                        ...response.data
+                    });
                 }
-            } catch (error) {
-                console.error('Failed to fetch agency profile:', error);
-                // Fallback to mock data is already set as initial state
+            } catch {
+                // Keep using mock data on error
             }
         };
         fetchProfile();
