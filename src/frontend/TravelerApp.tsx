@@ -1,6 +1,7 @@
-// TravelerApp.tsx
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '../frontend/contexts/AuthContext';
+import { useAuth } from '../frontend/contexts/AuthContext'; 
+import { useEffect } from 'react';
 import Header from './components/Header';
 import { ROUTES } from './utils/routes';
 import HomePage from './pages/traveler/HomePage';
@@ -21,6 +22,7 @@ import { ProfileCompletionPage } from './pages/traveler/ProfileCompletionPage';
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth(); 
 
   const isAuthPage = location.pathname === ROUTES.SIGN_IN ||
     location.pathname === ROUTES.SIGN_UP ||
@@ -28,11 +30,34 @@ function AppContent() {
 
   const showHeader = !isAuthPage;
 
+  useEffect(() => {
+    if (user && (user.userType === "agency" || user.userType === "guide")) {
+      navigate(ROUTES.AGENCY_DASHBOARD, {
+        state: {
+          profileId: user.agencyId || user.guideId,
+          profileType: user.userType,
+          userId: user.id,
+          isManager: user.isManager || user.userType === "agency",
+          userData: user
+        },
+        replace: true
+      });
+    }
+  }, [user, navigate]);
+
   const handleProfileComplete = () => {
     const accountType = location.state?.accountType || 'traveler';
 
     if (accountType === 'agency' || accountType === 'guide') {
-      navigate('/agency');
+      navigate(ROUTES.AGENCY_DASHBOARD, {
+        state: {
+          profileId: location.state?.signupData?.agencyId || location.state?.signupData?.guideId,
+          profileType: accountType,
+          userId: location.state?.signupData?.userId,
+          isManager: accountType === 'agency',
+          userData: location.state?.signupData
+        }
+      });
     } else {
       navigate(ROUTES.HOME);
     }

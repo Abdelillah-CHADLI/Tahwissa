@@ -1,18 +1,18 @@
-import { motion } from 'motion/react';
-import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '../../utils/routes';
-import { authService } from '../../services/authService';
-import { useAuth } from '../../contexts/AuthContext'; 
-import type { LoginRequest } from '../../types/auth';
+import { motion } from "motion/react";
+import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/routes";
+import { authService } from "../../services/authService";
+import { useAuth } from "../../contexts/AuthContext";
+import type { LoginRequest } from "../../types/auth";
 
 export default function SignInPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -35,8 +35,21 @@ export default function SignInPage() {
 
       if (response.success && response.user) {
         login(response.user);
-        
-        navigate(ROUTES.HOME);
+
+        const user = response.user;
+
+        if (user.userType === "agency" || user.role === "AgencyEmployee") {
+          navigate(ROUTES.AGENCY_DASHBOARD, {
+            state: {
+              profileId: user.agencyId,
+              profileType: "agency",
+              userId: user.id,
+              isManager: user.isManager || true,
+            },
+          });
+        } else {
+          navigate(ROUTES.HOME);
+        }
       } else {
         setError(response.message || "Login failed");
       }
@@ -58,12 +71,11 @@ export default function SignInPage() {
   };
 
   const handleForgotPassword = () => {
-    console.log('Navigate to forgot password');
-    // You can implement forgot password flow here
+    console.log("Navigate to forgot password");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleSignIn();
     }
   };
@@ -71,7 +83,7 @@ export default function SignInPage() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md mb-8">
-        <button 
+        <button
           onClick={handleBackToHome}
           className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
         >
@@ -88,8 +100,12 @@ export default function SignInPage() {
       >
         <div className="bg-white rounded-2xl shadow-lg p-8">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Sign in to your account to continue your journey</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome Back
+            </h1>
+            <p className="text-gray-600">
+              Sign in to your account to continue your journey
+            </p>
           </div>
 
           {error && (
@@ -100,7 +116,10 @@ export default function SignInPage() {
 
           <div className="space-y-5" onKeyPress={handleKeyPress}>
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-900 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
                 Email
               </label>
               <div className="relative">
@@ -119,7 +138,10 @@ export default function SignInPage() {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-semibold text-gray-900">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-gray-900"
+                >
                   Password
                 </label>
                 <button
@@ -172,7 +194,7 @@ export default function SignInPage() {
           </div>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don't have an account?{' '}
+            Don't have an account?{" "}
             <button
               onClick={handleSignUp}
               className="text-[#348086] hover:text-[#2a6970] font-semibold transition-colors"
