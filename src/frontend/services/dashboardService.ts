@@ -1,102 +1,144 @@
 import type { DashboardData } from '../types/dashboard';
-import { bookingService, tourService, reviewService } from './api';
-import { mockTours } from '../data/mockTours';
-import { bookings as mockBookings } from '../data/bookings';
+import { bookingService, tourService, profileService } from './api';
+
+interface Traveller {
+  traveller_fn?: string;
+  traveller_ls?: string;
+}
+
+interface Tour {
+  tour_id?: string | number;
+  id?: string | number;
+  tour_title?: string;
+  title?: string;
+  price?: number;
+  views?: number;
+  start_date?: string;
+}
+
+interface Booking {
+  booking_id?: string | number;
+  id?: string | number;
+  tour_id?: string | number;
+  booking_date?: string;
+  status?: string;
+  tour?: string;
+  travellers?: Traveller;
+  tours?: Tour;
+}
+
+interface AgencyProfile {
+  rating?: number;
+  num_raters?: number;
+}
+
+interface TourWithBookings extends Tour {
+  bookingCount: number;
+}
 
 export const dashboardService = {
   async getDashboardData(): Promise<DashboardData> {
+    const agencyId = localStorage.getItem('agencyId') || '1';
+    
+    let bookings: Booking[] = [];
+    let tours: Tour[] = [];
+    let agencyProfile: AgencyProfile | null = null;
+
+    // Fetch agency profile for rating data
     try {
-      // Get agency ID from localStorage
-      const agencyId = localStorage.getItem('agencyId') || '1';
-      
-      let bookings = [];
-      let tours = [];
-
-      try {
-        // Fetch bookings for this agency
-        const bookingsResponse = await bookingService.getBookings({ agencyId });
-        bookings = bookingsResponse.data || [];
-      } catch (e) {
-        console.warn('Failed to fetch bookings, using mock data');
-        bookings = mockBookings;
-      }
-      
-      try {
-        // Fetch tours
-        const toursResponse = await tourService.getTours();
-        tours = toursResponse.data || [];
-      } catch (e) {
-        console.warn('Failed to fetch tours, using mock data');
-        tours = mockTours;
-      }
-
-      // If API returns empty arrays, fallback to mock data
-      if (bookings.length === 0) bookings = mockBookings;
-      if (tours.length === 0) tours = mockTours;
-      
-      // Calculate stats
-      const totalBookings = bookings.length;
-      const confirmedBookings = bookings.filter((b: any) => b.status === 'confirmed').length;
-      
-      // Get recent bookings (last 3)
-      const recentBookings = bookings.slice(0, 3).map((booking: any) => ({
-        id: String(booking.booking_id || booking.id || ''),
-        tour: String(booking.tour_name || booking.tour || 'Unknown Tour'),
-        traveler: String(booking.traveller_name || booking.customerName || booking.traveler || 'Unknown'),
-        date: String(booking.booking_date || booking.date || 'N/A'),
-        status: (booking.status as 'confirmed' | 'pending' | 'cancelled') || 'pending',
-        amount: `${booking.total_price || booking.totalPrice || 0} DZD`,
-      }));
-      
-      // Get popular tours (top 3 by bookings or default to first 3)
-      const popularTours = tours.slice(0, 3).map((tour: any) => ({
-        name: String(tour.title || tour.name || 'Untitled Tour'),
-        bookings: Number(tour.bookings || 0),
-        views: Number(tour.views || 0),
-        rating: Number(tour.rating || 4.5),
-      }));
-      
-      // Calculate average rating from tours
-      const totalRating = tours.reduce((sum: number, tour: any) => sum + Number(tour.rating || 0), 0);
-      const averageRating = tours.length > 0 ? totalRating / tours.length : 0;
-      
-      return {
-        stats: {
-          activeTours: tours.filter((t: any) => t.status === 'Active' || t.status === 'active').length,
-          totalBookings,
-          averageRating: parseFloat(averageRating.toFixed(1)),
-          monthlyBookingChange: 18, // TODO: Calculate from historical data
-          totalReviews: tours.reduce((sum: number, tour: any) => sum + Number(tour.review_count || 0), 0),
-        },
-        recentBookings,
-        popularTours,
-      };
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-      // Return mock data on critical error
-      return {
-        stats: {
-          activeTours: mockTours.length,
-          totalBookings: mockBookings.length,
-          averageRating: 4.5,
-          monthlyBookingChange: 12,
-          totalReviews: 150,
-        },
-        recentBookings: mockBookings.slice(0, 3).map((booking: any) => ({
-            id: String(booking.id),
-            tour: String(booking.tour),
-            traveler: String(booking.customerName),
-            date: String(booking.date),
-            status: booking.status,
-            amount: `${booking.totalPrice} DZD`,
-        })),
-        popularTours: mockTours.slice(0, 3).map((tour: any) => ({
-            name: String(tour.title),
-            bookings: Number(tour.bookings || 0),
-            views: 100,
-            rating: 4.5,
-        })),
-      };
+      const profileResponse = await profileService.getProfile(agencyId, 'agency');
+      agencyProfile = profileResponse?.data || profileResponse?.profile || null;
+    } catch {
+      agencyProfile = null;
     }
+
+    // Fetch bookings for this agency
+    try {
+      const bookingsResponse = await bookingService.getBookings({ agencyId });
+      bookings = Array.isArray(bookingsResponse) ? bookingsResponse : [];
+    } catch {
+      bookings = [];
+    }
+    
+    // Fetch tours for this agency
+    try {
+      tours = await tourService.getAgencyTours(agencyId);
+    } catch {
+      tours = [];
+    }
+    
+    // Calculate stats
+    const totalBookings = bookings.length;
+    
+    // Calculate average rating from agency profile
+    let averageRating = 0;
+    let totalReviews = 0;
+    if (agencyProfile) {
+      const rating = Number(agencyProfile.rating) || 0;
+      const numRaters = Number(agencyProfile.num_raters) || 0;
+      averageRating = numRaters > 0 ? rating / numRaters : 0;
+      totalReviews = numRaters;
+    }
+    
+    // Get recent bookings (last 5)
+    const recentBookings = bookings.slice(0, 5).map((booking) => {
+      const traveller = booking.travellers || {};
+      const tour = booking.tours || {};
+      const travelerName = traveller.traveller_fn && traveller.traveller_ls 
+        ? `${traveller.traveller_fn} ${traveller.traveller_ls}` 
+        : 'Unknown';
+      
+      return {
+        id: String(booking.booking_id || booking.id || ''),
+        tour: String(tour.tour_title || booking.tour || 'Unknown Tour'),
+        traveler: travelerName,
+        date: String(booking.booking_date || 'N/A'),
+        status: (String(booking.status).toLowerCase() as 'confirmed' | 'pending' | 'cancelled') || 'pending',
+        amount: `${tour.price || 0} DZD`,
+      };
+    });
+    
+    // Get popular tours - sort by number of bookings associated
+    const tourBookingCount: Record<string, number> = {};
+    bookings.forEach((booking) => {
+      const tourId = String(booking.tour_id || booking.tours?.tour_id || '');
+      if (tourId) {
+        tourBookingCount[tourId] = (tourBookingCount[tourId] || 0) + 1;
+      }
+    });
+    
+    // Sort tours by booking count and get top 3
+    const toursWithBookings: TourWithBookings[] = tours.map((tour) => ({
+      ...tour,
+      bookingCount: tourBookingCount[String(tour.tour_id)] || 0
+    }));
+    toursWithBookings.sort((a, b) => b.bookingCount - a.bookingCount);
+    
+    const popularTours = toursWithBookings.slice(0, 3).map((tour) => ({
+      id: String(tour.tour_id || tour.id || ''),
+      name: String(tour.tour_title || tour.title || 'Unknown Tour'),
+      bookings: tour.bookingCount,
+      views: Number(tour.views || 0),
+      rating: parseFloat((averageRating > 0 ? averageRating : 4.5).toFixed(2)),
+    }));
+    
+    // Count active tours (tours with start_date in the future)
+    const now = new Date();
+    const activeTours = tours.filter((tour) => {
+      const startDate = tour.start_date ? new Date(tour.start_date) : null;
+      return startDate && startDate >= now;
+    }).length;
+    
+    return {
+      stats: {
+        activeTours: activeTours || tours.length,
+        totalBookings,
+        averageRating: parseFloat(averageRating.toFixed(2)),
+        monthlyBookingChange: 0,
+        totalReviews,
+      },
+      recentBookings,
+      popularTours,
+    };
   }
 };

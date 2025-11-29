@@ -16,6 +16,7 @@ export interface RecentBooking {
 }
 
 export interface PopularTour {
+  id: string;
   name: string;
   bookings: number;
   views: number;
