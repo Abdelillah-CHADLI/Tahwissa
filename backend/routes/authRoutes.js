@@ -1,3 +1,4 @@
+//wassim
 const express = require("express");
 const router = express.Router();
 
@@ -6,10 +7,7 @@ const {
   
   login,
   logout,
-  getMe,
-  fetchUsers,
   signUp,
-  simpleAddUser,
 } = require("../controllers/authController");
 
 // AUTH ROUTES
@@ -22,8 +20,7 @@ router.post("/signUp" , async ( req , res) => {
     }
 }) 
 router.post("/logout", logout);               // logout
-router.get("/me", getMe);                     // get the logged in user
-router.get("/fetchUsers", fetchUsers);        //this is just a test route to check all users.
-router.post("/simple" , simpleAddUser);
+
+
 
 module.exports = router;

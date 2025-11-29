@@ -1,53 +1,13 @@
+//wassim
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import  "../services/userService.js";
+import  {getUser} from "../services/userService.js";
+
 import { supabase } from "../config/supabasedb.js";
 import { insertUser } from "../services/userService.js";
-// Fetch all users
-export async function fetchUsers(req, res) {
-  try {
-    const users = await getAllUsers();
-    res.json(users);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-}
-export async function simpleAddUser(req , res){
-  const { userType, ...userData } = req.body;
-
-  const { data: user, error: userError } = await supabase
-        .from('users')
-        .insert({
-          email: userData.email,
-          password: userData.password,
-          role: "Traveller"
-        })
-        .select().maybeSingle();
-    
 
 
-      // Create traveller profile
-      const { error: travellerError } = await supabase
-        .from('travellers')
-        .insert({
-          traveller_id: user.user_id,
-          traveller_fn: userData.firstName,
-          traveller_ls: userData.lastName
-        });
-      let result = {
-        success: true,
-        message: 'Traveller account created successfully.',
-        data: {
-          userId: user.user_id,
-          email: user.email,
-          role: user.role,
-          
-        }
-      };
-      return res.status(201).json(result);
-      
-
-}
 
 
 // Authentication routes
@@ -284,15 +244,21 @@ export async function login(req, res) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // we will generate a tokken for security
+    // we will generate a token for security
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email},
       process.env.JWT_SECRET, 
       { expiresIn: "10d" }
     );
 
+    //  creating a new cookie called token
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+  });
     // sending the response to the fronend
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    res.json({ user: { id: user.id, email: user.email, name: user.name } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
@@ -301,9 +267,10 @@ export async function login(req, res) {
 }
 
 export function logout(req, res) {
-  res.send("logout");
+
+  res.clearCookie("token");
+  return res.status(200).json({ message: "Logged out successfully" });
+  //must redirect to the login from the frontEnd.
 }
 
-export function getMe(req, res) {
-  res.send("me");
-}
+

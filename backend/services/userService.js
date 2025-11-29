@@ -1,3 +1,4 @@
+//wassim
 import { supabase } from "../config/supabasedb.js";
 
 export async function getAllUsers() {
@@ -15,7 +16,7 @@ export async function getUser(email) {
     .from("users")
     .select("*")
     .eq("email", email)
-    .single();
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
