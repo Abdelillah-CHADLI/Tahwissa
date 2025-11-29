@@ -1,19 +1,21 @@
-export interface Filters {
+// types/explore.ts
+export interface TourFilters {
+  region: string;
   category: string;
   priceRange: string;
-  duration: string;
-  rating: string;
-  region: string; 
+  provider: string;
 }
 
 export interface FilterBarProps {
-  filters: Filters;
-  setFilters: (filters: Filters) => void;
+  filters: TourFilters;
+  setFilters: (filters: TourFilters) => void;
 }
 
 export interface Tour {
   id: string;
+  tour_id?: string; // Backend uses tour_id
   title: string;
+  tour_title?: string; // Backend field
   description: string;
   price: number;
   rating: number;
@@ -22,6 +24,8 @@ export interface Tour {
   location: string;
   category: string;
   groupSize: string;
+  guide_id?: string;
+  agency_id?: string;
   guide?: {
     name: string;
     rating: number;
@@ -32,4 +36,5 @@ export interface Tour {
 export interface TourCardProps {
   tour: Tour;
   onClick: (tourId: string) => void;
+  index?: number;
 }

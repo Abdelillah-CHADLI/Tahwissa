@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { MapPin, Users, CheckCircle2 } from 'lucide-react';
+import { Users, CheckCircle2 } from 'lucide-react';
 
 interface AgencyCardProps {
   agency: {
@@ -7,9 +7,7 @@ interface AgencyCardProps {
     name: string;
     subtitle: string;
     image: string;
-    location: string;
     tours: number;
-    teamSize: string;
     verified: boolean;
   };
   index: number;
@@ -46,23 +44,11 @@ const AgencyCard = ({ agency, index, onViewProfile }: AgencyCardProps) => {
         <h3 className="text-xl font-bold text-gray-900 mb-1">{agency.name}</h3>
         <p className="text-gray-600 text-sm mb-4">{agency.subtitle}</p>
 
-        <div className="flex items-center gap-2 text-gray-600 mb-4">
-          <MapPin className="w-4 h-4" />
-          <span className="text-sm">{agency.location}</span>
-        </div>
-
         <div className="flex items-center gap-4 mb-4">
           <div className="flex items-center gap-1 text-gray-600">
             <Users className="w-4 h-4" />
             <span className="text-sm">{agency.tours} tours</span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 py-3 px-4 bg-gray-50 rounded-lg mb-4">
-          <Users className="w-4 h-4 text-gray-600" />
-          <span className="text-sm text-gray-700">
-            Team Size: <span className="font-medium text-gray-900">{agency.teamSize}</span>
-          </span>
         </div>
 
         <motion.button
