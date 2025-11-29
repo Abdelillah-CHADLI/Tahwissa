@@ -27,42 +27,16 @@ interface BackendLoginResponse {
   };
 }
 
-interface ProfileResponse {
-  userType?: string;
-  role?: string;
-  type?: string;
-  [key: string]: unknown; 
-}
-
-// Helper function to extract user type from profile data
-const extractUserType = (profileData: ProfileResponse): string => {
-  if (profileData.userType) return profileData.userType;
-  if (profileData.role) return profileData.role.toLowerCase();
-  if (profileData.type) return profileData.type.toLowerCase();
-  return 'traveller';
-};
-
 export const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Step 1: Authenticate user (token will be set in cookie by backend)
+      // Authenticate user
       const loginResponse = await api.post<BackendLoginResponse>('/auth/login', credentials);
       
-      const userId = loginResponse.data.user.id;
-      
-      // Step 2: Fetch user profile to get userType
-      let userType = 'traveller';
-      try {
-        const profileResponse = await api.get<ProfileResponse>(`/profile/${userId}`);
-        userType = extractUserType(profileResponse.data);
-      } catch (profileError) {
-        console.warn('Could not fetch user profile:', profileError);
-      }
-      
       const user: User = {
-        id: userId,
+        id: loginResponse.data.user.id,
         email: loginResponse.data.user.email,
-        userType: userType,
+        userType: 'traveller', // Default to traveler
         name: loginResponse.data.user.name,
       };
       

@@ -15,8 +15,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
-import { useAuth } from "../../contexts/AuthContext"; // ADD THIS
-import type { SignupRequest ,User as UserType } from "../../types/auth";
+import type { SignupRequest, User as UserType } from "../../types/auth";
 
 export default function SignUpPage() {
   const [accountType, setAccountType] = useState("traveler");
@@ -35,7 +34,6 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleCreateAccount = async () => {
     if (!email || !password || !confirmPassword) {
@@ -87,8 +85,6 @@ export default function SignUpPage() {
           ...signupData,
           firstName,
           lastName,
-          ...(location && { location }),
-          ...(phoneNumber && { phoneNumber }),
         };
       } else if (accountType === "guide") {
         signupData = {
@@ -109,45 +105,15 @@ export default function SignUpPage() {
       const response = await authService.signup(signupData);
 
       if (response.success) {
-        if (response.user) {
-          login(response.user);
-        } else {
-             const userData: UserType = { 
-            id: `temp-${Date.now()}`,
-            email: email,
-            userType: (accountType === "traveler" ? "traveller" : accountType) as "traveller" | "guide" | "agency",
-            ...(accountType === "traveler" && { firstName, lastName }),
-            ...(accountType === "guide" && { guideName }),
-            ...(accountType === "agency" && { agencyName }),
-            ...(location && { location }),
-            ...(phoneNumber && { phoneNumber }),
-          };
-          login(userData);
-          console.log('🚀 User auto-logged in with form data:', userData);
-        }
 
-        if (accountType === "traveler") {
-          navigate(ROUTES.HOME, {
-            replace: true,
-            state: {
-              justSignedUp: true,
-              user: response.user,
-            },
-          });
-        } else {
-          navigate(ROUTES.PROFILE_COMPLETION, {
-            state: {
-              accountType,
-              signupData: response.user || {
-                email,
-                userType: accountType,
-                ...(accountType === "guide" && { guideName }),
-                ...(accountType === "agency" && { agencyName }),
-              },
-              justSignedUp: true,
-            },
-          });
-        }
+        navigate(ROUTES.SIGN_IN, {
+          replace: true,
+          state: {
+            justSignedUp: true,
+            email: email, 
+            message: "Account created successfully! Please sign in."
+          },
+        });
       } else {
         setError(response.message || "Signup failed");
       }
@@ -428,49 +394,6 @@ export default function SignUpPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
-                  <div>
-                    <label
-                      htmlFor="travelerLocation"
-                      className="block text-sm font-semibold text-gray-900 mb-2"
-                    >
-                      Location (Optional)
-                    </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                      <input
-                        id="travelerLocation"
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="City, Country"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="travelerPhone"
-                      className="block text-sm font-semibold text-gray-900 mb-2"
-                    >
-                      Phone (Optional)
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                      <input
-                        id="travelerPhone"
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="+213 XXX XXX XXX"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                        disabled={isLoading}
-                      />
-                    </div>
-                  </div>
-                </div>
               </>
             )}
 
