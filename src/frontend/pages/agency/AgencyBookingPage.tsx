@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Calendar, Users, DollarSign, MapPin } from "lucide-react";
-import PageHeader from "../../components/requests/PageHeader";
+import PageHeader from "../../components/traveler/requests/PageHeader";
 import { BookingCard } from "../../components/agency/bookings/BookingCard";
 import { StatsCards } from "../../components/agency/bookings/StatsCards";
 import { TabsNavigation } from "../../components/agency/bookings/TabsNavigation";

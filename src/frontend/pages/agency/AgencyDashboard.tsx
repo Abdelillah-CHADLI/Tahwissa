@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from "motion/react";
-import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X, Shield } from 'lucide-react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 
 export function AgencyDashboard() {
@@ -25,6 +25,7 @@ export function AgencyDashboard() {
         { path: "/agency/bookings", label: "Bookings", icon: Calendar },
         { path: "/agency/reviews", label: "Reviews & Ratings", icon: Star },
         { path: "/agency/settings", label: "Settings", icon: Settings },
+        { path: "/agency/admin", label: "Admin Panel", icon: Shield },
     ];
 
     const currentMenuItem = menuItems.find(item => item.path === location.pathname) || menuItems[0];
