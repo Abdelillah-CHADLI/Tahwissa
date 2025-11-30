@@ -6,6 +6,14 @@ import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
 import { employeeService } from "../../services/api";
 
+interface BackendEmployee {
+    employee_id: string;
+    users: {
+        role: string;
+        email: string;
+    };
+}
+
 export function AdminPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
@@ -26,32 +34,30 @@ export function AdminPage() {
         setFetchLoading(true);
         setError(null);
         try {
-            const agencyId = getAgencyId();
-            if (!agencyId) throw new Error("Agency ID not found");
-            
-            const response = await employeeService.getEmployees(agencyId);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const data = Array.isArray(response) ? response : ((response as any).data || []);
-            
-            if (data.length === 0) {
-                setEmployees([]);
-            } else {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const mappedData = data.map((emp: any) => {
-                    if (emp.users) {
-                        return {
-                            id: emp.employee_id,
-                            name: emp.users.email.split('@')[0],
-                            email: emp.users.email,
-                            role: emp.users.role,
-                            phone: "Not available",
-                            status: "active"
-                        };
-                    }
-                    return emp;
-                });
-                setEmployees(mappedData);
+            const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${getAgencyId()}`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch employees: ${response.statusText}`);
             }
+
+            const result = await response.json();
+
+            // Transform backend data to frontend format
+            const transformedEmployees: Employee[] = result.employees.map((emp: BackendEmployee) => ({
+                id: emp.employee_id,
+                name: emp.users.email.split('@')[0],
+                email: emp.users.email,
+                role: emp.users.role,
+                phone: "Not available",
+                status: "active"
+            }));
+
+            setEmployees(transformedEmployees);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch employees";
             setError(errorMessage);
@@ -65,7 +71,17 @@ export function AdminPage() {
             setLoading(true);
             setError(null);
             try {
-                await employeeService.deleteEmployee(id);
+                const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${id}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to delete employee: ${response.statusText}`);
+                }
+
                 await fetchEmployees();
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : "Failed to delete employee";
@@ -100,11 +116,14 @@ export function AdminPage() {
         }
     };
 
-    const handleToggleStatus = async () => {
+    // Remove toggle status and edit since backend doesn't support them
+    const handleToggleStatus = async (id: string) => {
+        alert(id);
         alert("Status toggle not supported by backend API");
     };
 
-    const handleEditEmployee = async () => {
+    const handleEditEmployee = async (employeeData: Omit<Employee, "id">) => {
+        alert(employeeData.name);
         alert("Edit employee functionality not implemented in backend");
         setIsEditModalOpen(false);
         setSelectedEmployee(null);

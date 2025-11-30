@@ -92,7 +92,7 @@ export const tourService = {
   getTourById: async (tourId: string) => {
     const response = await api.get('/tour/gettours');
     const tours = Array.isArray(response.data) ? response.data : [];
-    return tours.find((t: Record<string, unknown>) => 
+    return tours.find((t: Record<string, unknown>) =>
       String(t.tour_id) === tourId || String(t.id) === tourId
     ) || null;
   },
@@ -154,7 +154,7 @@ export const bookingService = {
     status?: string;
   }) => {
     const response = await api.get('/api/bookings', { params: filters });
-    return response.data?.data || response.data || [];
+    return response.data;
   },
 
   createBooking: async (bookingData: {
