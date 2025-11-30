@@ -1,20 +1,181 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import RequestCard from "../../components/traveler/requests/RequestCard";
 import StatsCards from "../../components/traveler/requests/StatsCards";
 import TabsNavigation from "../../components/traveler/requests/TabsNavigation";
 import EmptyState from "../../components/traveler/requests/EmptyState";
 import PageHeader from "../../components/traveler/requests/PageHeader";
-import { requests } from "../../data/requests";
+import { bookingService } from "../../services/api";
+
+interface BackendBooking {
+  booking_id: string;
+  traveller_id: string;
+  tour_id: string;
+  booking_date: string;
+  status: string;
+  tours?: {
+    tour_id: string;
+    tour_title?: string;
+    price?: number;
+    location?: string;
+    start_date?: string;
+    agencies?: {
+      agency_name?: string;
+    };
+    guides?: {
+      guide_name?: string;
+    };
+  };
+}
+
+interface Request {
+  id: string;
+  type: string;
+  providerName: string;
+  tourName: string;
+  requestDate: string;
+  preferredDate: string;
+  status: "pending" | "confirmed" | "declined";
+  travelers: number;
+  budget: string;
+  location: string;
+  message: string;
+  contactEmail: string;
+  contactPhone: string;
+  confirmedDetails?: string;
+  declineReason?: string;
+  price: number;
+  image: string;
+  duration: string;
+  tourId: string;
+  bookingDate: string;
+  startDate?: string;
+}
 
 function RequestsPage() {
   const [activeTab, setActiveTab] = useState("all");
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Filter requests based on status
+  const currentTravellerId = localStorage.getItem('userId') || "550e8400-e29b-41d4-a716-446655440001";
+
+  // --- API Calls ---
+  const fetchUserBookings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await bookingService.getUserBookings(currentTravellerId);
+
+      if (response.success && response.data) {
+        const transformedRequests: Request[] = response.data.map((booking: BackendBooking) => {
+          const tour = booking.tours;
+          const providerName = getProviderName(tour);
+          const status = mapStatus(booking.status);
+
+          return {
+            id: booking.booking_id,
+            type: tour?.agencies ? "agency" : "guide",
+            providerName: providerName,
+            tourName: tour?.tour_title || "Unknown Tour",
+            requestDate: formatDate(booking.booking_date),
+            preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
+            status: status,
+            travelers: 1,
+            budget: tour?.price ? `${tour.price} DZD` : "Not specified",
+            location: tour?.location || "Unknown Location",
+            message: `Booking for ${tour?.tour_title || "tour"}`,
+            contactEmail: "user@example.com",
+            contactPhone: "+1234567890",
+            price: tour?.price || 0,
+            image: getTourImage(tour),
+            duration: "3 days",
+            tourId: booking.tour_id,
+            bookingDate: booking.booking_date,
+            startDate: tour?.start_date,
+            confirmedDetails: status === "confirmed" ? "Your booking has been confirmed!" : undefined,
+            declineReason: status === "declined" ? "Booking was declined by the provider" : undefined,
+          };
+        });
+
+        setRequests(transformedRequests);
+      } else {
+        setError(response.error || "Failed to load bookings");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestAgain = async (requestId: string) => {
+    const request = requests.find(r => r.id === requestId);
+    if (request) {
+      try {
+        await bookingService.createBooking({
+          traveller_id: currentTravellerId,
+          tour_id: request.tourId
+        });
+
+        alert("New booking created successfully!");
+        fetchUserBookings();
+      } catch {
+        alert("Network error creating booking");
+      }
+    }
+  };
+
+  // --- Effects ---
+  useEffect(() => {
+    fetchUserBookings();
+  }, []);
+
+  // --- Data Processing ---
+  const getProviderName = (tour?: BackendBooking['tours']): string => {
+    if (tour?.agencies?.agency_name) {
+      return tour.agencies.agency_name;
+    }
+    if (tour?.guides?.guide_name) {
+      return tour.guides.guide_name;
+    }
+    return "Unknown Provider";
+  };
+
+  const mapStatus = (backendStatus: string): "pending" | "confirmed" | "declined" => {
+    const statusMap: Record<string, "pending" | "confirmed" | "declined"> = {
+      "PENDING": "pending",
+      "CONFIRMED": "confirmed",
+      "DECLINED": "declined",
+      "CANCELLED": "declined"
+    };
+    return statusMap[backendStatus] || "pending";
+  };
+
+  const formatDate = (dateString: string): string => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const getTourImage = (tour?: BackendBooking['tours']): string => {
+    const location = tour?.location?.toLowerCase() || "default";
+    if (location.includes("paris")) return "/api/placeholder/300/200?text=Paris";
+    if (location.includes("beach")) return "/api/placeholder/300/200?text=Beach";
+    return "/api/placeholder/300/200?text=Tour";
+  };
+
+  // --- Filter Logic ---
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const confirmedRequests = requests.filter((r) => r.status === "confirmed");
   const declinedRequests = requests.filter((r) => r.status === "declined");
 
-  // Define tabs with counts
   const tabs = [
     { id: "all", label: `All (${requests.length})` },
     { id: "pending", label: `Pending (${pendingRequests.length})` },
@@ -22,33 +183,76 @@ function RequestsPage() {
     { id: "declined", label: `Declined (${declinedRequests.length})` },
   ];
 
-  // Get requests to show based on active tab
-  const getRequestsToShow = () => {
-    if (activeTab === "all") return requests;
-    if (activeTab === "pending") return pendingRequests;
-    if (activeTab === "confirmed") return confirmedRequests;
-    if (activeTab === "declined") return declinedRequests;
-    return requests;
+  const getRequestsToShow = (): Request[] => {
+    switch (activeTab) {
+      case "pending": return pendingRequests;
+      case "confirmed": return confirmedRequests;
+      case "declined": return declinedRequests;
+      default: return requests;
+    }
   };
 
-  // Event handlers
-  const handleFollowUp = (requestId: string) => {
-    console.log("Follow up on request:", requestId);
-    alert(`Following up on request ${requestId}`);
-  };
-
-  const handleRequestAgain = (requestId: string) => {
-    console.log("Request again:", requestId);
-    alert(`Creating new request based on ${requestId}`);
+  // --- Handlers ---
+  const handleFollowUp = async (requestId: string) => {
+    const request = requests.find(r => r.id === requestId);
+    if (request) {
+      alert(`Following up on: ${request.tourName} with ${request.providerName}`);
+    }
   };
 
   const handleViewDetails = (requestId: string) => {
-    console.log("View details for:", requestId);
-    alert(`Showing details for ${requestId}`);
+    const request = requests.find(r => r.id === requestId);
+    if (request) {
+      alert(
+        `Tour: ${request.tourName}\n` +
+        `Provider: ${request.providerName}\n` +
+        `Status: ${request.status}\n` +
+        `Booking Date: ${request.bookingDate}\n` +
+        `Location: ${request.location}\n` +
+        `Price: ${request.price} DZD`
+      );
+    }
   };
 
   const requestsToShow = getRequestsToShow();
 
+  // --- Loading State ---
+  if (loading) {
+    return (
+      <div className="p-6">
+        <PageHeader
+          title="My Requests"
+          description="Track all your tour and guide requests"
+        />
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="ml-4 text-lg">Loading your requests...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- Error State ---
+  if (error) {
+    return (
+      <div className="p-6">
+        <PageHeader
+          title="My Requests"
+          description="Track all your tour and guide requests"
+        />
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-2xl">
+          <div className="text-red-800 font-semibold text-lg">Error loading requests</div>
+          <div className="text-red-600 mt-2">{error}</div>
+          <button
+            onClick={fetchUserBookings}
+            className="mt-4 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -69,31 +273,23 @@ function RequestsPage() {
         onTabChange={setActiveTab}
       />
 
-      <div>
-        {
-          // if there are requests
-          requestsToShow.length > 0 ? (
-            requestsToShow.map((request) => (
-              <RequestCard
-                key={request.id}
-                request={request}
-                onFollowUp={handleFollowUp}
-                onRequestAgain={handleRequestAgain}
-                onViewDetails={handleViewDetails}
-              />
-            ))
-          ) :
-            // if there are no requests
-            (
-              <EmptyState activeTab={activeTab} />
-            )
-        }
+      <div className="space-y-4">
+        {requestsToShow.length > 0 ? (
+          requestsToShow.map((request) => (
+            <RequestCard
+              key={request.id}
+              request={request}
+              onFollowUp={handleFollowUp}
+              onRequestAgain={handleRequestAgain}
+              onViewDetails={handleViewDetails}
+            />
+          ))
+        ) : (
+          <EmptyState activeTab={activeTab} />
+        )}
       </div>
-
     </div>
-
   );
 }
 
 export default RequestsPage;
-
