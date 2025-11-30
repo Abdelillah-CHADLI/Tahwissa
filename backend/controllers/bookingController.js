@@ -4,6 +4,8 @@ import {supabase} from "../config/supabasedb.js";
 
 
 
+
+
 export async function addTour(tourData, images = []) {
   const {
     tour_title,
@@ -17,7 +19,8 @@ export async function addTour(tourData, images = []) {
     tour_included,
     start_date,
     category ,
-    extra
+      requirements,
+      tour_not_included
   } = tourData;
 
   let on = {
@@ -58,7 +61,9 @@ export async function addTour(tourData, images = []) {
       tour_details,
       tour_included,
       start_date,
-      category
+      category ,
+      requirements,
+      tour_not_included
     })
     .select()
     .single();
@@ -252,12 +257,26 @@ export async function searchAgenciesByName(name, limit = 10) {
   return data;
 }
 
-export async function searchGuidesByName(name, limit = 10) {
-  const { data, error } = await supabase
+export async function searchGuidesByName(name , page = 1, limit = 10) {
+  const start = (page - 1) * limit;
+  const end = start + limit - 1;
+  if(name == null){
+      const { data, error } = await supabase
+    .from('guides')
+    .select('*')
+      .range(start, end)
+      if (error) throw new Error(`Failed to search guides: ${error.message}`);
+  return data;
+  }else{
+      const { data, error } = await supabase
     .from('guides')
     .select('*')
     .ilike('guide_name', `%${name}%`)
-    .limit(limit);
+    .range(start, end)
+      if (error) throw new Error(`Failed to search guides: ${error.message}`);
+  return data;
+  }
+
   if (error) throw new Error(`Failed to search guides: ${error.message}`);
   return data;
 }
