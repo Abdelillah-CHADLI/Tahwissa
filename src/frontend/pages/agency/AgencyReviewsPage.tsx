@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2, AlertCircle, Star } from "lucide-react";
 import PageHeader from "../../components/traveler/requests/PageHeader";
 import { ReviewCard } from "../../components/agency/reviews/ReviewCard";
@@ -29,40 +29,14 @@ export function AgencyReviewsPage() {
         return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
     };
 
-    // --- API Calls ---
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
             const agencyId = getAgencyId();
 
-            let toursResponse;
-            try {
-                toursResponse = await tourService.getTours();
-            } catch (tourError) {
-                throw new Error(`Failed to fetch tours: ${tourError instanceof Error ? tourError.message : 'Unknown error'}`);
-            }
-
-            let toursData: any[] = [];
-
-            if (Array.isArray(toursResponse)) {
-                toursData = toursResponse;
-            } else if (toursResponse && Array.isArray(toursResponse.data)) {
-                toursData = toursResponse.data;
-            } else {
-                throw new Error('Invalid tours data format received from server');
-            }
-
-            if (toursData.length === 0) {
-                setReviews([]);
-                setLoading(false);
-                return;
-            }
-
-            const agencyTours = toursData.filter((tour: any) =>
-                tour.agency_id === agencyId
-            );
+            const agencyTours = await tourService.getAgencyTours(agencyId);
 
             if (agencyTours.length === 0) {
                 setReviews([]);
@@ -72,7 +46,7 @@ export function AgencyReviewsPage() {
                     ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
                 });
                 setLoading(false);
-                setError(`No tours found for your agency. Found ${toursData.length} total tours but none belong to your agency.`);
+                setError(`No tours found for your agency.`);
                 return;
             }
 
@@ -86,6 +60,7 @@ export function AgencyReviewsPage() {
                     const reviewsResponse = await reviewService.getReviewsByTour(tourId);
 
                     if (reviewsResponse && reviewsResponse.success && Array.isArray(reviewsResponse.data)) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         reviewsResponse.data.forEach((review: any) => {
                             const transformedReview: Review = {
                                 id: review.review_id,
@@ -111,8 +86,8 @@ export function AgencyReviewsPage() {
                             }
                         });
                     }
-                } catch (err) {
-                    console.warn(`Failed to fetch reviews for tour ${tour.tour_id}:`, err);
+                } catch {
+                    // Continue to next tour if one fails
                 }
             }
 
@@ -142,14 +117,12 @@ export function AgencyReviewsPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    // --- Effects ---
-    useEffect(() => {
-        fetchReviews();
     }, []);
 
-    // --- Handlers ---
+    useEffect(() => {
+        fetchReviews();
+    }, [fetchReviews]);
+
     const formatDate = (dateString: string): string => {
         try {
             return new Date(dateString).toLocaleDateString('en-US', {
@@ -170,7 +143,6 @@ export function AgencyReviewsPage() {
         alert(`Reply to review: ${reviewId}`);
     };
 
-    // --- Loading State ---
     if (loading) {
         return (
             <div className="space-y-6">

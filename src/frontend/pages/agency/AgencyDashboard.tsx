@@ -10,6 +10,7 @@ export function AgencyDashboard() {
     const [isDesktop, setIsDesktop] = useState(false);
     const [agencyProfile, setAgencyProfile] = useState<any>(mockAgencyProvider);
     const location = useLocation();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const handleResize = () => {
@@ -51,6 +52,12 @@ export function AgencyDashboard() {
     ];
 
     const currentMenuItem = menuItems.find(item => item.path === location.pathname) || menuItems[0];
+
+    const handleLogout = () => {
+        localStorage.removeItem('agencyId');
+        localStorage.removeItem('token'); // If you use tokens
+        navigate(ROUTES.HOME);
+    };
 
     return (
         <div className='min-h-screen bg-gray-50'>
@@ -129,7 +136,10 @@ export function AgencyDashboard() {
                     </div>
 
                     <div className="mt-auto p-6 border-t border-gray-100">
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                        <button 
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                        >
                             <LogOut className="w-5 h-5" />
                             Logout
                         </button>

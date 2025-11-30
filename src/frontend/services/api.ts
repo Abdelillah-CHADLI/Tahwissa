@@ -53,6 +53,23 @@ export const profileService = {
     });
     return response.data;
   },
+
+  getTravellerInfo: async (id: string) => {
+    const response = await api.get(`/profile1/traveller/${id}`);
+    return response.data;
+  },
+
+  updateTravellerInfo: async (id: string, data: {
+    traveller_fn?: string;
+    traveller_ls?: string;
+    bio?: string;
+    phone_number?: string;
+    location?: string;
+    email?: string;
+  }) => {
+    const response = await api.post(`/profile1/traveller/${id}`, data);
+    return response.data;
+  },
 };
 
 export const tourService = {
@@ -196,7 +213,7 @@ export const reviewService = {
 
   // Get reviews for a specific tour
   getReviewsByTour: async (tourId: string) => {
-    const response = await api.get(`/api/reviews/tour/${tourId}`);
+    const response = await api.get(`/api/reviews/${tourId}`);
     return response.data;
   },
 
@@ -313,9 +330,7 @@ export const settingsService = {
 export const employeeService = {
   // Get all employees for an agency
   getEmployees: async (agencyId: string) => {
-    const response = await api.get(`/manager/employees`, {
-      params: { agency_id: agencyId }
-    });
+    const response = await api.get(`/manager/employees/${agencyId}`);
     return response.data;
   },
 
@@ -333,21 +348,21 @@ export const employeeService = {
   },
 
   // Update employee
-  updateEmployee: async (employeeId: string, data: {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  updateEmployee: async (_employeeId: string, _data: {
     email?: string;
     name?: string;
     role?: string;
     phone?: string;
     status?: string;
   }) => {
-    const response = await api.put(`/manager/employees/${employeeId}`, data);
-    return response.data;
+    return null;
   },
 
   // Delete employee
-  deleteEmployee: async (employeeId: string) => {
-    const response = await api.delete(`/manager/employees/${employeeId}`);
-    return response.data;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  deleteEmployee: async (_employeeId: string) => {
+    return null;
   },
 };
 

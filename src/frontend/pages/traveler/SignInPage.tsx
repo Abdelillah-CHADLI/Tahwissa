@@ -13,6 +13,11 @@ export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -78,11 +83,19 @@ export default function SignInPage() {
     if (e.key === "Enter") {
       handleSignIn();
     }
+    console.log("Navigate to forgot password");
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSignIn();
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md mb-8">
+        <button
         <button
           onClick={handleBackToHome}
           className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
@@ -106,6 +119,12 @@ export default function SignInPage() {
             <p className="text-gray-600">
               Sign in to your account to continue your journey
             </p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Welcome Back
+            </h1>
+            <p className="text-gray-600">
+              Sign in to your account to continue your journey
+            </p>
           </div>
 
           {error && (
@@ -115,7 +134,18 @@ export default function SignInPage() {
           )}
 
           <div className="space-y-5" onKeyPress={handleKeyPress}>
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 text-sm text-center">{error}</p>
+            </div>
+          )}
+
+          <div className="space-y-5" onKeyPress={handleKeyPress}>
             <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
               <label
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-900 mb-2"
@@ -132,12 +162,17 @@ export default function SignInPage() {
                   placeholder="your.email@example.com"
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
                   disabled={isLoading}
+                  disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-semibold text-gray-900"
+                >
                 <label
                   htmlFor="password"
                   className="block text-sm font-semibold text-gray-900"
@@ -149,6 +184,7 @@ export default function SignInPage() {
                   onClick={handleForgotPassword}
                   className="text-sm text-[#348086] hover:text-[#2a6970] font-medium transition-colors"
                   disabled={isLoading}
+                  disabled={isLoading}
                 >
                   Forgot password?
                 </button>
@@ -158,9 +194,25 @@ export default function SignInPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
+                  className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  disabled={isLoading}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
                   className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
                   disabled={isLoading}
                 />
@@ -183,7 +235,15 @@ export default function SignInPage() {
               onClick={handleSignIn}
               disabled={isLoading}
               className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md"
+              disabled={isLoading}
+              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md"
             >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <LogIn className="w-5 h-5" />
+              )}
+              {isLoading ? "Signing In..." : "Sign In"}
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
@@ -195,9 +255,11 @@ export default function SignInPage() {
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Don't have an account?{" "}
+            Don't have an account?{" "}
             <button
               onClick={handleSignUp}
               className="text-[#348086] hover:text-[#2a6970] font-semibold transition-colors"
+              disabled={isLoading}
               disabled={isLoading}
             >
               Sign up
