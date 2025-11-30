@@ -1,4 +1,4 @@
-// pages/traveler/ExplorePage.tsx
+// pages/traveler/ExplorePage.tsx - Only the useEffect needs updating
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "../../components/explore/SearchBar";
@@ -22,7 +22,12 @@ const ExplorePage = () => {
 
   const { tours, loading, error, hasMore, loadMore, refetch } = useTours();
 
-  // Debounced search effect
+  // Initial load
+  useEffect(() => {
+    refetch(filters, searchQuery);
+  }, []); // Empty dependency array for initial load only
+
+  // Search and filter debouncing
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -30,7 +35,7 @@ const ExplorePage = () => {
 
     searchTimeoutRef.current = window.setTimeout(() => {
       refetch(filters, searchQuery);
-    }, 300);
+    }, 500);
 
     return () => {
       if (searchTimeoutRef.current) {
@@ -41,7 +46,6 @@ const ExplorePage = () => {
 
   const handleViewDetails = (tour: Tour) => {
     const tourId = tour.tour_id || tour.id;
-
     navigate(`${ROUTES.DETAILS}/${tourId}`, {
       state: { tour },
     });
@@ -56,11 +60,10 @@ const ExplorePage = () => {
   };
 
   const handleTagClick = (tag: string) => {
-    const newFilters = {
-      ...filters,
+    setFilters(prev => ({
+      ...prev,
       category: tag,
-    };
-    setFilters(newFilters);
+    }));
   };
 
   const handleClearFilters = () => {
@@ -72,6 +75,8 @@ const ExplorePage = () => {
     };
     setFilters(defaultFilters);
     setSearchQuery("");
+    // Trigger refetch immediately when clearing
+    refetch(defaultFilters, "");
   };
 
   const activeFiltersCount = Object.values(filters).filter(
@@ -155,7 +160,7 @@ const ExplorePage = () => {
                 <TourCard
                   key={tour.tour_id || tour.id}
                   tour={tour}
-                  onClick={handleViewDetails} // Just pass the function reference
+                  onClick={() => handleViewDetails(tour)}
                   index={index}
                 />
               ))}

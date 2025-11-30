@@ -23,26 +23,22 @@ interface BackendLoginResponse {
   user: {
     id: string;
     email: string;
-    name?: string;
-    // Backend might add these later
     role?: string;
-    userType?: string;
+    name?: string;
     agencyId?: string;
     guideName?: string;
     isManager?: boolean;
   };
 }
 
-// HELPER FUNCTIONS (moved outside the object)
 const determineUserType = (backendUser: any): 'traveller' | 'guide' | 'agency' => {
-  // Priority: backend userType > backend role > default to 'traveller'
   if (backendUser.userType && ['traveller', 'guide', 'agency'].includes(backendUser.userType)) {
     return backendUser.userType;
   }
   if (backendUser.role) {
     return normalizeUserType(backendUser.role);
   }
-  return 'traveller'; // Default fallback
+  return 'traveller';
 };
 
 const normalizeUserType = (role: string): 'traveller' | 'guide' | 'agency' => {
@@ -56,62 +52,97 @@ const normalizeUserType = (role: string): 'traveller' | 'guide' | 'agency' => {
   if (normalized.includes('traveller')) {
     return 'traveller';
   }
-  return 'traveller'; // Default fallback
+  return 'traveller';
 };
 
 const determineProfileId = (backendData: any, userType: string): string => {
-  // Determine the main profile ID for routing
   switch (userType) {
     case 'agency':
-      return backendData.agencyId || backendData.userId;
+      return backendData.agencyId || backendData.userId || backendData.id;
     case 'guide':
-      return backendData.guideId || backendData.userId;
+      return backendData.guideId || backendData.userId || backendData.id;
     case 'traveller':
     default:
-      return backendData.userId;
+      return backendData.userId || backendData.id;
   }
 };
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Authenticate user
-      const loginResponse = await api.post<BackendLoginResponse>('/auth/login', credentials);
-      
-      console.log('FULL LOGIN RESPONSE:', loginResponse.data); // DEBUG
-      
+      console.log('=== AUTH SERVICE DEBUG START ===');
+      console.log('Sending login request to /auth/login');
+      console.log('Credentials:', { email: credentials.email, password: '[HIDDEN]' });
+
+      const loginResponse = await api.post<any>('/auth/login', credentials);
+
+      console.log('RAW AXIOS RESPONSE:', loginResponse);
+      console.log('RESPONSE STATUS:', loginResponse.status);
+      console.log('RESPONSE HEADERS:', loginResponse.headers);
+      console.log('RESPONSE DATA:', loginResponse.data);
+      console.log('RESPONSE DATA TYPE:', typeof loginResponse.data);
+      console.log('RESPONSE DATA KEYS:', Object.keys(loginResponse.data));
+
       const backendUser = loginResponse.data.user;
-      
-      // FALLBACK LOGIC: Use backend values when available, otherwise use defaults
+      console.log('BACKEND USER:', backendUser);
+      console.log('BACKEND USER TYPE:', typeof backendUser);
+
+      if (backendUser) {
+        console.log('BACKEND USER KEYS:', Object.keys(backendUser));
+        console.log('BACKEND USER.id:', backendUser.id);
+        console.log('BACKEND USER.email:', backendUser.email);
+        console.log('BACKEND USER.role:', backendUser.role);
+        console.log('BACKEND USER.name:', backendUser.name);
+        console.log('BACKEND USER.agencyId:', backendUser.agencyId);
+        console.log('BACKEND USER.guideName:', backendUser.guideName);
+        console.log('BACKEND USER.isManager:', backendUser.isManager);
+      } else {
+        console.log('BACKEND USER IS NULL OR UNDEFINED');
+      }
+
+      if (!backendUser) {
+        throw new Error('No user data received from backend');
+      }
+
       const userType = determineUserType(backendUser);
       const profileId = determineProfileId(backendUser, userType);
       const isManager = backendUser.isManager || false;
-      
+
+      console.log('DETERMINED USER TYPE:', userType);
+      console.log('DETERMINED PROFILE ID:', profileId);
+      console.log('DETERMINED IS MANAGER:', isManager);
+
       const user: User = {
-        id: backendUser.id || 'temp-id', // Fallback if id is missing
+        id: backendUser.id,
         email: backendUser.email,
         userType: userType,
         name: backendUser.name,
-        // Profile information for routing
         profileId: profileId,
         profileType: userType,
-        userId: backendUser.id || 'temp-id',
+        userId: backendUser.id,
         isManager: isManager,
-        // Backend fields (if available)
         role: backendUser.role,
         agencyId: backendUser.agencyId,
         guideName: backendUser.guideName
       };
-      
-      console.log('PROCESSED USER:', user); // DEBUG
-      
+
+      console.log('FINAL USER OBJECT:', user);
+      console.log('=== AUTH SERVICE DEBUG END ===');
+
       return {
         success: true,
         message: 'Login successful',
         user: user
       };
     } catch (error) {
+      console.error('LOGIN ERROR:', error);
       const axiosError = error as AxiosError<{ message: string }>;
+      console.error('AXIOS ERROR DETAILS:', {
+        message: axiosError.message,
+        code: axiosError.code,
+        status: axiosError.response?.status,
+        responseData: axiosError.response?.data
+      });
       return {
         success: false,
         message: axiosError.response?.data?.message || 'Login failed'
@@ -122,17 +153,15 @@ export const authService = {
   async signup(userData: SignupRequest): Promise<AuthResponse> {
     try {
       const response = await api.post<BackendSignupResponse>('/auth/signUp', userData);
-      
       const backendData = response.data.data;
-      
-      // FALLBACK LOGIC: Use backend role when available, otherwise use submitted userType
+
       const userType = backendData.role ? 
         normalizeUserType(backendData.role) : 
         userData.userType;
-      
+
       const profileId = determineProfileId(backendData, userType);
       const isManager = backendData.isManager || false;
-      
+
       const user: User = {
         id: backendData.userId,
         email: backendData.email,
@@ -141,15 +170,13 @@ export const authService = {
         lastName: backendData.last_name,
         guideName: backendData.guideName,
         agencyName: backendData.agencyName,
-        // Profile information for routing
         profileId: profileId,
         profileType: userType,
         userId: backendData.userId,
         isManager: isManager,
-        // Backend fields
         agencyId: backendData.agencyId
       };
-      
+
       return {
         success: true,
         message: response.data.message,
@@ -165,16 +192,13 @@ export const authService = {
   },
 
   logout(): void {
-    // Clear user data from localStorage
     localStorage.removeItem('user');
-    // Call backend logout
     api.post('/auth/logout').catch(error => {
       console.warn('Backend logout failed:', error.message);
     });
   },
 
   isAuthenticated(): boolean {
-    // Check if we have user data (token is in cookie)
     return !!localStorage.getItem('user');
   },
 

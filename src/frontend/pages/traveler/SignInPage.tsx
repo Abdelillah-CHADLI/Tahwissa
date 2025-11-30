@@ -44,38 +44,36 @@ export default function SignInPage() {
         password,
       };
 
+      console.log(" SignInPage: Starting login process...");
+
       const response = await authService.login(loginData);
 
+      console.log(" SignInPage: AuthService response:", response);
+
       if (response.success && response.user) {
+        console.log(
+          " SignInPage: Login successful, calling AuthContext login..."
+        );
+
         // Store user in context and localStorage
         login(response.user);
 
         const user = response.user;
 
-        // In SignInPage.tsx - Update the routing section
+        console.log(" SignInPage: Current user after login:", user);
+        console.log(" SignInPage: User type:", user.userType);
+        console.log(" SignInPage: User ID:", user.id);
+        console.log(" SignInPage: User role:", user.role);
+
+        // ROUTING LOGIC
         if (user.userType === "agency" || user.userType === "guide") {
-          console.log("🚀 REDIRECTING TO AGENCY APP:", user.userType);
-
-          // Pass user data as URL parameters for AgencyApp to read
-          const params = new URLSearchParams({
-            userId: user.userId,
-            profileId: user.profileId,
-            profileType: user.userType,
-            isManager: user.isManager?.toString() || "false",
-            email: user.email,
-          });
-
-          // Add any additional fields based on user type
-          if (user.userType === "agency" && user.agencyId) {
-            params.append("agencyId", user.agencyId);
-          }
-          if (user.userType === "guide" && user.guideName) {
-            params.append("guideName", user.guideName);
-          }
-
-          window.location.href = `/agency?${params.toString()}`;
+          console.log(
+            " SignInPage: REDIRECTING TO AGENCY APP:",
+            user.userType
+          );
+          window.location.href = "/agency";
         } else {
-          console.log("🚀 REDIRECTING TO HOME (TRAVELLER)");
+          console.log(" SignInPage: REDIRECTING TO HOME (TRAVELLER)");
           navigate(ROUTES.HOME, {
             state: {
               profileId: user.profileId,
@@ -85,9 +83,11 @@ export default function SignInPage() {
           });
         }
       } else {
+        console.log(" SignInPage: Login failed:", response.message);
         setError(response.message || "Login failed");
       }
     } catch (err) {
+      console.log(" SignInPage: Login error:", err);
       setError(
         err instanceof Error ? err.message : "Login failed. Please try again."
       );
