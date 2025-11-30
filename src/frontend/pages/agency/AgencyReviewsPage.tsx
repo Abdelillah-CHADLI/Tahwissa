@@ -26,7 +26,7 @@ export function AgencyReviewsPage() {
     });
 
     const getAgencyId = () => {
-        return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
+        return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440102";
     };
 
     // --- API Calls ---
@@ -37,32 +37,7 @@ export function AgencyReviewsPage() {
 
             const agencyId = getAgencyId();
 
-            let toursResponse;
-            try {
-                toursResponse = await tourService.getTours();
-            } catch (tourError) {
-                throw new Error(`Failed to fetch tours: ${tourError instanceof Error ? tourError.message : 'Unknown error'}`);
-            }
-
-            let toursData: any[] = [];
-
-            if (Array.isArray(toursResponse)) {
-                toursData = toursResponse;
-            } else if (toursResponse && Array.isArray(toursResponse.data)) {
-                toursData = toursResponse.data;
-            } else {
-                throw new Error('Invalid tours data format received from server');
-            }
-
-            if (toursData.length === 0) {
-                setReviews([]);
-                setLoading(false);
-                return;
-            }
-
-            const agencyTours = toursData.filter((tour: any) =>
-                tour.agency_id === agencyId
-            );
+            const agencyTours = await tourService.getAgencyTours(agencyId);
 
             if (agencyTours.length === 0) {
                 setReviews([]);
@@ -72,7 +47,7 @@ export function AgencyReviewsPage() {
                     ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
                 });
                 setLoading(false);
-                setError(`No tours found for your agency. Found ${toursData.length} total tours but none belong to your agency.`);
+                setError(`No tours found for your agency. Found ${agencyTours.length} total tours but none belong to your agency.`);
                 return;
             }
 
