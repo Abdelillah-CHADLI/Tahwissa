@@ -133,11 +133,17 @@ router.get('/agencies', async (req, res) => {
 
 router.get('/guides', async (req, res) => {
   try {
-    const { search, limit = 10 } = req.query;
-    if (!search) {
-      return res.status(400).json({ success: false, error: 'Search term required' });
+    let { search , page = 1, limit = 10 } = req.query;
+    // if (!search) {
+    //   return res.status(400).json({ success: false, error: 'Search term required' });
+    // }
+
+    //
+
+        if (!search) {
+     search = null
     }
-    const guides = await searchGuidesByName(search, parseInt(limit));
+    const guides = await searchGuidesByName(search , parseInt(page), parseInt(limit));
     res.json({ success: true, data: guides });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
