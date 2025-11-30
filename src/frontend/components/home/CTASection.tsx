@@ -15,7 +15,7 @@ export default function CTASection({ onNavigate }: CTASectionProps) {
         <div className="flex flex-col sm:flex-row justify-center gap-2 xs:gap-3 sm:gap-4">
           <button 
             onClick={() => onNavigate('/signup')}
-            className="bg-[#cbf492] hover:bg-[#b8e678] text-gray-900 px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 xs:py-3 sm:py-4 rounded-lg font-bold text-sm xs:text-base sm:text-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto min-h-[44px]"
+            className="bg-[#cbf492] hover:bg-[#b8e678] text-gray-900 px-4 xs:px-6 sm:px-8 md:px-10 py-2.5 xs:py-3 sm:py-4 rounded-lg font-bold text-sm xs:text-base sm:text-lg transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto min-h-11"
           >
             Get Started Today
           </button>

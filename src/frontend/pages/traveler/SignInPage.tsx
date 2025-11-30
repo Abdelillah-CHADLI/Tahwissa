@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,7 +14,20 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
+
+  // Check for success message from signup redirect
+  const justSignedUp = location.state?.justSignedUp;
+  const signupEmail = location.state?.email;
+  const signupMessage = location.state?.message;
+
+  // Pre-fill email if coming from signup
+  useState(() => {
+    if (justSignedUp && signupEmail && !email) {
+      setEmail(signupEmail);
+    }
+  });
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -34,21 +47,42 @@ export default function SignInPage() {
       const response = await authService.login(loginData);
 
       if (response.success && response.user) {
+        // Store user in context and localStorage
         login(response.user);
 
         const user = response.user;
 
-        if (user.userType === "agency" || user.role === "AgencyEmployee") {
-          navigate(ROUTES.AGENCY_DASHBOARD, {
+        // In SignInPage.tsx - Update the routing section
+        if (user.userType === "agency" || user.userType === "guide") {
+          console.log("🚀 REDIRECTING TO AGENCY APP:", user.userType);
+
+          // Pass user data as URL parameters for AgencyApp to read
+          const params = new URLSearchParams({
+            userId: user.userId,
+            profileId: user.profileId,
+            profileType: user.userType,
+            isManager: user.isManager?.toString() || "false",
+            email: user.email,
+          });
+
+          // Add any additional fields based on user type
+          if (user.userType === "agency" && user.agencyId) {
+            params.append("agencyId", user.agencyId);
+          }
+          if (user.userType === "guide" && user.guideName) {
+            params.append("guideName", user.guideName);
+          }
+
+          window.location.href = `/agency?${params.toString()}`;
+        } else {
+          console.log("🚀 REDIRECTING TO HOME (TRAVELLER)");
+          navigate(ROUTES.HOME, {
             state: {
-              profileId: user.agencyId,
-              profileType: "agency",
-              userId: user.id,
-              isManager: user.isManager || true,
+              profileId: user.profileId,
+              profileType: "traveller",
+              userId: user.userId,
             },
           });
-        } else {
-          navigate(ROUTES.HOME);
         }
       } else {
         setError(response.message || "Login failed");
@@ -72,6 +106,7 @@ export default function SignInPage() {
 
   const handleForgotPassword = () => {
     console.log("Navigate to forgot password");
+    // TODO: Implement forgot password flow
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -108,6 +143,16 @@ export default function SignInPage() {
             </p>
           </div>
 
+          {/* Success message from signup */}
+          {justSignedUp && signupMessage && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 text-sm text-center">
+                {signupMessage}
+              </p>
+            </div>
+          )}
+
+          {/* Error message */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-800 text-sm text-center">{error}</p>

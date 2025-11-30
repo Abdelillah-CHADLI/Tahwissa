@@ -24,8 +24,53 @@ interface BackendLoginResponse {
     id: string;
     email: string;
     name?: string;
+    // Backend might add these later
+    role?: string;
+    userType?: string;
+    agencyId?: string;
+    guideName?: string;
+    isManager?: boolean;
   };
 }
+
+// HELPER FUNCTIONS (moved outside the object)
+const determineUserType = (backendUser: any): 'traveller' | 'guide' | 'agency' => {
+  // Priority: backend userType > backend role > default to 'traveller'
+  if (backendUser.userType && ['traveller', 'guide', 'agency'].includes(backendUser.userType)) {
+    return backendUser.userType;
+  }
+  if (backendUser.role) {
+    return normalizeUserType(backendUser.role);
+  }
+  return 'traveller'; // Default fallback
+};
+
+const normalizeUserType = (role: string): 'traveller' | 'guide' | 'agency' => {
+  const normalized = role.toLowerCase();
+  if (normalized.includes('agency') || normalized.includes('employee')) {
+    return 'agency';
+  }
+  if (normalized.includes('guide')) {
+    return 'guide';
+  }
+  if (normalized.includes('traveller')) {
+    return 'traveller';
+  }
+  return 'traveller'; // Default fallback
+};
+
+const determineProfileId = (backendData: any, userType: string): string => {
+  // Determine the main profile ID for routing
+  switch (userType) {
+    case 'agency':
+      return backendData.agencyId || backendData.userId;
+    case 'guide':
+      return backendData.guideId || backendData.userId;
+    case 'traveller':
+    default:
+      return backendData.userId;
+  }
+};
 
 export const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
@@ -33,12 +78,32 @@ export const authService = {
       // Authenticate user
       const loginResponse = await api.post<BackendLoginResponse>('/auth/login', credentials);
       
+      console.log('FULL LOGIN RESPONSE:', loginResponse.data); // DEBUG
+      
+      const backendUser = loginResponse.data.user;
+      
+      // FALLBACK LOGIC: Use backend values when available, otherwise use defaults
+      const userType = determineUserType(backendUser);
+      const profileId = determineProfileId(backendUser, userType);
+      const isManager = backendUser.isManager || false;
+      
       const user: User = {
-        id: loginResponse.data.user.id,
-        email: loginResponse.data.user.email,
-        userType: 'traveller', // Default to traveler
-        name: loginResponse.data.user.name,
+        id: backendUser.id || 'temp-id', // Fallback if id is missing
+        email: backendUser.email,
+        userType: userType,
+        name: backendUser.name,
+        // Profile information for routing
+        profileId: profileId,
+        profileType: userType,
+        userId: backendUser.id || 'temp-id',
+        isManager: isManager,
+        // Backend fields (if available)
+        role: backendUser.role,
+        agencyId: backendUser.agencyId,
+        guideName: backendUser.guideName
       };
+      
+      console.log('PROCESSED USER:', user); // DEBUG
       
       return {
         success: true,
@@ -60,16 +125,29 @@ export const authService = {
       
       const backendData = response.data.data;
       
+      // FALLBACK LOGIC: Use backend role when available, otherwise use submitted userType
+      const userType = backendData.role ? 
+        normalizeUserType(backendData.role) : 
+        userData.userType;
+      
+      const profileId = determineProfileId(backendData, userType);
+      const isManager = backendData.isManager || false;
+      
       const user: User = {
         id: backendData.userId,
         email: backendData.email,
-        userType: backendData.role.toLowerCase(),
+        userType: userType,
         firstName: backendData.first_name,
         lastName: backendData.last_name,
         guideName: backendData.guideName,
         agencyName: backendData.agencyName,
-        agencyId: backendData.agencyId,
-        isManager: backendData.isManager
+        // Profile information for routing
+        profileId: profileId,
+        profileType: userType,
+        userId: backendData.userId,
+        isManager: isManager,
+        // Backend fields
+        agencyId: backendData.agencyId
       };
       
       return {
@@ -89,8 +167,10 @@ export const authService = {
   logout(): void {
     // Clear user data from localStorage
     localStorage.removeItem('user');
-    // Call backend logout to clear cookie
-    api.post('/auth/logout', {}, { withCredentials: true });
+    // Call backend logout
+    api.post('/auth/logout').catch(error => {
+      console.warn('Backend logout failed:', error.message);
+    });
   },
 
   isAuthenticated(): boolean {

@@ -7,7 +7,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-  //withCredentials: true,
+  //withCredentials: true, // ENABLED for cookie-based auth
 });
 
 // Request interceptor
@@ -381,3 +381,4 @@ export const advancedBookingService = {
   },
 
 };
+
