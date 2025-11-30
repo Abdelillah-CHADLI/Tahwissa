@@ -258,7 +258,7 @@ export async function login(req, res) {
       sameSite: "none",
   });
     // sending the response to the fronend
-    res.json({ user: { id: user.id, email: user.email, name: user.name } });
+    res.json( { id: user.user_id, email: user.email, role : user.role } );
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
