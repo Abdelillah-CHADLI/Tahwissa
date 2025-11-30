@@ -71,3 +71,38 @@ export async function editProfile(req, res) {
     res.status(400).json({ error: err.message });
   }
 }
+
+
+export async function getTravellerInfo(req, res) {
+  const { id } = req.params; 
+
+  if (!id) {
+    return res.status(400).json({ error: "id is required" });
+  }
+
+  try {
+    const { data: travellerData, error: travellerError } = await supabase
+      .from('travellers')
+      .select('traveller_fn, traveller_ls, bio, phone_number, location')
+      .eq('traveller_id', id)
+      .maybeSingle();
+
+    if (travellerError) throw travellerError;
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('email')
+      .eq('user_id', id)
+      .single();
+
+    if (userError) throw userError;
+    res.status(200).json({
+        ...travellerData,
+        email: userData.email
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}

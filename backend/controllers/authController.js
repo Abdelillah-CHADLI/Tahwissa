@@ -74,6 +74,18 @@ const { userType, email, password, confirmPassword } = req.body;
       let role = "Traveller";
       let user = await insertUser({email: email,password: hashedPassword,role: role});
 
+      const { data, error } = await supabase
+      .from('travellers')
+      .insert({
+        traveller_id: user.user_id,
+        traveller_fn: firstName,
+        traveller_ls: lastName
+      });
+      if (error) {
+    return res.status(500).json({ success: false, message: error.message });
+    }
+
+
       result = {
         success: true,
         message: 'Traveller account created successfully.',
