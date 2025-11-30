@@ -1,12 +1,36 @@
 import { motion } from 'motion/react';
-import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Users, MessageSquare, ClipboardList, Bell, Compass } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Search, Users, MessageSquare, ClipboardList, Bell, Compass, Menu, X } from 'lucide-react';
 import { ROUTES } from '../utils/routes';
+import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Header = () => {
     const location = useLocation();
+    const navigate = useNavigate();
+    const { user } = useAuth();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const isActive = (path: string) => location.pathname === path;
+
+    const handleProfileClick = (e: React.MouseEvent) => {
+        if (!user) {
+            e.preventDefault();
+            navigate(ROUTES.SIGN_IN);
+        }
+    };
+
+    const navItems = [
+        { path: ROUTES.HOME, icon: Home, label: 'Home' },
+        { path: ROUTES.EXPLORE, icon: Search, label: 'Explore' },
+        { path: ROUTES.GUIDES, icon: Users, label: 'Guides & Agencies' },
+        { path: ROUTES.COMMUNITY, icon: MessageSquare, label: 'Community' },
+        { path: ROUTES.REQUESTS, icon: ClipboardList, label: 'My Requests' },
+    ];
+
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
 
     return (
         <motion.header
@@ -34,7 +58,7 @@ const Header = () => {
                         </div>
                     </Link>
 
-                    <nav className="flex items-center space-x-2 sm:space-x-4 md:space-x-8">
+                    <nav className="hidden lg:flex items-center space-x-8">
                         <motion.div whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400 }}>
                             <Link
                                 to={ROUTES.HOME}
@@ -101,7 +125,7 @@ const Header = () => {
                         </motion.div>
                     </nav>
 
-                    <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
+                    <div className="hidden lg:flex items-center space-x-6">
                         <motion.button
                             whileHover={{ scale: 1.05, y: -1 }}
                             whileTap={{ scale: 0.95 }}
@@ -116,14 +140,108 @@ const Header = () => {
                             whileTap={{ scale: 0.95 }}
                         >
                             <Link
-                                to={ROUTES.PROFILE}
+                                to={user ? ROUTES.PROFILE : ROUTES.SIGN_IN}
+                                onClick={handleProfileClick}
                                 className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] text-white rounded-full font-semibold text-xs sm:text-sm hover:bg-[#2a6970] transition-colors"
                             >
-                                TR
+                                {user ? (user.firstName?.charAt(0) || user.name?.charAt(0) || 'U') : 'TR'}
                             </Link>
                         </motion.div>
                     </div>
+
+                    <div className="flex lg:hidden items-center space-x-4">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
+                        >
+                            <Bell className="w-5 h-5" />
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </motion.button>
+
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={toggleMobileMenu}
+                            className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            {isMobileMenuOpen ? (
+                                <X className="w-5 h-5" />
+                            ) : (
+                                <Menu className="w-5 h-5" />
+                            )}
+                        </motion.button>
+                    </div>
                 </div>
+
+                <motion.div
+                    initial={false}
+                    animate={{
+                        height: isMobileMenuOpen ? 'auto' : 0,
+                        opacity: isMobileMenuOpen ? 1 : 0
+                    }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="lg:hidden overflow-hidden border-t border-gray-200 mt-3"
+                >
+                    <nav className="py-4">
+                        <div className="flex flex-col space-y-3">
+                            {navItems.map((item) => {
+                                const Icon = item.icon;
+                                return (
+                                    <motion.div
+                                        key={item.path}
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: isMobileMenuOpen ? 1 : 0 }}
+                                        transition={{ duration: 0.3 }}
+                                    >
+                                        <Link
+                                            to={item.path}
+                                            onClick={() => setIsMobileMenuOpen(false)}
+                                            className={`flex items-center space-x-3 p-3 rounded-lg transition-colors ${isActive(item.path)
+                                                    ? 'bg-[#348086] text-white'
+                                                    : 'text-gray-600 hover:bg-gray-100 hover:text-[#348086]'
+                                                }`}
+                                        >
+                                            <Icon className="w-5 h-5" />
+                                            <span className="font-medium">{item.label}</span>
+                                        </Link>
+                                    </motion.div>
+                                );
+                            })}
+
+                            <motion.div
+                                initial={{ x: -20, opacity: 0 }}
+                                animate={{ x: 0, opacity: isMobileMenuOpen ? 1 : 0 }}
+                                transition={{ duration: 0.3, delay: 0.1 }}
+                                className="flex items-center space-x-3 p-3 border-t border-gray-200 pt-4 mt-2"
+                            >
+                                <Link
+                                    to={user ? ROUTES.PROFILE : ROUTES.SIGN_IN}
+                                    onClick={(e) => {
+                                        if (!user) {
+                                            e.preventDefault();
+                                            navigate(ROUTES.SIGN_IN);
+                                        }
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="flex items-center space-x-3 w-full"
+                                >
+                                    <div className="flex items-center justify-center w-10 h-10 bg-[#348086] text-white rounded-full font-semibold text-sm">
+                                        {user ? (user.firstName?.charAt(0) || user.name?.charAt(0) || 'U') : 'TR'}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-gray-900">
+                                            {user ? (user.firstName || user.name || 'User') : 'Traveler'}
+                                        </span>
+                                        <span className="text-sm text-gray-500">
+                                            {user ? 'View Profile' : 'Sign In'}
+                                        </span>
+                                    </div>
+                                </Link>
+                            </motion.div>
+                        </div>
+                    </nav>
+                </motion.div>
             </div>
         </motion.header>
     );

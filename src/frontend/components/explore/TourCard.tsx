@@ -1,8 +1,25 @@
+// components/explore/TourCard.tsx
 import { motion } from 'motion/react';
-import { MapPin, Star, Calendar, Users } from 'lucide-react';
-import type { TourCardProps } from '../../types/explore';
+import { MapPin, Star, Calendar, Users, Building, User } from 'lucide-react';
+import type { Tour } from '../../types/explore';
 
-const TourCard = ({ tour, onClick, index = 0 }: TourCardProps & { index?: number }) => {
+// Update the interface to accept full tour object
+interface TourCardProps {
+  tour: Tour;
+  onClick: (tour: Tour) => void;  // Change from (tourId: string) to (tour: Tour)
+  index?: number;
+}
+
+const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
+  // Use backend field names with fallbacks
+  const tourTitle = tour.tour_title || tour.title;
+  const tourId = tour.tour_id || tour.id;
+  const displayPrice = tour.price?.toLocaleString() || '0';
+
+  // Determine if it's from agency or guide
+  const providerType = tour.agency_id ? 'Agency' : tour.guide_id ? 'Guide' : 'Provider';
+  const providerIcon = tour.agency_id ? <Building className="w-3 h-3" /> : <User className="w-3 h-3" />;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -14,28 +31,31 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps & { index?: number
       <div className="relative h-40 xs:h-48 overflow-hidden">
         <motion.img 
           src={tour.image} 
-          alt={tour.title}
+          alt={tourTitle}
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.6 }}
         />
 
-        <div className="absolute top-2 xs:top-3 left-2 xs:left-3">
-          <span className="px-2 xs:px-3 py-1 bg-[#348086] text-white text-xs font-medium rounded-full">
-            {tour.category}
+        {/* Provider Type Badge - Top Left */}
+        <div className="absolute top-2 xs:top-3 left-2 xs:left-3 flex gap-1">
+          <span className="px-2 xs:px-3 py-1 bg-[#348086] text-white text-xs font-medium rounded-full flex items-center gap-1">
+            {providerIcon}
+            {providerType}
           </span>
         </div>
 
+        {/* Category Badge - Top Right */}
         <div className="absolute top-2 xs:top-3 right-2 xs:right-3">
           <span className="px-2 xs:px-3 py-1 bg-[#cbf492] text-gray-900 text-xs font-medium rounded-full">
-            Popular
+            {tour.category}
           </span>
         </div>
       </div>
 
       <div className="p-3 xs:p-4 sm:p-5">
         <h3 className="text-base xs:text-lg font-bold text-gray-900 mb-1 xs:mb-2 line-clamp-2">
-          {tour.title}
+          {tourTitle}
         </h3>
 
         <div className="flex items-center text-gray-600 mb-2 xs:mb-3">
@@ -63,7 +83,7 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps & { index?: number
         <div className="flex items-center justify-between">
           <div>
             <span className="text-lg xs:text-xl font-bold text-[#348086]">
-              {tour.price.toLocaleString()} DZD
+              {displayPrice} DZD
             </span>
             <span className="text-xs text-gray-500 ml-1">/person</span>
           </div>
@@ -71,7 +91,7 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps & { index?: number
           <motion.button
             onClick={(e) => {
               e.stopPropagation(); 
-              onClick(tour.id);  
+              onClick(tour);  // Pass the full tour object instead of just ID
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

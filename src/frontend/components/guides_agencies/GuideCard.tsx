@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { MapPin, User, Calendar, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 interface GuideCardProps {
   guide: {
@@ -7,10 +7,6 @@ interface GuideCardProps {
     name: string;
     subtitle: string;
     image: string;
-    location: string;
-    tours: number;
-    experience: string;
-    languages: string[];
     verified: boolean;
   };
   index: number;
@@ -46,37 +42,6 @@ const GuideCard = ({ guide, index, onViewProfile }: GuideCardProps) => {
       <div className="p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-1">{guide.name}</h3>
         <p className="text-gray-600 text-sm mb-4">{guide.subtitle}</p>
-
-        <div className="flex items-center gap-2 text-gray-600 mb-4">
-          <MapPin className="w-4 h-4" />
-          <span className="text-sm">{guide.location}</span>
-        </div>
-
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex items-center gap-1 text-gray-600">
-            <User className="w-4 h-4" />
-            <span className="text-sm">{guide.tours} tours</span>
-          </div>
-        </div>
-
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center gap-2 py-2 px-4 bg-gray-50 rounded-lg">
-            <Calendar className="w-4 h-4 text-gray-600" />
-            <span className="text-sm text-gray-700">
-              Experience: <span className="font-medium text-gray-900">{guide.experience}</span>
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1">
-            {guide.languages.map((language, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-              >
-                {language}
-              </span>
-            ))}
-          </div>
-        </div>
 
         <motion.button
           onClick={onViewProfile}

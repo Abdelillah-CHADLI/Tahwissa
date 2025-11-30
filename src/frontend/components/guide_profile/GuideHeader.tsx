@@ -1,4 +1,4 @@
-import { MapPin, Star, Users, Calendar } from 'lucide-react';
+import { MapPin, Star, Users, Calendar, Building } from 'lucide-react';
 
 interface GuideHeaderProps {
   guide: {
@@ -9,6 +9,8 @@ interface GuideHeaderProps {
     toursCount?: number | null;
     experience: string;
     image?: string;
+    type?: 'guide' | 'agency'; 
+    num_raters?: number; 
   };
 }
 
@@ -29,6 +31,7 @@ const GuideHeader = ({ guide }: GuideHeaderProps) => {
   const hasRating = guide.rating !== null && guide.rating !== undefined;
   const hasToursCount = guide.toursCount !== null && guide.toursCount !== undefined;
   const hasImage = guide.image && guide.image !== '';
+  const isAgency = guide.type === 'agency';
 
   return (
     <div className="bg-white border-b">
@@ -43,14 +46,20 @@ const GuideHeader = ({ guide }: GuideHeaderProps) => {
               />
             ) : (
               <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
-                <Users className="w-12 h-12 text-gray-400" />
+                {isAgency ? (
+                  <Building className="w-12 h-12 text-gray-400" />
+                ) : (
+                  <Users className="w-12 h-12 text-gray-400" />
+                )}
               </div>
             )}
           </div>
 
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{guide.name}</h1>
-            <p className="text-lg text-gray-600 mb-4">{guide.specialty}</p>
+            <p className="text-lg text-gray-600 mb-4">
+              {isAgency ? 'Travel Agency' : 'Local Guide'}
+            </p>
             <div className="flex items-center justify-center md:justify-start text-gray-500 mb-6">
               <MapPin className="w-4 h-4 mr-1" />
               <span>{guide.location}</span>
@@ -62,6 +71,11 @@ const GuideHeader = ({ guide }: GuideHeaderProps) => {
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                     <span className="font-semibold">{guide.rating}</span>
+                    {guide.num_raters && (
+                      <span className="text-sm text-gray-500">
+                        ({guide.num_raters} reviews)
+                      </span>
+                    )}
                   </div>
                 )}
                 {hasToursCount && (
@@ -81,6 +95,9 @@ const GuideHeader = ({ guide }: GuideHeaderProps) => {
               <div className="flex justify-center md:justify-start items-center gap-2">
                 {renderStars(guide.rating!)}
                 <span className="font-semibold text-gray-900">{guide.rating}</span>
+                <span className="text-sm text-gray-500">
+                  • {guide.num_raters || 0} reviews
+                </span>
               </div>
             )}
           </div>

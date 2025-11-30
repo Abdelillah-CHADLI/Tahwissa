@@ -1,13 +1,16 @@
+// components/home/HeroSection.tsx
 import { motion } from 'motion/react';
-import { ArrowRight, LogIn, Users } from 'lucide-react';
+import { ArrowRight, LogIn, Users, LogOut, User } from 'lucide-react';
 import { ROUTES } from '../../utils/routes';
 import homeImg from '../../assets/imgs/home.png';
 
 interface HeroSectionProps {
     onNavigate: (path: string) => void;
+    user: any;
+    onLogout: () => void;
 }
 
-export default function HeroSection({ onNavigate }: HeroSectionProps) {
+export default function HeroSection({ onNavigate, user, onLogout }: HeroSectionProps) {
     return (
         <motion.section
             className="relative h-[70vh] sm:h-[80vh] lg:h-[90vh] overflow-hidden"
@@ -67,19 +70,41 @@ export default function HeroSection({ onNavigate }: HeroSectionProps) {
                             Start Exploring <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                         </button>
 
-                        <button
-                            onClick={() => onNavigate(ROUTES.SIGN_IN)}
-                            className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                        >
-                            <LogIn className="w-4 h-4 sm:w-5 sm:h-5" /> Sign In
-                        </button>
+                        {!user && (
+                            <>
+                                <button
+                                    onClick={() => onNavigate(ROUTES.SIGN_IN)}
+                                    className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                                >
+                                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5" /> Sign In
+                                </button>
 
-                        <button
-                            onClick={() => onNavigate(ROUTES.SIGN_UP)}
-                            className="bg-white border-2 border-[#348086] text-[#348086] hover:bg-[#348086] hover:text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                        >
-                            <Users className="w-4 h-4 sm:w-5 sm:h-5" /> Sign Up
-                        </button>
+                                <button
+                                    onClick={() => onNavigate(ROUTES.SIGN_UP)}
+                                    className="bg-white border-2 border-[#348086] text-[#348086] hover:bg-[#348086] hover:text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                                >
+                                    <Users className="w-4 h-4 sm:w-5 sm:h-5" /> Sign Up
+                                </button>
+                            </>
+                        )}
+
+                        {user && (
+                            <>
+                                <button
+                                    onClick={() => onNavigate(ROUTES.PROFILE)}
+                                    className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                                >
+                                    <User className="w-4 h-4 sm:w-5 sm:h-5" /> Profile
+                                </button>
+
+                                <button
+                                    onClick={onLogout}
+                                    className="bg-white border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+                                >
+                                    <LogOut className="w-4 h-4 sm:w-5 sm:h-5" /> Sign Out
+                                </button>
+                            </>
+                        )}
                     </motion.div>
                 </motion.div>
             </div>

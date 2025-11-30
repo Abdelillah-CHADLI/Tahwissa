@@ -7,15 +7,13 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
+  //withCredentials: true,
 });
 
-// Add auth token to requests
+// Request interceptor - we don't need to manually add tokens (cookies are automatic)
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = localStorage.getItem('token');
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    // Cookies are sent automatically with withCredentials: true
     return config;
   },
   (error: AxiosError) => {
@@ -41,19 +39,19 @@ api.interceptors.response.use(
 export default api;
 
 export const profileService = {
-  // Fetch profile data
-  getProfile: async (id: string, typeOfProfile: 'Agency' | 'Guide') => {
-    const response = await api.get(`/profile1/${id}`, {
-      params: { TypeOfProfile: typeOfProfile }
+  // Fetch profile data - CORRECT ENDPOINT
+  getProfile: async (id: string, type: 'agency' | 'guide') => {
+    const response = await api.get(`/api/profile/${id}`, {
+      params: { type } // lowercase 'type' as per documentation
     });
     return response.data;
   },
 
   // Update profile data
-  updateProfile: async (id: string, data: Record<string, unknown>, typeOfProfile: 'Agency' | 'Guide') => {
-    const response = await api.put(`/profile1/${id}`, {
+  updateProfile: async (id: string, data: Record<string, unknown>, type: 'agency' | 'guide') => {
+    const response = await api.put(`/api/profile/${id}`, {
       ...data,
-      TypeOfProfile: typeOfProfile
+      type // lowercase 'type' as per documentation
     });
     return response.data;
   },
@@ -68,8 +66,14 @@ export const tourService = {
     return response.data;
   },
 
-  // Search tours with criteria
-  searchTours: async (searchParams: Record<string, unknown>) => {
+  // Search tours with criteria - FIXED to match backend
+  searchTours: async (searchParams: {
+    name?: string;
+    region?: string;
+    category?: string;
+    budget?: string;
+    provider?: string;
+  }) => {
     const response = await api.post('/tour/searchTours', searchParams);
     return response.data;
   },

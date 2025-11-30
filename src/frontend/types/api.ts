@@ -1,4 +1,3 @@
-// API Types
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -20,14 +19,33 @@ export interface ProfileData {
   guide_phone?: string;
 }
 
-export interface TourSearchParams {
-  location?: string;
-  category?: string;
-  priceRange?: { min: number; max: number };
+export interface BackendTour {
+  tour_id: string;
+  tour_title: string;
+  description?: string;
+  price: number;
+  rating?: number;
+  image_url?: string;
   duration?: string;
+  location: string;
+  category: string;
+  group_size?: string;
+  guide_name?: string;
+  guide_rating?: number;
+  guide_tours_count?: number;
+  agency_id?: string;
+  guide_id?: string;
 }
 
-export interface TourFilters {
+export interface SearchTourParams {
+  name?: string;
+  region?: string;
+  category?: string;
+  budget?: string;
+  provider?: string;
+}
+
+export interface BrowseTourFilters {
   cat?: string[];
   regions?: string[];
   priceMin?: number;

@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { Mail, Phone, Navigation } from 'lucide-react';
+import { Mail, Phone, Navigation, Globe } from 'lucide-react';
 import { colors } from '../../assets/colors';
 
 interface ContactSectionProps {
@@ -7,6 +7,14 @@ interface ContactSectionProps {
     email: string;
     phone: string;
     location: string;
+    agency_email?: string;
+    agency_phone?: string;
+    guide_email?: string;
+    guide_phone?: string;
+    emergency_phone?: string;
+    support_email?: string;
+    website?: string;
+    agency_website?: string;
   };
 }
 
@@ -83,7 +91,12 @@ const ContactSection = ({ guide }: ContactSectionProps) => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium text-gray-900">{guide.email}</p>
+              <p className="font-medium text-gray-900">
+                {guide.agency_email || guide.guide_email || guide.email}
+              </p>
+              {guide.support_email && (
+                <p className="text-xs text-gray-500 mt-1">Support: {guide.support_email}</p>
+              )}
             </div>
           </motion.div>
 
@@ -104,7 +117,12 @@ const ContactSection = ({ guide }: ContactSectionProps) => {
             </div>
             <div>
               <p className="text-sm text-gray-500">Phone</p>
-              <p className="font-medium text-gray-900">{guide.phone}</p>
+              <p className="font-medium text-gray-900">
+                {guide.agency_phone || guide.guide_phone || guide.phone}
+              </p>
+              {guide.emergency_phone && (
+                <p className="text-xs text-gray-500 mt-1">Emergency: {guide.emergency_phone}</p>
+              )}
             </div>
           </motion.div>
 
@@ -128,6 +146,28 @@ const ContactSection = ({ guide }: ContactSectionProps) => {
               <p className="font-medium text-gray-900">{guide.location}</p>
             </div>
           </motion.div>
+
+          {(guide.website || guide.agency_website) && (
+            <motion.div 
+              variants={cardVariants}
+              whileHover="hover"
+              className="flex items-center p-4 rounded-lg border-2 cursor-pointer"
+              style={{ borderColor: colors.primary.green }}
+            >
+              <div 
+                className="p-2 rounded-lg mr-4"
+                style={{ backgroundColor: `${colors.primary.green}20` }}
+              >
+                <Globe className="w-5 h-5" style={{ color: colors.primary.green }} />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Website</p>
+                <p className="font-medium text-gray-900">
+                  {guide.website || guide.agency_website}
+                </p>
+              </div>
+            </motion.div>
+          )}
         </div>
       </motion.div>
     </motion.div>

@@ -1,4 +1,6 @@
+// TravelerApp.tsx
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { AuthProvider } from '../frontend/contexts/AuthContext';
 import Header from './components/Header';
 import { ROUTES } from './utils/routes';
 import HomePage from './pages/traveler/HomePage';
@@ -52,7 +54,7 @@ function AppContent() {
           <Route path="guide-profile" element={<GuideProfilePage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="add-post" element={<AddPostPage />} />
-          <Route path="details" element={<DetailsPage />} />
+          <Route path="details/:tourId" element={<DetailsPage />} />
           <Route path="booking" element={<BookingPage />} />
           <Route
             path="profile-completion"
@@ -72,7 +74,9 @@ function AppContent() {
 
 function TravelerApp() {
   return (
-    <AppContent />
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

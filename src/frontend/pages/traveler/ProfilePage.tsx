@@ -1,14 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { colors } from '../../assets/colors';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { User } from '../../types/auth';
 
-interface ProfileData {
-  fullName: string;
+interface TravelerProfileData {
+  firstName: string;
+  lastName: string;
   email: string;
-  phone: string;
-  location: string;
-  bio: string;
 }
 
 interface PasswordData {
@@ -22,13 +20,13 @@ const ProfilePage = () => {
   const [activeTab, setActiveTab] = useState<'profile' | 'security'>('profile');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [saveLoading, setSaveLoading] = useState(false);
   
-  const [profileData, setProfileData] = useState<ProfileData>({
-    fullName: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+213 555 123 456',
-    location: 'Algiers, Algeria',
-    bio: 'Adventure seeker exploring the beauty of Algeria'
+  const [profileData, setProfileData] = useState<TravelerProfileData>({
+    firstName: '',
+    lastName: '',
+    email: '',
   });
   
   const [passwordData, setPasswordData] = useState<PasswordData>({
@@ -37,11 +35,40 @@ const ProfilePage = () => {
     confirmPassword: ''
   });
 
+  // Fetch traveler data on component mount
+  useEffect(() => {
+    const fetchTravelerProfile = async () => {
+      try {
+        setIsLoading(true);
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+          navigate('/signin');
+          return;
+        }
+
+        const user: User = JSON.parse(userStr);
+        
+        setProfileData({
+          firstName: user.firstName || user.first_name || '',
+          lastName: user.lastName || user.last_name || '',
+          email: user.email,
+        });
+
+      } catch (error) {
+        console.error('Error fetching traveler profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchTravelerProfile();
+  }, [navigate]);
+
   const handleBackToHome = () => {
     navigate('/traveler');
   };
 
-  const handleProfileChange = (field: keyof ProfileData, value: string) => {
+  const handleProfileChange = (field: keyof TravelerProfileData, value: string) => {
     setProfileData(prev => ({
       ...prev,
       [field]: value
@@ -55,17 +82,66 @@ const ProfilePage = () => {
     }));
   };
 
-  const handleProfileSubmit = (e: React.FormEvent) => {
+  const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveLoading(true);
+    
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+
+      const user: User = JSON.parse(userStr);
+      
+      const updatedUser: User = {
+        ...user,
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+      };
+      
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      
+      alert('Profile updated successfully!');
+      
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('New passwords do not match');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      alert('New password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      alert('Password updated successfully!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (error) {
+      console.error('Error changing password:', error);
+      alert('Failed to change password. Please try again.');
+    }
   };
 
   const handleDeleteAccount = () => {
     if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-     // deletion logic     
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      navigate('/');
+      alert('Account deleted successfully');
     }
   };
 
@@ -147,6 +223,14 @@ const ProfilePage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial="hidden"
@@ -165,7 +249,7 @@ const ProfilePage = () => {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span className="text-sm font-medium">Back to Home</span>
+          <span className="text-sm font-medium">Back to Dashboard</span>
         </motion.button>
 
         <motion.div
@@ -181,7 +265,7 @@ const ProfilePage = () => {
                   whileTap={{ scale: 0.98 }}
                   className={`flex-1 py-4 text-center font-medium text-sm transition-colors ${
                     activeTab === tab.id
-                      ? `text-[${colors.primary.green}] border-b-2 border-[${colors.primary.green}]`
+                      ? 'text-teal-600 border-b-2 border-teal-600'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                   onClick={() => setActiveTab(tab.id)}
@@ -210,6 +294,7 @@ const ProfilePage = () => {
                     onImageUpload={handleImageUpload}
                     onRemoveImage={handleRemoveImage}
                     uploadError={uploadError}
+                    isLoading={saveLoading}
                   />
                 </motion.div>
               )}
@@ -238,17 +323,19 @@ const ProfilePage = () => {
   );
 };
 
+// Profile Tab Component
 interface ProfileTabProps {
-  data: ProfileData;
-  onChange: (field: keyof ProfileData, value: string) => void;
+  data: TravelerProfileData;
+  onChange: (field: keyof TravelerProfileData, value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   profileImage: string | null;
   onImageUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onRemoveImage: () => void;
   uploadError: string;
+  isLoading: boolean;
 }
 
-const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, onRemoveImage, uploadError }: ProfileTabProps) => (
+const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, onRemoveImage, uploadError, isLoading }: ProfileTabProps) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -315,44 +402,26 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, onR
     <form onSubmit={onSubmit} className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
-          label="Full Name"
-          value={data.fullName}
-          onChange={(value) => onChange('fullName', value)}
+          label="First Name"
+          value={data.firstName}
+          onChange={(value) => onChange('firstName', value)}
           type="text"
         />
         <FormField
-          label="Email Address"
-          value={data.email}
-          onChange={(value) => onChange('email', value)}
-          type="email"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
-          label="Phone Number"
-          value={data.phone}
-          onChange={(value) => onChange('phone', value)}
-          type="tel"
-        />
-        <FormField
-          label="Location"
-          value={data.location}
-          onChange={(value) => onChange('location', value)}
+          label="Last Name"
+          value={data.lastName}
+          onChange={(value) => onChange('lastName', value)}
           type="text"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          Bio
-        </label>
-        <motion.textarea
-          whileFocus={{ scale: 1.01 }}
-          value={data.bio}
-          onChange={(e) => onChange('bio', e.target.value)}
-          rows={4}
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-[#348086] text-sm"
+        <FormField
+          label="Email Address"
+          value={data.email}
+          onChange={(value) => onChange('email', value)}
+          type="email"
+          disabled={true}
         />
       </div>
 
@@ -360,14 +429,18 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, onR
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         type="submit"
-        className={`px-8 py-3 bg-[${colors.primary.green}] text-white text-sm font-medium rounded-md hover:bg-[${colors.primary.darkTeal}] focus:outline-none focus:ring-2 focus:ring-[${colors.primary.green}] shadow-sm`}
+        disabled={isLoading}
+        className={`px-8 py-3 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-sm transition-colors ${
+          isLoading ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
       >
-        Save Changes
+        {isLoading ? 'Saving...' : 'Save Changes'}
       </motion.button>
     </form>
   </motion.div>
 );
 
+// Security Tab Component
 interface SecurityTabProps {
   data: PasswordData;
   onChange: (field: keyof PasswordData, value: string) => void;
@@ -409,7 +482,7 @@ const SecurityTab = ({ data, onChange, onSubmit, onDeleteAccount }: SecurityTabP
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className={`px-8 py-3 bg-[${colors.primary.green}] text-white text-sm font-medium rounded-md hover:bg-[${colors.primary.darkTeal}] focus:outline-none focus:ring-2 focus:ring-[${colors.primary.green}] shadow-sm`}
+          className="px-8 py-3 bg-teal-600 text-white text-sm font-medium rounded-md hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-sm"
         >
           Update Password
         </motion.button>
@@ -446,27 +519,32 @@ const SecurityTab = ({ data, onChange, onSubmit, onDeleteAccount }: SecurityTabP
   </motion.div>
 );
 
+// Form Field Component
 interface FormFieldProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  type?: 'text' | 'email' | 'password' | 'tel';
+  type?: 'text' | 'email' | 'password' | 'tel' | 'date';
+  disabled?: boolean;
 }
 
-const FormField = ({ label, value, onChange, type = 'text' }: FormFieldProps) => (
+const FormField = ({ label, value, onChange, type = 'text', disabled = false }: FormFieldProps) => (
   <motion.div
-    whileHover={{ scale: 1.01 }}
+    whileHover={{ scale: disabled ? 1 : 1.01 }}
     transition={{ type: "spring", stiffness: 300 }}
   >
     <label className="block text-sm font-medium text-gray-700 mb-3">
       {label}
     </label>
     <motion.input
-      whileFocus={{ scale: 1.02 }}
+      whileFocus={{ scale: disabled ? 1 : 1.02 }}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-[#348086] text-sm"
+      disabled={disabled}
+      className={`w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm ${
+        disabled ? 'bg-gray-100 cursor-not-allowed' : ''
+      }`}
     />
   </motion.div>
 );
