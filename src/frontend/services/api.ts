@@ -7,7 +7,7 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-  //withCredentials: true,
+  //withCredentials: true, // ENABLED for cookie-based auth
 });
 
 // Request interceptor
@@ -55,31 +55,8 @@ export const profileService = {
   },
 };
 
-export const tourService = {
-  getTours: async (limit?: number) => {
-    const response = await api.get('/tour/gettours', {
-      params: { limit }
-    });
-    return response.data;
-  },
-
-  getAgencyTours: async (agencyId: string) => {
-    const response = await api.get('/api/tours/browse', {
-      params: { provider: 'agency', size: 100 }
-    });
-    const result = response.data?.data || response.data;
-    const tours = result?.tours || [];
-    return tours.filter((tour: Record<string, unknown>) => String(tour.agency_id) === agencyId);
-  },
-
-  getTourById: async (tourId: string) => {
-    const response = await api.get('/tour/gettours');
-    const tours = Array.isArray(response.data) ? response.data : [];
-    return tours.find((t: Record<string, unknown>) =>
-      String(t.tour_id) === tourId || String(t.id) === tourId
-    ) || null;
-  },
-
+// Add this new service
+export const searchService = {
   searchTours: async (searchParams: {
     name?: string;
     region?: string;
@@ -87,8 +64,122 @@ export const tourService = {
     budget?: string;
     provider?: string;
   }) => {
-    const response = await api.post('/tour/searchTours', searchParams);
-    return response.data;
+    return await tourService.searchTours(searchParams);
+  },
+
+  quickSearch: async (query: string) => {
+    if (!query.trim()) return [];
+    
+    try {
+      const tours = await tourService.getTours(20);
+      return tours
+        .filter((tour: any) => 
+          tour.tour_title?.toLowerCase().includes(query.toLowerCase()) ||
+          tour.location?.toLowerCase().includes(query.toLowerCase())
+        )
+        .slice(0, 5)
+        .map((tour: any) => ({
+          type: 'tour',
+          id: tour.tour_id || tour.id,
+          title: tour.tour_title,
+          location: tour.location,
+          price: tour.price
+        }));
+    } catch (error) {
+      console.error('Quick search error:', error);
+      return [];
+    }
+  }
+};
+export const tourService = {
+  getTours: async (limit?: number) => {
+    try {
+      const response = await api.get('/tour/gettours', {
+        params: { limit }
+      });
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (error) {
+      console.error('Get tours error:', error);
+      return [];
+    }
+  },
+
+  // Updated searchTours function to match backend
+  searchTours: async (searchParams: {
+    name?: string;
+    region?: string;
+    category?: string;
+    budget?: string;
+    provider?: string;
+  }) => {
+    try {
+      console.log('🔍 Searching tours with params:', searchParams);
+      
+      // Use POST request with request body as backend expects
+      const response = await api.post('/tour/searchTours', searchParams);
+      console.log('✅ Search endpoint response:', response.data);
+      
+      // Backend returns direct array
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else {
+        console.warn('⚠️ Unexpected response format:', response.data);
+        return [];
+      }
+    } catch (error) {
+      console.error('❌ Search endpoint failed:', error);
+      
+      // Fallback: Get all tours and filter client-side
+      try {
+        console.log('🔄 Using fallback client-side filtering...');
+        const allTours = await tourService.getTours(100);
+        
+        return allTours.filter((tour: any) => {
+          let matches = true;
+
+          // Name filter
+          if (searchParams.name) {
+            matches = matches && tour.tour_title?.toLowerCase().includes(searchParams.name.toLowerCase());
+          }
+
+          // Region filter
+          if (searchParams.region && searchParams.region !== "All Regions") {
+            matches = matches && tour.location?.toLowerCase().includes(searchParams.region.toLowerCase());
+          }
+
+          // Category filter
+          if (searchParams.category && searchParams.category !== "All Categories") {
+            matches = matches && tour.category === searchParams.category;
+          }
+
+          // Budget filter
+          if (searchParams.budget && searchParams.budget !== "All Budgets") {
+            const price = Number(tour.price) || 0;
+            const budgetRanges = {
+              '<5000': price < 5000,
+              '5000-10000': price >= 5000 && price <= 10000,
+              '10000-20000': price >= 10000 && price <= 20000,
+              '>20000': price > 20000
+            };
+            matches = matches && budgetRanges[searchParams.budget as keyof typeof budgetRanges];
+          }
+
+          // Provider filter
+          if (searchParams.provider && searchParams.provider !== "All Providers") {
+            if (searchParams.provider === 'Guide') {
+              matches = matches && (tour.guide_id !== null && tour.guide_id !== undefined);
+            } else if (searchParams.provider === 'Agency') {
+              matches = matches && (tour.agency_id !== null && tour.agency_id !== undefined);
+            }
+          }
+
+          return matches;
+        });
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        throw new Error('Search functionality is currently unavailable');
+      }
+    }
   },
 
   createTour: async (tourData: Record<string, unknown>) => {
@@ -381,3 +472,4 @@ export const advancedBookingService = {
   },
 
 };
+

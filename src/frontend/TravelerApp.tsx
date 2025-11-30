@@ -30,20 +30,29 @@ function AppContent() {
 
   const showHeader = !isAuthPage;
 
-  useEffect(() => {
-    if (user && (user.userType === "agency" || user.userType === "guide")) {
-      navigate(ROUTES.AGENCY_DASHBOARD, {
-        state: {
-          profileId: user.agencyId || user.guideId,
-          profileType: user.userType,
-          userId: user.id,
-          isManager: user.isManager || user.userType === "agency",
-          userData: user
-        },
-        replace: true
-      });
+// In TravelerApp.tsx - Update the useEffect
+useEffect(() => {
+  if (user && (user.userType === "agency" || user.userType === "guide")) {
+    console.log('🔄 AUTO-REDIRECTING TO AGENCY APP:', user.userType);
+    
+    const params = new URLSearchParams({
+      userId: user.userId,
+      profileId: user.profileId,
+      profileType: user.userType,
+      isManager: user.isManager?.toString() || 'false',
+      email: user.email
+    });
+    
+    if (user.userType === "agency" && user.agencyId) {
+      params.append('agencyId', user.agencyId);
     }
-  }, [user, navigate]);
+    if (user.userType === "guide" && user.guideName) {
+      params.append('guideName', user.guideName);
+    }
+    
+    window.location.href = `/agency?${params.toString()}`;
+  }
+}, [user]);
 
   const handleProfileComplete = () => {
     const accountType = location.state?.accountType || 'traveler';

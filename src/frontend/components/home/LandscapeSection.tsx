@@ -25,13 +25,21 @@ export default function LandscapeSection() {
   return (
     <section className="py-12 xs:py-16 sm:py-20 bg-white">
       <div className="container mx-auto px-3 xs:px-4 sm:px-6 max-w-7xl">
+    <section className="py-12 xs:py-16 sm:py-20 bg-white">
+      <div className="container mx-auto px-3 xs:px-4 sm:px-6 max-w-7xl">
         <motion.div 
+          className="text-center mb-8 xs:mb-12 sm:mb-16"
           className="text-center mb-8 xs:mb-12 sm:mb-16"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true, margin: "-50px" }}
+          viewport={{ once: true, margin: "-50px" }}
         >
+          <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 xs:mb-3 sm:mb-4">
+            Algeria's Natural Diversity
+          </h2>
+          <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto px-2 xs:px-4">
           <h2 className="text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2 xs:mb-3 sm:mb-4">
             Algeria's Natural Diversity
           </h2>
@@ -41,13 +49,16 @@ export default function LandscapeSection() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 xs:gap-4 sm:gap-6">
           {landscapes.map((landscape, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               whileHover={{ scale: 1.03 }}
+              whileHover={{ scale: 1.03 }}
               transition={{ duration: 0.6, delay: landscape.delay }}
+              viewport={{ once: true, margin: "-50px" }}
               viewport={{ once: true, margin: "-50px" }}
             >
               <LandscapeCard
@@ -65,6 +76,7 @@ export default function LandscapeSection() {
 
 function LandscapeCard({ image, title, subtitle }: { image: string; title: string; subtitle: string }) {
   return (
+    <div className="relative h-48 xs:h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96 rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer shadow-lg transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-xl">
     <div className="relative h-48 xs:h-56 sm:h-64 md:h-72 lg:h-80 xl:h-96 rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden group cursor-pointer shadow-lg transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-xl">
       <img 
         src={image} 

@@ -26,16 +26,22 @@ export interface AuthResponse {
 export interface User {
   id: string;
   email: string;
-  userType: string;
+  userType: 'traveller' | 'guide' | 'agency'; // Now strictly typed
   firstName?: string;
   lastName?: string;
   guideName?: string;
   agencyName?: string;
-  userId?: string;
+  
+  // Profile information for routing (added)
+  profileId: string;       // agencyId, guideId, or userId
+  profileType: 'traveller' | 'guide' | 'agency';
+  userId: string;          // logged-in user ID
+  isManager?: boolean;     // for agency employees
+  
+  // Backend fields (optional)
   role?: string;
   agencyId?: string;
-  isManager?: boolean;
   first_name?: string;
   last_name?: string;
-  name?: string; 
+  name?: string;
 }

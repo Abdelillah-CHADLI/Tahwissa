@@ -27,7 +27,10 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
       transition={{ duration: 0.4, delay: index * 0.1 }}
       whileHover={{ y: -4, scale: 1.01 }}
       className="bg-white rounded-lg xs:rounded-xl shadow-sm hover:shadow-md overflow-hidden cursor-pointer border border-gray-100"
+      whileHover={{ y: -4, scale: 1.01 }}
+      className="bg-white rounded-lg xs:rounded-xl shadow-sm hover:shadow-md overflow-hidden cursor-pointer border border-gray-100"
     >
+      <div className="relative h-40 xs:h-48 overflow-hidden">
       <div className="relative h-40 xs:h-48 overflow-hidden">
         <motion.img 
           src={tour.image} 
@@ -61,20 +64,28 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
         <div className="flex items-center text-gray-600 mb-2 xs:mb-3">
           <MapPin className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />
           <span className="text-xs xs:text-sm truncate">{tour.location}</span>
+        <div className="flex items-center text-gray-600 mb-2 xs:mb-3">
+          <MapPin className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />
+          <span className="text-xs xs:text-sm truncate">{tour.location}</span>
         </div>
 
         <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 text-xs xs:text-sm text-gray-600">
+        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 text-xs xs:text-sm text-gray-600">
           <div className="flex items-center">
+            <Star className="w-3 h-3 xs:w-4 xs:h-4 text-yellow-400 fill-yellow-400 mr-1" />
+            <span className="font-semibold text-gray-900">{tour.rating}</span>
             <Star className="w-3 h-3 xs:w-4 xs:h-4 text-yellow-400 fill-yellow-400 mr-1" />
             <span className="font-semibold text-gray-900">{tour.rating}</span>
           </div>
 
           <div className="flex items-center">
             <Calendar className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />
+            <Calendar className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />
             <span>{tour.duration}</span>
           </div>
 
           <div className="flex items-center">
+            <Users className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />
             <Users className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />
             <span>{tour.groupSize}</span>
           </div>
@@ -86,6 +97,7 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
               {displayPrice} DZD
             </span>
             <span className="text-xs text-gray-500 ml-1">/person</span>
+            <span className="text-xs text-gray-500 ml-1">/person</span>
           </div>
 
           <motion.button
@@ -95,6 +107,8 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            className="px-3 xs:px-4 sm:px-6 py-1.5 xs:py-2 bg-[#348086] text-white rounded-lg 
+                       hover:bg-[#2a6970] transition-colors font-medium text-xs xs:text-sm min-h-9 xs:min-h-[40px]"
             className="px-3 xs:px-4 sm:px-6 py-1.5 xs:py-2 bg-[#348086] text-white rounded-lg 
                        hover:bg-[#2a6970] transition-colors font-medium text-xs xs:text-sm min-h-9 xs:min-h-[40px]"
           >
