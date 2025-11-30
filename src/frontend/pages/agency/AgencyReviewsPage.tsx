@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2, AlertCircle, Star } from "lucide-react";
 import PageHeader from "../../components/traveler/requests/PageHeader";
 import { ReviewCard } from "../../components/agency/reviews/ReviewCard";
@@ -29,8 +29,7 @@ export function AgencyReviewsPage() {
         return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
     };
 
-    // --- API Calls ---
-    const fetchReviews = async () => {
+    const fetchReviews = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -61,6 +60,7 @@ export function AgencyReviewsPage() {
                     const reviewsResponse = await reviewService.getReviewsByTour(tourId);
 
                     if (reviewsResponse && reviewsResponse.success && Array.isArray(reviewsResponse.data)) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         reviewsResponse.data.forEach((review: any) => {
                             const transformedReview: Review = {
                                 id: review.review_id,
@@ -86,8 +86,8 @@ export function AgencyReviewsPage() {
                             }
                         });
                     }
-                } catch (err) {
-                    console.warn(`Failed to fetch reviews for tour ${tour.tour_id}:`, err);
+                } catch {
+                    // Continue to next tour if one fails
                 }
             }
 
@@ -117,14 +117,12 @@ export function AgencyReviewsPage() {
         } finally {
             setLoading(false);
         }
-    };
-
-    // --- Effects ---
-    useEffect(() => {
-        fetchReviews();
     }, []);
 
-    // --- Handlers ---
+    useEffect(() => {
+        fetchReviews();
+    }, [fetchReviews]);
+
     const formatDate = (dateString: string): string => {
         try {
             return new Date(dateString).toLocaleDateString('en-US', {
@@ -145,7 +143,6 @@ export function AgencyReviewsPage() {
         alert(`Reply to review: ${reviewId}`);
     };
 
-    // --- Loading State ---
     if (loading) {
         return (
             <div className="space-y-6">

@@ -15,10 +15,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
-import type { SignupRequest, User as UserType } from "../../types/auth";
+import type { SignupRequest } from "../../types/auth";
 
 export default function SignUpPage() {
-  const [accountType, setAccountType] = useState("traveler");
+  const [accountType, setAccountType] = useState<
+    "traveller" | "guide" | "agency"
+  >("traveller");
   const [agencyName, setAgencyName] = useState("");
   const [guideName, setGuideName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -36,55 +38,96 @@ export default function SignUpPage() {
   const navigate = useNavigate();
 
   const handleCreateAccount = async () => {
+    // Reset error
+    setError("");
+
+    // Common validation for all user types
     if (!email || !password || !confirmPassword) {
-      setError("Please fill in all required fields");
+      setError("Email, password, and confirm password are required");
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Confirm password match
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Password and confirm password do not match");
       return;
     }
 
-    if (
-      accountType === "agency" &&
-      (!agencyName || !location || !phoneNumber)
-    ) {
-      setError("Please fill in all agency details");
-      return;
-    }
+    // User type specific validation
+    if (accountType === "traveller") {
+      if (!firstName || !lastName) {
+        setError("First name and last name are required for traveller signup");
+        return;
+      }
+    } else if (accountType === "agency") {
+      if (!agencyName || !location || !phoneNumber) {
+        setError(
+          "Agency name, phone number, and location are required for agency signup"
+        );
+        return;
+      }
 
-    if (accountType === "guide" && (!guideName || !location || !phoneNumber)) {
-      setError("Please fill in all guide details");
-      return;
-    }
+      // Phone number validation
+      const phoneRegex = /^[+]?[0-9\s\-()]{8,}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        setError("Please enter a valid phone number");
+        return;
+      }
+    } else if (accountType === "guide") {
+      if (!guideName || !location || !phoneNumber) {
+        setError(
+          "Guide name, phone number, and location are required for guide signup"
+        );
+        return;
+      }
 
-    if (accountType === "traveler" && (!firstName || !lastName)) {
-      setError("Please fill in your name");
-      return;
+      // Phone number validation
+      const phoneRegex = /^[+]?[0-9\s\-()]{8,}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        setError("Please enter a valid phone number");
+        return;
+      }
     }
 
     setIsLoading(true);
-    setError("");
 
     try {
+      // Prepare base data
       const baseData: SignupRequest = {
         email,
         password,
         confirmPassword,
-        userType: (accountType === "traveler" ? "traveller" : accountType) as
-          | "traveller"
-          | "guide"
-          | "agency",
+        userType: accountType,
       };
 
+      // Add type-specific fields
       let signupData: SignupRequest = { ...baseData };
 
-      if (accountType === "traveler") {
+      if (accountType === "traveller") {
         signupData = {
           ...signupData,
           firstName,
           lastName,
+        };
+      } else if (accountType === "agency") {
+        signupData = {
+          ...signupData,
+          agencyName,
+          location,
+          phoneNumber,
         };
       } else if (accountType === "guide") {
         signupData = {
@@ -93,29 +136,27 @@ export default function SignUpPage() {
           location,
           phoneNumber,
         };
-      } else {
-        signupData = {
-          ...signupData,
-          agencyName,
-          location,
-          phoneNumber,
-        };
       }
+
+      console.log("Sending signup data:", {
+        ...signupData,
+        password: "[HIDDEN]",
+        confirmPassword: "[HIDDEN]",
+      });
 
       const response = await authService.signup(signupData);
 
       if (response.success) {
-
         navigate(ROUTES.SIGN_IN, {
           replace: true,
           state: {
             justSignedUp: true,
-            email: email, 
-            message: "Account created successfully! Please sign in."
+            email: email,
+            message: "Account created successfully! Please sign in.",
           },
         });
       } else {
-        setError(response.message || "Signup failed");
+        setError(response.message || "Signup failed. Please try again.");
       }
     } catch (err) {
       setError(
@@ -138,6 +179,13 @@ export default function SignUpPage() {
     if (e.key === "Enter") {
       handleCreateAccount();
     }
+  };
+
+  // Update account type with proper typing
+  const handleAccountTypeChange = (type: "traveller" | "guide" | "agency") => {
+    setAccountType(type);
+    // Clear previous errors when switching types
+    setError("");
   };
 
   return (
@@ -176,9 +224,9 @@ export default function SignUpPage() {
 
           <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-3 gap-1 mb-6">
             <button
-              onClick={() => setAccountType("traveler")}
+              onClick={() => handleAccountTypeChange("traveller")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
-                accountType === "traveler"
+                accountType === "traveller"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               }`}
@@ -188,7 +236,7 @@ export default function SignUpPage() {
             </button>
 
             <button
-              onClick={() => setAccountType("guide")}
+              onClick={() => handleAccountTypeChange("guide")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "guide"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -200,7 +248,7 @@ export default function SignUpPage() {
             </button>
 
             <button
-              onClick={() => setAccountType("agency")}
+              onClick={() => handleAccountTypeChange("agency")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "agency"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -351,7 +399,7 @@ export default function SignUpPage() {
               </>
             )}
 
-            {accountType === "traveler" && (
+            {accountType === "traveller" && (
               <>
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
                   <div>
@@ -393,7 +441,6 @@ export default function SignUpPage() {
                     />
                   </div>
                 </div>
-
               </>
             )}
 

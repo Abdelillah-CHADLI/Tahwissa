@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { ProgressSteps } from "../../components/traveler/booking/ProgressSteps";
 import { BookingDetailsForm } from "../../components/traveler/booking/BookingDetailsForm";
 import { PaymentForm } from "../../components/traveler/booking/PaymentForm";
 import { ConfirmationStep } from "../../components/traveler/booking/ConfirmationStep";
 import { BookingSummary } from "../../components/traveler/booking/BookingSummary";
 import { BookingSuccessPage } from "../../components/traveler/booking/BookingSuccessPage";
-import { bookingService } from "../../services/api";
+import { bookingService, tourService } from "../../services/api";
 
 interface FormData {
     firstName: string;
@@ -33,6 +33,8 @@ export function BookingPage() {
     const { id } = useParams<{ id: string }>();
     const [step, setStep] = useState<number>(1);
     const [showSuccess, setShowSuccess] = useState<boolean>(false);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [tour, setTour] = useState<Tour | null>(null);
     const [formData, setFormData] = useState<FormData>({
         firstName: "",
         lastName: "",
@@ -43,16 +45,47 @@ export function BookingPage() {
         specialRequests: "",
     });
 
-    const tour: Tour = {
-        id: parseInt(id || "1"),
-        title: "Sahara Desert 5-Day Adventure",
-        location: "Tamanrasset, Algeria",
-        duration: "5 Days / 4 Nights",
-        price: 45000,
-        image: "https://images.unsplash.com/photo-1670015239006-610536cc0593",
-    };
+    useEffect(() => {
+        const fetchTour = async () => {
+            if (!id) return;
+            try {
+                setLoading(true);
+                const tourData = await tourService.getTourById(id);
+                if (tourData) {
+                    setTour({
+                        id: Number(tourData.tour_id || tourData.id),
+                        title: String(tourData.tour_title || tourData.title),
+                        location: String(tourData.location),
+                        duration: String(tourData.duration),
+                        price: Number(tourData.price),
+                        image: String(tourData.images?.[0] || tourData.image || "https://images.unsplash.com/photo-1670015239006-610536cc0593"),
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch tour:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    // --- Handlers ---
+        fetchTour();
+        
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: user.firstName || user.first_name || "",
+                    lastName: user.lastName || user.last_name || "",
+                    email: user.email || "",
+                }));
+            } catch (e) {
+                console.error("Error parsing user data", e);
+            }
+        }
+    }, [id]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -68,8 +101,16 @@ export function BookingPage() {
     };
 
     const handleConfirm = async () => {
+        if (!tour) return;
+        
         try {
-            const travellerId = localStorage.getItem('userId') || 'default-id';
+            const userStr = localStorage.getItem('user');
+            let travellerId = 'default-id';
+            
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                travellerId = user.id || user.userId;
+            }
 
             await bookingService.createBooking({
                 traveller_id: travellerId,
@@ -99,10 +140,30 @@ export function BookingPage() {
         }
     };
 
-    // --- Calculations ---
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+        );
+    }
+
+    if (!tour) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour not found</h2>
+                <button
+                    onClick={() => navigate('/traveler/explore')}
+                    className="text-blue-600 hover:underline"
+                >
+                    Back to Explore
+                </button>
+            </div>
+        );
+    }
+
     const totalPrice = tour.price * parseInt(formData.numberOfPeople || "1");
 
-    // --- Success State ---
     if (showSuccess) {
         return <BookingSuccessPage onNavigate={handleNavigate} />;
     }
