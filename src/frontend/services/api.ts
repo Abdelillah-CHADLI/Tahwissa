@@ -287,7 +287,7 @@ export const reviewService = {
 
   // Get reviews for a specific tour
   getReviewsByTour: async (tourId: string) => {
-    const response = await api.get(`/api/reviews/tour/${tourId}`);
+    const response = await api.get(`/api/reviews/${tourId}`);
     return response.data;
   },
 
