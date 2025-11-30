@@ -4,8 +4,8 @@ const router = express.Router();
 
 const { 
   addAgencyEmployee, 
-  removeAgencyEmployee, 
-  getAgencyEmployees 
+  getAgencyEmployees , 
+  removeAgencyEmployee 
 } = require("../controllers/managerController");
 
 router.post('/employees', addAgencyEmployee);

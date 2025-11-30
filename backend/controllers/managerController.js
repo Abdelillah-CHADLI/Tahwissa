@@ -59,7 +59,19 @@ export async function removeAgencyEmployee(req, res) {
   }
 
   try {
-    // Delete from agency_employees table first
+    const { data: managedAgencies, error: managerCheckError } = await supabase
+      .from('agencies')
+      .select('agency_id')
+      .eq('manager_id', employee_id);
+
+    if (managerCheckError) throw managerCheckError;
+
+    if (managedAgencies && managedAgencies.length > 0) {
+      return res.status(400).json({
+        error: "Cannot remove this employee because they are a manager of an agency"
+      });
+    }
+
     const { data: deletedEmployee, error: employeeError } = await supabase
       .from('agency_employees')
       .delete()
@@ -69,7 +81,6 @@ export async function removeAgencyEmployee(req, res) {
 
     if (employeeError) throw employeeError;
 
-    // Optionally delete from users table as well
     const { data: deletedUser, error: userError } = await supabase
       .from('users')
       .delete()
@@ -89,6 +100,7 @@ export async function removeAgencyEmployee(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
 
 // Get all employees of a specific agency by agency_id
 export async function getAgencyEmployees(req, res) {
