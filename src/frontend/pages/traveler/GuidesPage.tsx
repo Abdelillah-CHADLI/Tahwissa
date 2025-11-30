@@ -1,0 +1,379 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
+import SearchSection from "../../components/guides_agencies/SearchSection";
+import TabNavigation from "../../components/guides_agencies/TabNavigation";
+import AgencyCard from "../../components/guides_agencies/AgencyCard";
+import GuideCard from "../../components/guides_agencies/GuideCard";
+import LoadMoreButton from "../../components/guides_agencies/LoadMoreButton";
+import { agencyService, guideService } from "../../services/api";
+import { agencies as mockAgencies } from "../../data/agencies";
+import { guides as mockGuides } from "../../data/guides";
+import { ROUTES } from "../../utils/routes";
+
+const ITEMS_PER_LOAD = 3;
+
+// Define proper types for API responses
+interface BackendAgency {
+  agency_id: string;
+  agency_name: string;
+  rating?: number;
+  num_raters?: number;
+  manager_id?: string;
+  tours?: Array<{
+    tour_id: string;
+    tour_title: string;
+    location: string;
+    price: number;
+    start_date?: string;
+    guide_id?: string | null;
+  }>;
+}
+
+interface BackendGuide {
+  guide_id: string;
+  guide_name: string;
+  ratings?: number;
+  num_raters?: number;
+}
+
+interface BrowseAgenciesResponse {
+  success: boolean;
+  data: {
+    agencies: BackendAgency[];
+    pagination: {
+      page: number;
+      size: number;
+      total: number;
+      totalPages: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+}
+
+interface SearchAgenciesResponse {
+  success: boolean;
+  data: BackendAgency[];
+}
+
+interface SearchGuidesResponse {
+  success: boolean;
+  data: BackendGuide[];
+}
+
+const mapAgencyData = (backendAgency: BackendAgency) => {
+  const avgRating =
+    backendAgency.num_raters && backendAgency.num_raters > 0 && backendAgency.rating
+      ? (backendAgency.rating / backendAgency.num_raters).toFixed(1)
+      : '0';
+
+  const toursCount = backendAgency.tours ? backendAgency.tours.length : 0;
+
+  return {
+    id: backendAgency.agency_id,
+    name: backendAgency.agency_name,
+    subtitle: `Rated ${avgRating} ⭐ • ${backendAgency.num_raters || 0} reviews`,
+    image: "../src/frontend/data/mock_img.jpg",
+    location: "Algeria",
+    tours: toursCount,
+    teamSize: "Professional Team",
+    verified: true,
+    toursData: backendAgency.tours || []
+  };
+};
+
+const mapGuideData = (backendGuide: BackendGuide) => {
+  const avgRating =
+    backendGuide.num_raters && backendGuide.num_raters > 0 && backendGuide.ratings
+      ? (backendGuide.ratings / backendGuide.num_raters).toFixed(1)
+      : '0';
+
+  return {
+    id: backendGuide.guide_id,
+    name: backendGuide.guide_name,
+    subtitle: `Rated ${avgRating} ⭐ • ${backendGuide.num_raters || 0} reviews`,
+    image: "../src/frontend/data/mock_img.jpg",
+    location: "Algeria",
+    tours: 0,
+    experience: "Professional Guide",
+    languages: ["Arabic", "French", "English"],
+    verified: true,
+  };
+};
+
+const TravelAgenciesPage = () => {
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("agencies");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [agencies, setAgencies] = useState<any[]>([]);
+  const [guides, setGuides] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [visibleAgencies, setVisibleAgencies] = useState<any[]>([]);
+  const [visibleGuides, setVisibleGuides] = useState<any[]>([]);
+  const [usingMockData, setUsingMockData] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError(null);
+      setUsingMockData(false);
+
+      try {
+        if (activeTab === "agencies") {
+          if (searchQuery.trim()) {
+            try {
+              const response = await agencyService.searchAgencies(
+                searchQuery,
+                50
+              ) as SearchAgenciesResponse;
+
+              if (response.success && Array.isArray(response.data)) {
+                const mappedAgencies = response.data.map(mapAgencyData);
+                setAgencies(mappedAgencies);
+                setVisibleAgencies(mappedAgencies.slice(0, ITEMS_PER_LOAD));
+              } else {
+                throw new Error("Invalid search response format");
+              }
+            } catch (apiError) {
+              console.warn("Agencies search API failed, using mock data");
+              setAgencies(mockAgencies);
+              setVisibleAgencies(mockAgencies.slice(0, ITEMS_PER_LOAD));
+              setUsingMockData(true);
+            }
+          } else {
+            try {
+              const response = await agencyService.browseAgencies(1, 50) as BrowseAgenciesResponse;
+
+              if (
+                response.success &&
+                response.data &&
+                Array.isArray(response.data.agencies)
+              ) {
+                const mappedAgencies = response.data.agencies.map(mapAgencyData);
+                setAgencies(mappedAgencies);
+                setVisibleAgencies(mappedAgencies.slice(0, ITEMS_PER_LOAD));
+              } else {
+                throw new Error("Invalid browse response format");
+              }
+            } catch (apiError) {
+              console.warn("Agencies browse API failed, using mock data");
+              setAgencies(mockAgencies);
+              setVisibleAgencies(mockAgencies.slice(0, ITEMS_PER_LOAD));
+              setUsingMockData(true);
+            }
+          }
+        } else {
+          if (searchQuery.trim()) {
+            try {
+              const response = await guideService.searchGuides(searchQuery, 50) as SearchGuidesResponse;
+
+              if (response.success && Array.isArray(response.data)) {
+                const mappedGuides = response.data.map(mapGuideData);
+                setGuides(mappedGuides);
+                setVisibleGuides(mappedGuides.slice(0, ITEMS_PER_LOAD));
+              } else {
+                throw new Error("Invalid guides response format");
+              }
+            } catch (apiError) {
+              console.warn("Guides search API failed, using mock data");
+              setGuides(mockGuides);
+              setVisibleGuides(mockGuides.slice(0, ITEMS_PER_LOAD));
+              setUsingMockData(true);
+            }
+          } else {
+            console.warn(
+              "No search query for guides - search parameter is required, using mock data"
+            );
+            setGuides(mockGuides);
+            setVisibleGuides(mockGuides.slice(0, ITEMS_PER_LOAD));
+            setUsingMockData(true);
+            setError("Enter a search term to find guides");
+          }
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        setError("Failed to load data");
+        if (activeTab === "agencies") {
+          setAgencies(mockAgencies);
+          setVisibleAgencies(mockAgencies.slice(0, ITEMS_PER_LOAD));
+        } else {
+          setGuides(mockGuides);
+          setVisibleGuides(mockGuides.slice(0, ITEMS_PER_LOAD));
+        }
+        setUsingMockData(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [activeTab, searchQuery]);
+
+  const filteredAgencies = visibleAgencies.filter(
+    (agency) =>
+      agency.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agency.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (agency.subtitle &&
+        agency.subtitle.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const filteredGuides = visibleGuides.filter(
+    (guide) =>
+      guide.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      guide.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (guide.subtitle &&
+        guide.subtitle.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const handleViewProfile = (profileData: any, type: "agency" | "guide") => {
+    console.log("Navigating to profile with tours data:", {
+      profileId: profileData.id,
+      toursCount: profileData.tours,
+      toursData: profileData.toursData
+    });
+    
+    navigate(ROUTES.GUIDE_PROFILE, {
+      state: {
+        profileId: profileData.id,
+        profileType: type,
+        initialData: {
+          name: profileData.name,
+          subtitle: profileData.subtitle,
+          image: profileData.image,
+          tours: profileData.toursData || [],
+          toursCount: profileData.tours || 0
+        },
+      },
+    });
+  };
+
+  const handleLoadMoreAgencies = () => {
+    const nextAgencies = agencies.slice(
+      visibleAgencies.length,
+      visibleAgencies.length + ITEMS_PER_LOAD
+    );
+    setVisibleAgencies((prev) => [...prev, ...nextAgencies]);
+  };
+
+  const handleLoadMoreGuides = () => {
+    const nextGuides = guides.slice(
+      visibleGuides.length,
+      visibleGuides.length + ITEMS_PER_LOAD
+    );
+    setVisibleGuides((prev) => [...prev, ...nextGuides]);
+  };
+
+  const getTitle = () => {
+    return activeTab === "agencies" ? "Travel Agencies" : "Local Guides";
+  };
+
+  const getDescription = () => {
+    return activeTab === "agencies"
+      ? "Professional agencies offering comprehensive tour packages across Algeria"
+      : "Certified local guides providing personalized experiences and expert knowledge";
+  };
+
+  const hasMoreAgencies = visibleAgencies.length < agencies.length;
+  const hasMoreGuides = visibleGuides.length < guides.length;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <SearchSection
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            activeTab={activeTab}
+          />
+          <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+      </div>
+
+      {usingMockData && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-yellow-800 font-medium">
+              {activeTab === "guides" && !searchQuery
+                ? "🔍 Enter a search term to find guides"
+                : "🔄 Using demo data"}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mb-8"
+        >
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {getTitle()}
+          </h1>
+          <p className="text-gray-600">{getDescription()}</p>
+
+          {error && !usingMockData && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800 text-sm">{error}</p>
+            </div>
+          )}
+        </motion.div>
+
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#348086]"></div>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {activeTab === "agencies" &&
+                filteredAgencies.map((agency, index) => (
+                  <AgencyCard
+                    key={agency.id}
+                    agency={agency}
+                    index={index}
+                    onViewProfile={() => handleViewProfile(agency, "agency")}
+                  />
+                ))}
+
+              {activeTab === "guides" &&
+                filteredGuides.map((guide, index) => (
+                  <GuideCard
+                    key={guide.id}
+                    guide={guide}
+                    index={index}
+                    onViewProfile={() => handleViewProfile(guide, "guide")}
+                  />
+                ))}
+            </div>
+
+            <LoadMoreButton
+              onClick={handleLoadMoreAgencies}
+              visible={activeTab === "agencies" && hasMoreAgencies}
+            />
+            <LoadMoreButton
+              onClick={handleLoadMoreGuides}
+              visible={activeTab === "guides" && hasMoreGuides}
+            />
+
+            {((activeTab === "agencies" && filteredAgencies.length === 0) ||
+              (activeTab === "guides" && filteredGuides.length === 0)) && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg">
+                  No {activeTab === "agencies" ? "agencies" : "guides"} found
+                  {searchQuery && ` matching "${searchQuery}"`}.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TravelAgenciesPage;

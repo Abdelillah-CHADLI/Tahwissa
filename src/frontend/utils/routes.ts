@@ -1,0 +1,19 @@
+export const ROUTES = {
+  HOME: '/traveler',
+  EXPLORE: '/traveler/explore',
+  GUIDES: '/traveler/guides',
+  COMMUNITY: '/traveler/community',
+  REQUESTS: '/traveler/requests',
+  NOTIFICATIONS: '/traveler/notifications',
+  PROFILE: '/traveler/profile',
+  ADD_POST: '/traveler/add-post',
+  DETAILS: '/traveler/details',
+  SIGN_IN: '/traveler/signin',
+  SIGN_UP: '/traveler/signup',
+  GUIDE_PROFILE: '/traveler/guide-profile',
+  PROFILE_COMPLETION: '/traveler/profile-completion',
+  BOOKING: '/traveler/booking',
+  
+
+  AGENCY_DASHBOARD: '/agency',
+} as const;
