@@ -124,10 +124,14 @@ const ExplorePage = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-800 text-sm">{error}</p>
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-800 text-sm">{error}</p>
             <button
               onClick={() => refetch(filters, searchQuery)}
               className="mt-2 bg-red-100 text-red-700 px-4 py-2 rounded text-sm font-medium hover:bg-red-200"
             >
+              Try again
               Try again
             </button>
           </div>

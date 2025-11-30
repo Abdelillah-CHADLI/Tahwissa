@@ -16,6 +16,24 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
 import type { SignupRequest } from "../../types/auth";
+import { motion } from "motion/react";
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  User,
+  Briefcase,
+  Users,
+  MapPin,
+  Phone,
+  Eye,
+  EyeOff,
+} from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/routes";
+import { authService } from "../../services/authService";
+import type { SignupRequest } from "../../types/auth";
 
 export default function SignUpPage() {
   const [accountType, setAccountType] = useState<"traveller" | "guide" | "agency">("traveller");
@@ -33,6 +51,7 @@ export default function SignUpPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleCreateAccount = async () => {
@@ -41,6 +60,7 @@ export default function SignUpPage() {
 
     // Validation
     if (!email || !password || !confirmPassword) {
+      setError("Please fill in all required fields");
       setError("Please fill in all required fields");
       return;
     }
@@ -55,6 +75,8 @@ export default function SignUpPage() {
       return;
     }
 
+    if (accountType === "guide" && (!guideName || !location || !phoneNumber)) {
+      setError("Please fill in all guide details");
     if (accountType === "guide" && (!guideName || !location || !phoneNumber)) {
       setError("Please fill in all guide details");
       return;
@@ -125,6 +147,7 @@ export default function SignUpPage() {
     } finally {
       setIsLoading(false);
     }
+    }
   };
 
   const handleBackToHome = () => {
@@ -136,6 +159,7 @@ export default function SignUpPage() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
     if (e.key === "Enter") {
       handleCreateAccount();
     }
@@ -152,9 +176,14 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 xs:p-6 py-8 xs:py-12">
       <div className="w-full max-w-2xl mb-6 xs:mb-8">
         <button
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 xs:p-6 py-8 xs:py-12">
+      <div className="w-full max-w-2xl mb-6 xs:mb-8">
+        <button
           onClick={handleBackToHome}
           className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors text-sm xs:text-base"
+          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors text-sm xs:text-base"
         >
+          <ArrowLeft className="w-4 h-4 xs:w-5 xs:h-5" />
           <ArrowLeft className="w-4 h-4 xs:w-5 xs:h-5" />
           <span className="font-medium">Back to Home</span>
         </button>
@@ -174,6 +203,14 @@ export default function SignUpPage() {
             <p className="text-gray-600 text-sm xs:text-base">
               Join thousands of travelers exploring Algeria
             </p>
+        <div className="bg-white rounded-xl xs:rounded-2xl shadow-lg p-6 xs:p-8">
+          <div className="text-center mb-6 xs:mb-8">
+            <h1 className="text-xl xs:text-2xl font-bold text-gray-900 mb-2">
+              Create an Account
+            </h1>
+            <p className="text-gray-600 text-sm xs:text-base">
+              Join thousands of travelers exploring Algeria
+            </p>
           </div>
 
           {error && (
@@ -182,6 +219,7 @@ export default function SignUpPage() {
             </div>
           )}
 
+          <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-3 gap-1 mb-6">
           <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-3 gap-1 mb-6">
             <button
               onClick={() => handleAccountTypeChange("traveller")}
@@ -192,8 +230,10 @@ export default function SignUpPage() {
               }`}
             >
               <User className="w-3 h-3 xs:w-4 xs:h-4" />
+              <User className="w-3 h-3 xs:w-4 xs:h-4" />
               Traveler
             </button>
+
 
             <button
               onClick={() => handleAccountTypeChange("guide")}
@@ -217,9 +257,13 @@ export default function SignUpPage() {
             >
               <Briefcase className="w-3 h-3 xs:w-4 xs:h-4" />
               Agency
+              <Briefcase className="w-3 h-3 xs:w-4 xs:h-4" />
+              Agency
             </button>
           </div>
 
+          <div className="space-y-4 xs:space-y-5" onKeyPress={handleKeyPress}>
+            {accountType === "agency" && (
           <div className="space-y-4 xs:space-y-5" onKeyPress={handleKeyPress}>
             {accountType === "agency" && (
               <>
@@ -229,14 +273,22 @@ export default function SignUpPage() {
                     className="block text-sm font-semibold text-gray-900 mb-2"
                   >
                     Agency Name *
+                  <label
+                    htmlFor="agencyName"
+                    className="block text-sm font-semibold text-gray-900 mb-2"
+                  >
+                    Agency Name *
                   </label>
                   <div className="relative">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                     <input
                       id="agencyName"
                       type="text"
                       value={agencyName}
                       onChange={(e) => setAgencyName(e.target.value)}
+                      placeholder="Your Agency Name"
+                      className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                       placeholder="Your Agency Name"
                       className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                       disabled={isLoading}
@@ -314,6 +366,7 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
                   <div>
                     <label
                       htmlFor="guideLocation"
@@ -323,6 +376,7 @@ export default function SignUpPage() {
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                       <input
                         id="guideLocation"
                         type="text"
@@ -330,10 +384,12 @@ export default function SignUpPage() {
                         onChange={(e) => setLocation(e.target.value)}
                         placeholder="City, Country"
                         className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                         disabled={isLoading}
                       />
                     </div>
                   </div>
+
 
                   <div>
                     <label
@@ -344,12 +400,16 @@ export default function SignUpPage() {
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                       <input
                         id="guidePhone"
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+213 XXX XXX XXX"
+                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                         className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                         disabled={isLoading}
                       />
@@ -409,15 +469,28 @@ export default function SignUpPage() {
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-900 mb-2"
               >
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
                 Email *
               </label>
               <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  placeholder={
+                    accountType === "agency"
+                      ? "agency@example.com"
+                      : accountType === "guide"
+                      ? "guide@example.com"
+                      : "your.email@example.com"
+                  }
+                  className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                   placeholder={
                     accountType === "agency"
                       ? "agency@example.com"
@@ -436,19 +509,37 @@ export default function SignUpPage() {
                 htmlFor="password"
                 className="block text-sm font-semibold text-gray-900 mb-2"
               >
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
                 Password *
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
                   id="password"
+                  type={showPassword ? "text" : "password"}
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a strong password"
                   className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                  className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -468,19 +559,37 @@ export default function SignUpPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-semibold text-gray-900 mb-2"
               >
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-semibold text-gray-900 mb-2"
+              >
                 Confirm Password *
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
                   id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                  className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                   disabled={isLoading}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -499,12 +608,21 @@ export default function SignUpPage() {
               onClick={handleCreateAccount}
               disabled={isLoading}
               className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md text-sm xs:text-base min-h-12"
+              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md text-sm xs:text-base min-h-12"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Users className="w-4 h-4 xs:w-5 xs:h-5" />
+                <Users className="w-4 h-4 xs:w-5 xs:h-5" />
               )}
+              {isLoading
+                ? "Creating Account..."
+                : accountType === "agency"
+                ? "Create Agency Account"
+                : accountType === "guide"
+                ? "Create Guide Account"
+                : "Create Account"}
               {isLoading
                 ? "Creating Account..."
                 : accountType === "agency"
@@ -515,6 +633,8 @@ export default function SignUpPage() {
             </button>
           </div>
 
+          <p className="text-center text-xs xs:text-sm text-gray-600 mt-6">
+            Already have an account?{" "}
           <p className="text-center text-xs xs:text-sm text-gray-600 mt-6">
             Already have an account?{" "}
             <button
