@@ -15,10 +15,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
-import type { SignupRequest, User as UserType } from "../../types/auth";
+import type { SignupRequest } from "../../types/auth";
 
 export default function SignUpPage() {
-  const [accountType, setAccountType] = useState("traveler");
+  const [accountType, setAccountType] = useState<
+    "traveller" | "guide" | "agency"
+  >("traveller");
   const [agencyName, setAgencyName] = useState("");
   const [guideName, setGuideName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -33,35 +35,34 @@ export default function SignUpPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleCreateAccount = async () => {
+    // Reset error
+    setError("");
+
+    // Common validation for all user types
     if (!email || !password || !confirmPassword) {
-      setError("Please fill in all required fields");
+      setError("Email, password, and confirm password are required");
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    // Password validation
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Confirm password match
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (
-      accountType === "agency" &&
-      (!agencyName || !location || !phoneNumber)
-    ) {
-      setError("Please fill in all agency details");
-      return;
-    }
-
-    if (accountType === "guide" && (!guideName || !location || !phoneNumber)) {
-      setError("Please fill in all guide details");
-      return;
-    }
-
-    if (accountType === "traveler" && (!firstName || !lastName)) {
-      setError("Please fill in your name");
+      setError("Password and confirm password do not match");
       return;
     }
 
@@ -80,7 +81,7 @@ export default function SignUpPage() {
       }
 
       // Phone number validation
-      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,}$/;
+      const phoneRegex = /^[+]?[0-9\s\-()]{8,}$/;
       if (!phoneRegex.test(phoneNumber)) {
         setError("Please enter a valid phone number");
         return;
@@ -94,7 +95,7 @@ export default function SignUpPage() {
       }
 
       // Phone number validation
-      const phoneRegex = /^[\+]?[0-9\s\-\(\)]{8,}$/;
+      const phoneRegex = /^[+]?[0-9\s\-()]{8,}$/;
       if (!phoneRegex.test(phoneNumber)) {
         setError("Please enter a valid phone number");
         return;
@@ -102,26 +103,31 @@ export default function SignUpPage() {
     }
 
     setIsLoading(true);
-    setError("");
 
     try {
+      // Prepare base data
       const baseData: SignupRequest = {
         email,
         password,
         confirmPassword,
-        userType: (accountType === "traveler" ? "traveller" : accountType) as
-          | "traveller"
-          | "guide"
-          | "agency",
+        userType: accountType,
       };
 
+      // Add type-specific fields
       let signupData: SignupRequest = { ...baseData };
 
-      if (accountType === "traveler") {
+      if (accountType === "traveller") {
         signupData = {
           ...signupData,
           firstName,
           lastName,
+        };
+      } else if (accountType === "agency") {
+        signupData = {
+          ...signupData,
+          agencyName,
+          location,
+          phoneNumber,
         };
       } else if (accountType === "guide") {
         signupData = {
@@ -130,29 +136,27 @@ export default function SignUpPage() {
           location,
           phoneNumber,
         };
-      } else {
-        signupData = {
-          ...signupData,
-          agencyName,
-          location,
-          phoneNumber,
-        };
       }
+
+      console.log("Sending signup data:", {
+        ...signupData,
+        password: "[HIDDEN]",
+        confirmPassword: "[HIDDEN]",
+      });
 
       const response = await authService.signup(signupData);
 
       if (response.success) {
-
         navigate(ROUTES.SIGN_IN, {
           replace: true,
           state: {
             justSignedUp: true,
-            email: email, 
-            message: "Account created successfully! Please sign in."
+            email: email,
+            message: "Account created successfully! Please sign in.",
           },
         });
       } else {
-        setError(response.message || "Signup failed");
+        setError(response.message || "Signup failed. Please try again.");
       }
     } catch (err) {
       setError(
@@ -160,7 +164,6 @@ export default function SignUpPage() {
       );
     } finally {
       setIsLoading(false);
-    }
     }
   };
 
@@ -173,7 +176,6 @@ export default function SignUpPage() {
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
     if (e.key === "Enter") {
       handleCreateAccount();
     }
@@ -190,14 +192,9 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 xs:p-6 py-8 xs:py-12">
       <div className="w-full max-w-2xl mb-6 xs:mb-8">
         <button
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 xs:p-6 py-8 xs:py-12">
-      <div className="w-full max-w-2xl mb-6 xs:mb-8">
-        <button
           onClick={handleBackToHome}
           className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors text-sm xs:text-base"
-          className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors text-sm xs:text-base"
         >
-          <ArrowLeft className="w-4 h-4 xs:w-5 xs:h-5" />
           <ArrowLeft className="w-4 h-4 xs:w-5 xs:h-5" />
           <span className="font-medium">Back to Home</span>
         </button>
@@ -217,14 +214,6 @@ export default function SignUpPage() {
             <p className="text-gray-600 text-sm xs:text-base">
               Join thousands of travelers exploring Algeria
             </p>
-        <div className="bg-white rounded-xl xs:rounded-2xl shadow-lg p-6 xs:p-8">
-          <div className="text-center mb-6 xs:mb-8">
-            <h1 className="text-xl xs:text-2xl font-bold text-gray-900 mb-2">
-              Create an Account
-            </h1>
-            <p className="text-gray-600 text-sm xs:text-base">
-              Join thousands of travelers exploring Algeria
-            </p>
           </div>
 
           {error && (
@@ -234,23 +223,20 @@ export default function SignUpPage() {
           )}
 
           <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-3 gap-1 mb-6">
-          <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-3 gap-1 mb-6">
             <button
-              onClick={() => setAccountType("traveler")}
+              onClick={() => handleAccountTypeChange("traveller")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
-                accountType === "traveler"
+                accountType === "traveller"
                   ? "bg-white text-gray-900 shadow-sm"
                   : "bg-transparent text-gray-600 hover:text-gray-900"
               }`}
             >
               <User className="w-3 h-3 xs:w-4 xs:h-4" />
-              <User className="w-3 h-3 xs:w-4 xs:h-4" />
               Traveler
             </button>
 
-
             <button
-              onClick={() => setAccountType("guide")}
+              onClick={() => handleAccountTypeChange("guide")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "guide"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -262,7 +248,7 @@ export default function SignUpPage() {
             </button>
 
             <button
-              onClick={() => setAccountType("agency")}
+              onClick={() => handleAccountTypeChange("agency")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "agency"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -271,13 +257,9 @@ export default function SignUpPage() {
             >
               <Briefcase className="w-3 h-3 xs:w-4 xs:h-4" />
               Agency
-              <Briefcase className="w-3 h-3 xs:w-4 xs:h-4" />
-              Agency
             </button>
           </div>
 
-          <div className="space-y-4 xs:space-y-5" onKeyPress={handleKeyPress}>
-            {accountType === "agency" && (
           <div className="space-y-4 xs:space-y-5" onKeyPress={handleKeyPress}>
             {accountType === "agency" && (
               <>
@@ -287,14 +269,8 @@ export default function SignUpPage() {
                     className="block text-sm font-semibold text-gray-900 mb-2"
                   >
                     Agency Name *
-                  <label
-                    htmlFor="agencyName"
-                    className="block text-sm font-semibold text-gray-900 mb-2"
-                  >
-                    Agency Name *
                   </label>
                   <div className="relative">
-                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                     <input
                       id="agencyName"
@@ -303,39 +279,19 @@ export default function SignUpPage() {
                       onChange={(e) => setAgencyName(e.target.value)}
                       placeholder="Your Agency Name"
                       className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                      placeholder="Your Agency Name"
-                      className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                       disabled={isLoading}
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
-                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
                   <div>
                     <label
                       htmlFor="agencyLocation"
                       className="block text-sm font-semibold text-gray-900 mb-2"
                     >
                       Agency Location *
-                    <label
-                      htmlFor="agencyLocation"
-                      className="block text-sm font-semibold text-gray-900 mb-2"
-                    >
-                      Agency Location *
                     </label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                      <input
-                        id="agencyLocation"
-                        type="text"
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        placeholder="City, Country"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                        disabled={isLoading}
-                      />
-                    </div>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                       <input
@@ -350,31 +306,13 @@ export default function SignUpPage() {
                     </div>
                   </div>
 
-
                   <div>
                     <label
                       htmlFor="agencyPhone"
                       className="block text-sm font-semibold text-gray-900 mb-2"
                     >
                       Phone Number *
-                    <label
-                      htmlFor="agencyPhone"
-                      className="block text-sm font-semibold text-gray-900 mb-2"
-                    >
-                      Phone Number *
                     </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                      <input
-                        id="agencyPhone"
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="+213 XXX XXX XXX"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                        disabled={isLoading}
-                      />
-                    </div>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                       <input
@@ -392,7 +330,6 @@ export default function SignUpPage() {
               </>
             )}
 
-            {accountType === "guide" && (
             {accountType === "guide" && (
               <>
                 <div>
@@ -401,23 +338,12 @@ export default function SignUpPage() {
                     className="block text-sm font-semibold text-gray-900 mb-2"
                   >
                     Guide Name *
-                  <label
-                    htmlFor="guideName"
-                    className="block text-sm font-semibold text-gray-900 mb-2"
-                  >
-                    Guide Name *
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                     <input
                       id="guideName"
-                      id="guideName"
                       type="text"
-                      value={guideName}
-                      onChange={(e) => setGuideName(e.target.value)}
-                      placeholder="Your Guide Name"
-                      className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                       value={guideName}
                       onChange={(e) => setGuideName(e.target.value)}
                       placeholder="Your Guide Name"
@@ -428,13 +354,7 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
-                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
                   <div>
-                    <label
-                      htmlFor="guideLocation"
-                      className="block text-sm font-semibold text-gray-900 mb-2"
-                    >
-                      Location *
                     <label
                       htmlFor="guideLocation"
                       className="block text-sm font-semibold text-gray-900 mb-2"
@@ -443,28 +363,19 @@ export default function SignUpPage() {
                     </label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                       <input
-                        id="guideLocation"
                         id="guideLocation"
                         type="text"
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                         placeholder="City, Country"
                         className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                         disabled={isLoading}
                       />
                     </div>
                   </div>
 
-
                   <div>
-                    <label
-                      htmlFor="guidePhone"
-                      className="block text-sm font-semibold text-gray-900 mb-2"
-                    >
-                      Phone Number *
                     <label
                       htmlFor="guidePhone"
                       className="block text-sm font-semibold text-gray-900 mb-2"
@@ -473,17 +384,12 @@ export default function SignUpPage() {
                     </label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                       <input
-                        id="guidePhone"
                         id="guidePhone"
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+213 XXX XXX XXX"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                         className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                         disabled={isLoading}
                       />
@@ -493,7 +399,7 @@ export default function SignUpPage() {
               </>
             )}
 
-            {accountType === "traveler" && (
+            {accountType === "traveller" && (
               <>
                 <div className="grid grid-cols-1 xs:grid-cols-2 gap-3 xs:gap-4">
                   <div>
@@ -535,7 +441,6 @@ export default function SignUpPage() {
                     />
                   </div>
                 </div>
-
               </>
             )}
 
@@ -544,14 +449,9 @@ export default function SignUpPage() {
                 htmlFor="email"
                 className="block text-sm font-semibold text-gray-900 mb-2"
               >
-              <label
-                htmlFor="email"
-                className="block text-sm font-semibold text-gray-900 mb-2"
-              >
                 Email *
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
                   id="email"
@@ -566,24 +466,12 @@ export default function SignUpPage() {
                       : "your.email@example.com"
                   }
                   className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                  placeholder={
-                    accountType === "agency"
-                      ? "agency@example.com"
-                      : accountType === "guide"
-                      ? "guide@example.com"
-                      : "your.email@example.com"
-                  }
-                  className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                   disabled={isLoading}
                 />
               </div>
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-semibold text-gray-900 mb-2"
-              >
               <label
                 htmlFor="password"
                 className="block text-sm font-semibold text-gray-900 mb-2"
@@ -592,29 +480,15 @@ export default function SignUpPage() {
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
                   id="password"
-                  type={showPassword ? "text" : "password"}
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a strong password"
                   className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                  className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                   disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
@@ -634,37 +508,19 @@ export default function SignUpPage() {
                 htmlFor="confirmPassword"
                 className="block text-sm font-semibold text-gray-900 mb-2"
               >
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-semibold text-gray-900 mb-2"
-              >
                 Confirm Password *
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
                   id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
-                  className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
                   disabled={isLoading}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -683,21 +539,12 @@ export default function SignUpPage() {
               onClick={handleCreateAccount}
               disabled={isLoading}
               className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md text-sm xs:text-base min-h-12"
-              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md text-sm xs:text-base min-h-12"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <Users className="w-4 h-4 xs:w-5 xs:h-5" />
-                <Users className="w-4 h-4 xs:w-5 xs:h-5" />
               )}
-              {isLoading
-                ? "Creating Account..."
-                : accountType === "agency"
-                ? "Create Agency Account"
-                : accountType === "guide"
-                ? "Create Guide Account"
-                : "Create Account"}
               {isLoading
                 ? "Creating Account..."
                 : accountType === "agency"
@@ -708,8 +555,6 @@ export default function SignUpPage() {
             </button>
           </div>
 
-          <p className="text-center text-xs xs:text-sm text-gray-600 mt-6">
-            Already have an account?{" "}
           <p className="text-center text-xs xs:text-sm text-gray-600 mt-6">
             Already have an account?{" "}
             <button

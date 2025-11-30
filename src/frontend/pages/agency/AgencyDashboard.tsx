@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from "motion/react";
 import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X, Shield } from 'lucide-react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/api';
 import { mockAgencyProvider } from '../../data/mockAgency';
+import { ROUTES } from '../../utils/routes';
 
 export function AgencyDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -25,7 +26,15 @@ export function AgencyDashboard() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const agencyId = localStorage.getItem('agencyId') || '1';
+                let agencyId = localStorage.getItem('agencyId');
+                const userStr = localStorage.getItem('user');
+                if (userStr && !agencyId) {
+                    const user = JSON.parse(userStr);
+                    agencyId = user.agencyId || user.id;
+                }
+                
+                if (!agencyId) return;
+
                 const response = await profileService.getProfile(agencyId, 'agency');
                 if (response.data) {
                     setAgencyProfile({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Calendar, Users, DollarSign, MapPin, Loader2, AlertCircle } from "lucide-react";
 import { BookingCard } from "../../components/agency/bookings/BookingCard";
 import { StatsCards } from "../../components/agency/bookings/StatsCards";
@@ -34,17 +34,16 @@ export function AgencyBookingPage() {
         return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
     };
 
-    // --- API Calls ---
-    const fetchAgencyBookings = async () => {
+    const fetchAgencyBookings = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
             const agencyId = getAgencyId();
-            const response = await bookingService.getBookings({ agencyId });
+            const bookingsData = await bookingService.getBookings({ agencyId });
 
-            if (response.success && response.data) {
-                const transformedBookings: Booking[] = response.data.map((booking: any) => ({
+            if (Array.isArray(bookingsData)) {
+                const transformedBookings: Booking[] = bookingsData.map((booking: any) => ({
                     id: booking.booking_id,
                     customerName: booking.travellers
                         ? `${booking.travellers.traveller_fn} ${booking.travellers.traveller_ls}`
@@ -57,14 +56,14 @@ export function AgencyBookingPage() {
                     email: booking.travellers?.email || "No email",
                     phone: booking.travellers?.phone || "No phone",
                     location: booking.tours?.location || "Unknown Location",
-                    duration: `${booking.tours?.duration || 0} days`,
-                    tourType: booking.tours?.category || "Adventure",
+                    duration: booking.tours?.duration ? `${booking.tours.duration} days` : "N/A",
+                    tourType: booking.tours?.category || "Standard",
                     bookedOn: booking.booking_date || new Date().toISOString().split('T')[0]
                 }));
 
                 setBookings(transformedBookings);
             } else {
-                throw new Error(response.error || "Invalid response from server");
+                throw new Error("Invalid response format from server");
             }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to load bookings";
@@ -73,7 +72,7 @@ export function AgencyBookingPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const handleConfirmBooking = async (bookingId: string) => {
         try {
@@ -100,12 +99,10 @@ export function AgencyBookingPage() {
         }
     };
 
-    // --- Effects ---
     useEffect(() => {
         fetchAgencyBookings();
-    }, []);
+    }, [fetchAgencyBookings]);
 
-    // --- Data Processing ---
     const mapStatus = (backendStatus: string): "pending" | "confirmed" | "cancelled" => {
         const statusMap: Record<string, "pending" | "confirmed" | "cancelled"> = {
             "PENDING": "pending",
@@ -174,7 +171,6 @@ export function AgencyBookingPage() {
         ? bookings.find((b) => b.id === selectedBooking)
         : null;
 
-    // --- Loading State ---
     if (loading) {
         return (
             <div className="p-6">

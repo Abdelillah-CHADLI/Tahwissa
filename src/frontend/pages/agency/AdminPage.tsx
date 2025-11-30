@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UserPlus, Search, AlertCircle } from "lucide-react";
 import { EmployeeList } from "../../components/agency/admin/EmployeeList";
 import { AddEditModal } from "../../components/agency/admin/AddEditModal";
 import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
-
-const API_BASE_URL = "http://localhost:5000";
+import { employeeService } from "../../services/api";
 
 export function AdminPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -23,48 +22,50 @@ export function AdminPage() {
         return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
     };
 
-    // --- API Calls ---
-    const fetchEmployees = async () => {
+    const fetchEmployees = useCallback(async () => {
         setFetchLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees?agency_id=${getAgencyId()}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to fetch employees: ${response.statusText}`);
+            const agencyId = getAgencyId();
+            if (!agencyId) throw new Error("Agency ID not found");
+            
+            const response = await employeeService.getEmployees(agencyId);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const data = Array.isArray(response) ? response : ((response as any).data || []);
+            
+            if (data.length === 0) {
+                setEmployees([]);
+            } else {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const mappedData = data.map((emp: any) => {
+                    if (emp.users) {
+                        return {
+                            id: emp.employee_id,
+                            name: emp.users.email.split('@')[0],
+                            email: emp.users.email,
+                            role: emp.users.role,
+                            phone: "Not available",
+                            status: "active"
+                        };
+                    }
+                    return emp;
+                });
+                setEmployees(mappedData);
             }
-
-            const employeesData = await response.json();
-            setEmployees(employeesData);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch employees";
             setError(errorMessage);
         } finally {
             setFetchLoading(false);
         }
-    };
+    }, []);
 
     const handleDeleteEmployee = async (id: string) => {
         if (confirm("Are you sure you want to delete this employee?")) {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`${API_BASE_URL}/manager/employees/${id}`, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to delete employee: ${response.statusText}`);
-                }
-
+                await employeeService.deleteEmployee(id);
                 await fetchEmployees();
             } catch (err) {
                 const errorMessage = err instanceof Error ? err.message : "Failed to delete employee";
@@ -75,62 +76,19 @@ export function AdminPage() {
         }
     };
 
-    const handleToggleStatus = async (id: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const employee = employees.find(e => e.id === id);
-            if (!employee) return;
-
-            const newStatus = employee.status === "active" ? "inactive" : "active";
-
-            const response = await fetch(`${API_BASE_URL}/manager/employees/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    status: newStatus
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to update employee status: ${response.statusText}`);
-            }
-
-            await fetchEmployees();
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to update employee status";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleAddEmployee = async (employeeData: Omit<Employee, "id">) => {
         setLoading(true);
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: employeeData.email,
-                    password: "123",
-                    agency_id: getAgencyId(),
-                    name: employeeData.name,
-                    role: employeeData.role,
-                    phone: employeeData.phone
-                })
+            await employeeService.createEmployee({
+                email: employeeData.email,
+                password: "123", 
+                agency_id: getAgencyId(),
+                name: employeeData.name,
+                role: employeeData.role,
+                phone: employeeData.phone
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `Failed to add employee: ${response.statusText}`);
-            }
 
             await fetchEmployees();
             setIsAddModalOpen(false);
@@ -142,49 +100,20 @@ export function AdminPage() {
         }
     };
 
-    const handleEditEmployee = async (employeeData: Omit<Employee, "id">) => {
-        if (!selectedEmployee) return;
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees/${selectedEmployee.id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: employeeData.email,
-                    name: employeeData.name,
-                    role: employeeData.role,
-                    phone: employeeData.phone,
-                    status: employeeData.status
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `Failed to update employee: ${response.statusText}`);
-            }
-
-            await fetchEmployees();
-            setIsEditModalOpen(false);
-            setSelectedEmployee(null);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to update employee";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
+    const handleToggleStatus = async () => {
+        alert("Status toggle not supported by backend API");
     };
 
-    // --- Effects ---
+    const handleEditEmployee = async () => {
+        alert("Edit employee functionality not implemented in backend");
+        setIsEditModalOpen(false);
+        setSelectedEmployee(null);
+    };
+
     useEffect(() => {
         fetchEmployees();
-    }, []);
+    }, [fetchEmployees]);
 
-    // --- Filter Logic ---
     const filteredEmployees = employees.filter((employee) => {
         const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             employee.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -221,6 +150,8 @@ export function AdminPage() {
                     </button>
                 </div>
             )}
+
+           
 
             <div className="bg-white rounded-lg shadow p-4">
                 <div className="flex gap-4 mb-4">
@@ -277,7 +208,7 @@ export function AdminPage() {
                     }}
                     onSave={(employeeData) => {
                         if (selectedEmployee) {
-                            handleEditEmployee(employeeData);
+                            handleEditEmployee();
                         } else {
                             handleAddEmployee(employeeData);
                         }
