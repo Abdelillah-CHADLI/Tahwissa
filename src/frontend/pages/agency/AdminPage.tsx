@@ -28,7 +28,7 @@ export function AdminPage() {
         setFetchLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees?agency_id=${getAgencyId()}`, {
+            const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${getAgencyId()}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
