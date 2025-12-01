@@ -47,7 +47,7 @@ export function AgencyReviewsPage() {
                     ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
                 });
                 setLoading(false);
-                setError(`No tours found for your agency. Found ${agencyTours.length} total tours but none belong to your agency.`);
+                setError(`No tours found for your agency.`);
                 return;
             }
 
