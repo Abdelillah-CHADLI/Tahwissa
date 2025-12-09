@@ -72,7 +72,7 @@ const { userType, email, password, confirmPassword } = req.body;
 
       // Create user account
       let role = "Traveller";
-      let user = await insertUser({email: email,password: hashedPassword,role: role});
+      let user = await insertUser({email: email,password: hashedPassword,role: role , fn : firstName , ls : lastName});
 
       result = {
         success: true,
