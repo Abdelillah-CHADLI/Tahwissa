@@ -28,23 +28,28 @@ interface BackendLoginResponse {
 }
 
 export const authService = {
+
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
-      // Authenticate user
-      const loginResponse = await api.post<BackendLoginResponse>('/auth/login', credentials);
-      
+
+      const loginResponse = await api.post('/auth/login', credentials);
+
+      const data = loginResponse.data; 
+      // data = { id, email, role }
+
       const user: User = {
-        id: loginResponse.data.user.id,
-        email: loginResponse.data.user.email,
-        userType: 'traveller', // Default to traveler
-        name: loginResponse.data.user.name,
+        id: data.id,
+        email: data.email,
+        userType: data.role,   // use backend role
+        name: data.email.split("@")[0], // temporary name if you want
       };
-      
+
       return {
         success: true,
         message: 'Login successful',
         user: user
       };
+
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       return {
