@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { ProgressSteps } from "../../components/traveler/booking/ProgressSteps";
 import { BookingDetailsForm } from "../../components/traveler/booking/BookingDetailsForm";
@@ -30,10 +30,12 @@ interface Tour {
 
 export function BookingPage() {
     const navigate = useNavigate();
-    const { id } = useParams<{ id: string }>();
+    const location = useLocation();
+    const { tourId } = useParams<{ tourId: string }>();
     const [step, setStep] = useState<number>(1);
     const [showSuccess, setShowSuccess] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string | null>(null);
     const [tour, setTour] = useState<Tour | null>(null);
     const [formData, setFormData] = useState<FormData>({
         firstName: "",
@@ -47,10 +49,33 @@ export function BookingPage() {
 
     useEffect(() => {
         const fetchTour = async () => {
-            if (!id) return;
+            if (!tourId) {
+                setError("No tour ID provided");
+                setLoading(false);
+                return;
+            }
+
             try {
                 setLoading(true);
-                const tourData = await tourService.getTourById(id);
+                setError(null);
+
+                // First, try to use tour data from location state
+                const stateData = location.state?.tourData;
+                if (stateData) {
+                    setTour({
+                        id: Number(stateData.tour_id || stateData.id),
+                        title: String(stateData.tour_title || stateData.title),
+                        location: String(stateData.location),
+                        duration: String(stateData.duration),
+                        price: Number(stateData.price),
+                        image: String(stateData.images?.[0] || stateData.image || "https://images.unsplash.com/photo-1670015239006-610536cc0593"),
+                    });
+                    setLoading(false);
+                    return;
+                }
+
+                // If no state data, fetch from API
+                const tourData = await tourService.getTourById(tourId);
                 if (tourData) {
                     setTour({
                         id: Number(tourData.tour_id || tourData.id),
@@ -60,16 +85,19 @@ export function BookingPage() {
                         price: Number(tourData.price),
                         image: String(tourData.images?.[0] || tourData.image || "https://images.unsplash.com/photo-1670015239006-610536cc0593"),
                     });
+                } else {
+                    setError("Tour not found");
                 }
             } catch (error) {
                 console.error("Failed to fetch tour:", error);
+                setError("Failed to load tour details");
             } finally {
                 setLoading(false);
             }
         };
 
         fetchTour();
-        
+
         const userStr = localStorage.getItem('user');
         if (userStr) {
             try {
@@ -84,7 +112,7 @@ export function BookingPage() {
                 console.error("Error parsing user data", e);
             }
         }
-    }, [id]);
+    }, [tourId, location]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -101,26 +129,33 @@ export function BookingPage() {
     };
 
     const handleConfirm = async () => {
-        if (!tour) return;
-        
-        try {
-            const userStr = localStorage.getItem('user');
-            let travellerId = 'default-id';
-            
-            if (userStr) {
-                const user = JSON.parse(userStr);
-                travellerId = user.id || user.userId;
-            }
+        if (!tour || !tourId) return;
 
-            await bookingService.createBooking({
+        try {
+            const travellerId = localStorage.getItem('userId') || '550e8400-e29b-41d4-a716-446655440001';
+
+            console.log('Creating booking with:', {
                 traveller_id: travellerId,
-                tour_id: tour.id.toString(),
+                tour_id: tourId
             });
 
-            setShowSuccess(true);
-        } catch (error) {
+            const response = await bookingService.createBooking({
+                traveller_id: travellerId,
+                tour_id: tourId,
+            });
+
+            // Check if the booking was successful
+            if (response.success) {
+                setShowSuccess(true);
+            } else {
+                alert(`Failed to create booking: ${response.error || 'Please try again'}`);
+            }
+        } catch (error: any) {
             console.error('Booking failed:', error);
-            alert('Failed to create booking');
+            const errorMessage = error?.response?.data?.error
+                || error?.message
+                || 'Failed to create booking';
+            alert(errorMessage);
         }
     };
 
@@ -148,10 +183,12 @@ export function BookingPage() {
         );
     }
 
-    if (!tour) {
+    if (error || !tour) {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour not found</h2>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                    {error || "Tour not found"}
+                </h2>
                 <button
                     onClick={() => navigate('/traveler/explore')}
                     className="text-blue-600 hover:underline"

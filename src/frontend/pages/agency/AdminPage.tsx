@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { UserPlus, Search, AlertCircle } from "lucide-react";
 import { EmployeeList } from "../../components/agency/admin/EmployeeList";
 import { AddEditModal } from "../../components/agency/admin/AddEditModal";
 import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
-import { employeeService } from "../../services/api";
+
+const API_BASE_URL = "http://localhost:5000";
 
 interface BackendEmployee {
     employee_id: string;
@@ -30,7 +31,8 @@ export function AdminPage() {
         return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
     };
 
-    const fetchEmployees = useCallback(async () => {
+    // --- API Calls ---
+    const fetchEmployees = async () => {
         setFetchLoading(true);
         setError(null);
         try {
@@ -64,7 +66,7 @@ export function AdminPage() {
         } finally {
             setFetchLoading(false);
         }
-    }, []);
+    };
 
     const handleDeleteEmployee = async (id: string) => {
         if (confirm("Are you sure you want to delete this employee?")) {
@@ -97,14 +99,25 @@ export function AdminPage() {
         setError(null);
 
         try {
-            await employeeService.createEmployee({
-                email: employeeData.email,
-                password: "123", 
-                agency_id: getAgencyId(),
-                name: employeeData.name,
-                role: employeeData.role,
-                phone: employeeData.phone
+            const response = await fetch(`${API_BASE_URL}/manager/employees`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: employeeData.email,
+                    password: "123",
+                    agency_id: getAgencyId(),
+                    name: employeeData.name,
+                    role: employeeData.role,
+                    phone: employeeData.phone
+                })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `Failed to add employee: ${response.statusText}`);
+            }
 
             await fetchEmployees();
             setIsAddModalOpen(false);
@@ -129,10 +142,12 @@ export function AdminPage() {
         setSelectedEmployee(null);
     };
 
+    // --- Effects ---
     useEffect(() => {
         fetchEmployees();
-    }, [fetchEmployees]);
+    }, []);
 
+    // --- Filter Logic ---
     const filteredEmployees = employees.filter((employee) => {
         const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             employee.email.toLowerCase().includes(searchQuery.toLowerCase());
@@ -169,8 +184,6 @@ export function AdminPage() {
                     </button>
                 </div>
             )}
-
-           
 
             <div className="bg-white rounded-lg shadow p-4">
                 <div className="flex gap-4 mb-4">
@@ -227,7 +240,7 @@ export function AdminPage() {
                     }}
                     onSave={(employeeData) => {
                         if (selectedEmployee) {
-                            handleEditEmployee();
+                            handleEditEmployee(employeeData);
                         } else {
                             handleAddEmployee(employeeData);
                         }

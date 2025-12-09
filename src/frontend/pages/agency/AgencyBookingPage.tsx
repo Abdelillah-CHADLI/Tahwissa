@@ -40,7 +40,8 @@ export function AgencyBookingPage() {
             setError(null);
 
             const agencyId = getAgencyId();
-            const bookingsData = await bookingService.getBookings({ agencyId });
+            const response = await bookingService.getBookings({ agencyId });
+            const bookingsData = response.success && response.data ? response.data : response;
 
             if (Array.isArray(bookingsData)) {
                 const transformedBookings: Booking[] = bookingsData.map((booking: any) => ({
