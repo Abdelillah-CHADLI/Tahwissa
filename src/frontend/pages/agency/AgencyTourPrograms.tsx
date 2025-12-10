@@ -18,9 +18,9 @@ export function AgencyTourPrograms() {
     const fetchTours = async () => {
         try {
             setLoading(true);
-            let agencyId = localStorage.getItem('agencyId');
+            let agencyId = localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
             const userStr = localStorage.getItem('user');
-            
+
             if (userStr && !agencyId) {
                 try {
                     const user = JSON.parse(userStr);
@@ -29,7 +29,7 @@ export function AgencyTourPrograms() {
                     console.error("Error parsing user data", e);
                 }
             }
-            
+
             if (!agencyId) {
                 setError("Agency ID not found. Please log in.");
                 setLoading(false);
@@ -56,7 +56,7 @@ export function AgencyTourPrograms() {
         // Local filtering is handled by filteredTours
     };
 
-    const filteredTours = tours.filter(tour => 
+    const filteredTours = tours.filter(tour =>
         (tour.tour_title || tour.title || '').toLowerCase().includes(query.toLowerCase()) ||
         (tour.location || '').toLowerCase().includes(query.toLowerCase())
     );
@@ -81,9 +81,9 @@ export function AgencyTourPrograms() {
                     Create New Tour
                 </button>
             </div>
-            
+
             <p className='text-sm text-gray-600'>Manage your tour packages and itineraries</p>
-            
+
             {error && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
@@ -103,18 +103,18 @@ export function AgencyTourPrograms() {
                     />
                 </form>
             </div>
-            
+
             <div className="w-full">
                 <button className='text-shadow-lg rounded-lg bg-gray-50 w-full p-2 flex items-center justify-center gap-2 border border-gray-300 hover:bg-lime-200 transition-colors'>
                     <Filter className="w-4 h-4" />
                     Filter
                 </button>
             </div>
-            
+
             {filteredTours.length === 0 && !error ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                     <p className="text-gray-500">No tours found.</p>
-                    <button 
+                    <button
                         onClick={() => navigate('/agency/add-tour')}
                         className="mt-4 text-[#375E5E] font-medium hover:underline"
                     >
