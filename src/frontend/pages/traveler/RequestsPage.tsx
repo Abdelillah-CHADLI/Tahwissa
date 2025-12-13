@@ -18,12 +18,8 @@ interface BackendBooking {
     price?: number;
     location?: string;
     start_date?: string;
-    agencies?: {
-      agency_name?: string;
-    };
-    guides?: {
-      guide_name?: string;
-    };
+    agency_id?: string | null;
+    guide_id?: string | null;
   };
 }
 
@@ -75,7 +71,7 @@ function RequestsPage() {
 
           return {
             id: booking.booking_id,
-            type: tour?.agencies ? "agency" : "guide",
+            type: tour?.agency_id ? "agency" : "guide",
             providerName: providerName,
             tourName: tour?.tour_title || "Unknown Tour",
             requestDate: formatDate(booking.booking_date),
@@ -133,11 +129,11 @@ function RequestsPage() {
 
   // --- Data Processing ---
   const getProviderName = (tour?: BackendBooking['tours']): string => {
-    if (tour?.agencies?.agency_name) {
-      return tour.agencies.agency_name;
+    if (tour?.agency_id) {
+      return "Agency Provider";
     }
-    if (tour?.guides?.guide_name) {
-      return tour.guides.guide_name;
+    if (tour?.guide_id) {
+      return "Guide Provider";
     }
     return "Unknown Provider";
   };

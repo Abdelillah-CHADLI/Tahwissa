@@ -21,7 +21,7 @@ interface TourInclusions {
 
 function DayByDayScheduleTab({ tourDetails }: { tourDetails: string | DaySchedule[] | null }) {
     let schedule: DaySchedule[] = [];
-    
+
     if (tourDetails) {
         if (typeof tourDetails === 'string') {
             try {
@@ -115,7 +115,7 @@ function WhatsIncludedTab({ tourIncluded }: { tourIncluded: string | TourInclusi
         notIncluded: [],
         requirements: []
     };
-    
+
     if (tourIncluded) {
         if (typeof tourIncluded === 'string') {
             const trimmed = tourIncluded.trim();
@@ -164,7 +164,7 @@ function WhatsIncludedTab({ tourIncluded }: { tourIncluded: string | TourInclusi
     return (
         <div className="space-y-6 sm:space-y-8">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">What's Included & Requirements</h2>
-            
+
             {inclusions.included.length > 0 && (
                 <div className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -242,9 +242,9 @@ const DetailsPage = () => {
             try {
                 setLoading(true);
                 setError(null);
-                
+
                 let tour: Record<string, unknown> | null = null;
-                
+
                 // Fetch fresh tour data to get all fields
                 if (tourId) {
                     try {
@@ -253,7 +253,7 @@ const DetailsPage = () => {
                         // Will fallback to navigation state
                     }
                 }
-                
+
                 // Fallback to navigation state if API fetch failed
                 if (!tour) {
                     const stateData = location.state as { tour?: Record<string, unknown> } | null;
@@ -268,9 +268,9 @@ const DetailsPage = () => {
                     setLoading(false);
                     return;
                 }
-                
+
                 setTourData(tour);
-                
+
                 if (tour.agency_id || tour.guide_id) {
                     try {
                         const providerId = String(tour.agency_id || tour.guide_id);
@@ -289,32 +289,18 @@ const DetailsPage = () => {
                 setLoading(false);
             }
         };
-        
+
         fetchData();
     }, [tourId, location.state]);
 
-    const handleBookNow = async () => {
+    const handleBookNow = () => {
         if (!tourData) return;
-        
-        try {
-            setBookingLoading(true);
-            const travellerId = localStorage.getItem('userId') || '1';
-            
-            await bookingService.createBooking({
-                traveller_id: travellerId,
-                tour_id: String(tourData.tour_id || tourData.id || ''),
-            });
-            
-            setBookingSuccess(true);
-            setTimeout(() => {
-                setBookingSuccess(false);
-                navigate('/bookings'); // Navigate to bookings page
-            }, 2000);
-        } catch {
-            alert('Booking failed. Please try again.');
-        } finally {
-            setBookingLoading(false);
-        }
+
+        // Navigate to booking page with tour ID as state
+        const tourId = String(tourData.tour_id || tourData.id || '');
+        navigate(`${ROUTES.BOOKING}/${tourId}`, {
+            state: { tourData }
+        });
     };
 
     if (loading) {
@@ -361,27 +347,27 @@ const DetailsPage = () => {
                 <div className="space-y-4 sm:space-y-6">
 
                     <div className="border border-gray-200 rounded-xl bg-white shadow-md overflow-hidden">
-                        <img 
+                        <img
                             src={String(tourData.image || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470')}
                             alt={String(tourData.tour_title || tourData.title || 'Tour')}
-                            className="w-full h-48 sm:h-64 md:h-80 object-cover" 
+                            className="w-full h-48 sm:h-64 md:h-80 object-cover"
                         />
 
                         <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4">
-                            <img 
-                                src={String(tourData.image || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470')} 
+                            <img
+                                src={String(tourData.image || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470')}
                                 alt="Tour gallery 1"
-                                className="w-full max-w-full h-auto object-cover rounded-xl" 
+                                className="w-full max-w-full h-auto object-cover rounded-xl"
                             />
-                            <img 
-                                src={String(tourData.image || 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1')} 
+                            <img
+                                src={String(tourData.image || 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1')}
                                 alt="Tour gallery 2"
-                                className="w-full max-w-full h-auto object-cover rounded-xl" 
+                                className="w-full max-w-full h-auto object-cover rounded-xl"
                             />
-                            <img 
-                                src={String(tourData.image || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e')} 
+                            <img
+                                src={String(tourData.image || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e')}
                                 alt="Tour gallery 3"
-                                className="w-full max-w-full h-auto object-cover rounded-xl" 
+                                className="w-full max-w-full h-auto object-cover rounded-xl"
                             />
                         </div>
                     </div>
@@ -439,8 +425,8 @@ const DetailsPage = () => {
                                 key={activeTab}
                                 className="animate-fadeIn"
                             >
-                                {activeTab === 'schedule' 
-                                    ? <DayByDayScheduleTab tourDetails={tourData.tour_details as string | DaySchedule[] | null} /> 
+                                {activeTab === 'schedule'
+                                    ? <DayByDayScheduleTab tourDetails={tourData.tour_details as string | DaySchedule[] | null} />
                                     : <WhatsIncludedTab tourIncluded={tourData.tour_included as string | TourInclusions | null} />
                                 }
                             </div>
@@ -470,15 +456,15 @@ const DetailsPage = () => {
                             </div>
                         </div>
                         <div className="bg-gray-300 h-px my-4"></div>
-                        
+
                         {bookingSuccess && (
                             <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5 text-green-600" />
                                 <p className="text-sm text-green-800">Booking successful!</p>
                             </div>
                         )}
-                        
-                        <button 
+
+                        <button
                             onClick={handleBookNow}
                             disabled={bookingLoading || bookingSuccess}
                             className="w-full bg-[#4d8b8b] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#274345] transition-colors flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -522,7 +508,7 @@ const DetailsPage = () => {
                                         <MapPin className="w-3.5 h-3.5" /> {String(provider.main_office_location || provider.location || 'Unknown Location')}
                                     </div>
                                     <div className="flex items-center gap-1 text-xs text-gray-800 font-medium">
-                                        <Star className="w-3.5 h-3.5 text-yellow-500" /> 
+                                        <Star className="w-3.5 h-3.5 text-yellow-500" />
                                         {(() => {
                                             const rawRating = Number(provider.rating || 0);
                                             const numRaters = Number(provider.num_raters || 0);
@@ -555,22 +541,22 @@ const DetailsPage = () => {
                             <div className="my-4 border-t border-gray-200"></div>
                             <div className="space-y-3 text-sm">
                                 <div className="flex items-center gap-2 text-gray-700">
-                                    <Phone className="w-4 h-4" /> 
+                                    <Phone className="w-4 h-4" />
                                     {String(provider.phone_number || 'N/A')}
                                 </div>
                                 {provider.support_email ? (
                                     <div className="flex items-center gap-2 text-gray-700 break-all">
-                                        <Mail className="w-4 h-4" /> 
+                                        <Mail className="w-4 h-4" />
                                         {String(provider.support_email)}
                                     </div>
                                 ) : null}
                                 {provider.website ? (
                                     <div className="flex items-center gap-2 text-gray-700 break-all">
-                                        <Globe className="w-4 h-4" /> 
-                                        <a 
-                                            href={String(provider.website).startsWith('http') ? String(provider.website) : `https://${String(provider.website)}`} 
-                                            target="_blank" 
-                                            rel="noopener noreferrer" 
+                                        <Globe className="w-4 h-4" />
+                                        <a
+                                            href={String(provider.website).startsWith('http') ? String(provider.website) : `https://${String(provider.website)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
                                             className="text-[#4d8b8b] hover:underline"
                                         >
                                             {String(provider.website)}
@@ -579,7 +565,7 @@ const DetailsPage = () => {
                                 ) : null}
                                 {provider.emergency_contact ? (
                                     <div className="flex items-center gap-2 text-gray-700">
-                                        <Phone className="w-4 h-4 text-red-500" /> 
+                                        <Phone className="w-4 h-4 text-red-500" />
                                         <span className="text-red-600">Emergency: {String(provider.emergency_contact)}</span>
                                     </div>
                                 ) : null}
