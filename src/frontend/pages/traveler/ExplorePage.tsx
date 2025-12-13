@@ -1,4 +1,4 @@
-// pages/traveler/ExplorePage.tsx - Only the useEffect needs updating
+// pages/traveler/ExplorePage.tsx
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "../../components/explore/SearchBar";
@@ -22,12 +22,7 @@ const ExplorePage = () => {
 
   const { tours, loading, error, hasMore, loadMore, refetch } = useTours();
 
-  // Initial load
-  useEffect(() => {
-    refetch(filters, searchQuery);
-  }, []); // Empty dependency array for initial load only
-
-  // Search and filter debouncing
+  // Debounced search effect
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -35,7 +30,7 @@ const ExplorePage = () => {
 
     searchTimeoutRef.current = window.setTimeout(() => {
       refetch(filters, searchQuery);
-    }, 500);
+    }, 300);
 
     return () => {
       if (searchTimeoutRef.current) {
@@ -46,6 +41,7 @@ const ExplorePage = () => {
 
   const handleViewDetails = (tour: Tour) => {
     const tourId = tour.tour_id || tour.id;
+
     navigate(`${ROUTES.DETAILS}/${tourId}`, {
       state: { tour },
     });
@@ -60,10 +56,11 @@ const ExplorePage = () => {
   };
 
   const handleTagClick = (tag: string) => {
-    setFilters(prev => ({
-      ...prev,
+    const newFilters = {
+      ...filters,
       category: tag,
-    }));
+    };
+    setFilters(newFilters);
   };
 
   const handleClearFilters = () => {
@@ -75,8 +72,6 @@ const ExplorePage = () => {
     };
     setFilters(defaultFilters);
     setSearchQuery("");
-    // Trigger refetch immediately when clearing
-    refetch(defaultFilters, "");
   };
 
   const activeFiltersCount = Object.values(filters).filter(
@@ -124,14 +119,10 @@ const ExplorePage = () => {
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
             <p className="text-red-800 text-sm">{error}</p>
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800 text-sm">{error}</p>
             <button
               onClick={() => refetch(filters, searchQuery)}
               className="mt-2 bg-red-100 text-red-700 px-4 py-2 rounded text-sm font-medium hover:bg-red-200"
             >
-              Try again
               Try again
             </button>
           </div>
@@ -164,7 +155,7 @@ const ExplorePage = () => {
                 <TourCard
                   key={tour.tour_id || tour.id}
                   tour={tour}
-                  onClick={() => handleViewDetails(tour)}
+                  onClick={handleViewDetails} // Just pass the function reference
                   index={index}
                 />
               ))}

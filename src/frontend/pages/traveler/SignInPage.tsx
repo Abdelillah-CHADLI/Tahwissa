@@ -67,10 +67,7 @@ export default function SignInPage() {
 
         // ROUTING LOGIC
         if (user.userType === "agency" || user.userType === "guide") {
-          console.log(
-            " SignInPage: REDIRECTING TO AGENCY APP:",
-            user.userType
-          );
+          console.log(" SignInPage: REDIRECTING TO AGENCY APP:", user.userType);
           window.location.href = "/agency";
         } else {
           console.log(" SignInPage: REDIRECTING TO HOME (TRAVELLER)");
@@ -177,7 +174,6 @@ export default function SignInPage() {
                   placeholder="your.email@example.com"
                   className="w-full pl-11 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
                   disabled={isLoading}
-                  disabled={isLoading}
                 />
               </div>
             </div>
@@ -195,7 +191,6 @@ export default function SignInPage() {
                   onClick={handleForgotPassword}
                   className="text-sm text-[#348086] hover:text-[#2a6970] font-medium transition-colors"
                   disabled={isLoading}
-                  disabled={isLoading}
                 >
                   Forgot password?
                 </button>
@@ -205,25 +200,9 @@ export default function SignInPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
                   className="w-full pl-11 pr-11 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all"
                   disabled={isLoading}
                 />
@@ -253,12 +232,6 @@ export default function SignInPage() {
                 <LogIn className="w-5 h-5" />
               )}
               {isLoading ? "Signing In..." : "Sign In"}
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <LogIn className="w-5 h-5" />
-              )}
-              {isLoading ? "Signing In..." : "Sign In"}
             </button>
           </div>
 
@@ -267,7 +240,6 @@ export default function SignInPage() {
             <button
               onClick={handleSignUp}
               className="text-[#348086] hover:text-[#2a6970] font-semibold transition-colors"
-              disabled={isLoading}
               disabled={isLoading}
             >
               Sign up
