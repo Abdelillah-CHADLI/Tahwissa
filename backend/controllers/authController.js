@@ -74,18 +74,6 @@ const { userType, email, password, confirmPassword } = req.body;
       let role = "Traveller";
       let user = await insertUser({email: email,password: hashedPassword,role: role , fn : firstName , ls : lastName});
 
-      const { data, error } = await supabase
-      .from('travellers')
-      .insert({
-        traveller_id: user.user_id,
-        traveller_fn: firstName,
-        traveller_ls: lastName
-      });
-      if (error) {
-    return res.status(500).json({ success: false, message: error.message });
-    }
-
-
       result = {
         success: true,
         message: 'Traveller account created successfully.',
@@ -284,5 +272,4 @@ export function logout(req, res) {
   return res.status(200).json({ message: "Logged out successfully" });
   //must redirect to the login from the frontEnd.
 }
-
 
