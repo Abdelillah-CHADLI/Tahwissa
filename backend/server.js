@@ -9,6 +9,8 @@ const bookingroutes = require('./routes/booking');
 const tourRoutes = require("./routes/tourRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const managerRoutes = require("./routes/managerRoutes");
+const reportRoutes = require("./routes/reportRoutes");
+const verificationRoutes = require("./routes/verificationRoutes");
 
 
 
@@ -21,6 +23,9 @@ app.use('/api', bookingroutes)
 app.use("/tour", tourRoutes);
 app.use("/profile1" , profileRoutes);
 app.use("/manager" , managerRoutes);
+app.use("/report" , reportRoutes);
+app.use("/verification" , verificationRoutes);
+
 
 
 
