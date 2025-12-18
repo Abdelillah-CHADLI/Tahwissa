@@ -11,7 +11,7 @@ const profileRoutes = require("./routes/profileRoutes");
 const managerRoutes = require("./routes/managerRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const verificationRoutes = require("./routes/verificationRoutes");
-
+const pstroutes = require('./routes/postroutes');
 
 
 app.use(cors());
@@ -20,6 +20,7 @@ app.use(express.json());
 // mounting routes here :
 app.use("/auth", authRoutes);
 app.use('/api', bookingroutes)
+app.use('/pst', pstroutes)
 app.use("/tour", tourRoutes);
 app.use("/profile1" , profileRoutes);
 app.use("/manager" , managerRoutes);
