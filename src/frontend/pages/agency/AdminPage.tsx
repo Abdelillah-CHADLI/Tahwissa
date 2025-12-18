@@ -7,6 +7,14 @@ import type { Employee } from "../../types/employee";
 
 const API_BASE_URL = "http://localhost:5000";
 
+interface BackendEmployee {
+    employee_id: string;
+    users: {
+        role: string;
+        email: string;
+    };
+}
+
 export function AdminPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
@@ -28,7 +36,7 @@ export function AdminPage() {
         setFetchLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees?agency_id=${getAgencyId()}`, {
+            const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${getAgencyId()}`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -39,8 +47,19 @@ export function AdminPage() {
                 throw new Error(`Failed to fetch employees: ${response.statusText}`);
             }
 
-            const employeesData = await response.json();
-            setEmployees(employeesData);
+            const result = await response.json();
+
+            // Transform backend data to frontend format
+            const transformedEmployees: Employee[] = result.employees.map((emp: BackendEmployee) => ({
+                id: emp.employee_id,
+                name: emp.users.email.split('@')[0],
+                email: emp.users.email,
+                role: emp.users.role,
+                phone: "Not available",
+                status: "active"
+            }));
+
+            setEmployees(transformedEmployees);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch employees";
             setError(errorMessage);
@@ -54,7 +73,7 @@ export function AdminPage() {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`${API_BASE_URL}/manager/employees/${id}`, {
+                const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${id}`, {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
@@ -72,38 +91,6 @@ export function AdminPage() {
             } finally {
                 setLoading(false);
             }
-        }
-    };
-
-    const handleToggleStatus = async (id: string) => {
-        setLoading(true);
-        setError(null);
-        try {
-            const employee = employees.find(e => e.id === id);
-            if (!employee) return;
-
-            const newStatus = employee.status === "active" ? "inactive" : "active";
-
-            const response = await fetch(`${API_BASE_URL}/manager/employees/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    status: newStatus
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`Failed to update employee status: ${response.statusText}`);
-            }
-
-            await fetchEmployees();
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to update employee status";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
         }
     };
 
@@ -142,41 +129,17 @@ export function AdminPage() {
         }
     };
 
+    // Remove toggle status and edit since backend doesn't support them
+    const handleToggleStatus = async (id: string) => {
+        alert(id);
+        alert("Status toggle not supported by backend API");
+    };
+
     const handleEditEmployee = async (employeeData: Omit<Employee, "id">) => {
-        if (!selectedEmployee) return;
-
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees/${selectedEmployee.id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: employeeData.email,
-                    name: employeeData.name,
-                    role: employeeData.role,
-                    phone: employeeData.phone,
-                    status: employeeData.status
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `Failed to update employee: ${response.statusText}`);
-            }
-
-            await fetchEmployees();
-            setIsEditModalOpen(false);
-            setSelectedEmployee(null);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to update employee";
-            setError(errorMessage);
-        } finally {
-            setLoading(false);
-        }
+        alert(employeeData.name);
+        alert("Edit employee functionality not implemented in backend");
+        setIsEditModalOpen(false);
+        setSelectedEmployee(null);
     };
 
     // --- Effects ---

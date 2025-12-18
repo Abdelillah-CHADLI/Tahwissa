@@ -1,6 +1,6 @@
 import { Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { AuthProvider } from '../frontend/contexts/AuthContext';
-import { useAuth } from '../frontend/contexts/AuthContext'; 
+import { useAuth } from '../frontend/contexts/AuthContext';
 import { useEffect } from 'react';
 import Header from './components/Header';
 import { ROUTES } from './utils/routes';
@@ -22,7 +22,7 @@ import { ProfileCompletionPage } from './pages/traveler/ProfileCompletionPage';
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth(); 
+  const { user } = useAuth();
 
   const isAuthPage = location.pathname === ROUTES.SIGN_IN ||
     location.pathname === ROUTES.SIGN_UP ||
@@ -89,7 +89,7 @@ useEffect(() => {
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="add-post" element={<AddPostPage />} />
           <Route path="details/:tourId" element={<DetailsPage />} />
-          <Route path="booking" element={<BookingPage />} />
+          <Route path="booking/:tourId" element={<BookingPage />} />
           <Route
             path="profile-completion"
             element={

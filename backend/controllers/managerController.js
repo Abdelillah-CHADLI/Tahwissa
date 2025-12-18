@@ -48,3 +48,86 @@ export async function addAgencyEmployee(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+
+// Remove an agency employee by employee_id
+export async function removeAgencyEmployee(req, res) {
+  const { employee_id } = req.params;
+
+  if (!employee_id) {
+    return res.status(400).json({ error: "employee_id is required" });
+  }
+
+  try {
+    const { data: managedAgencies, error: managerCheckError } = await supabase
+      .from('agencies')
+      .select('agency_id')
+      .eq('manager_id', employee_id);
+
+    if (managerCheckError) throw managerCheckError;
+
+    if (managedAgencies && managedAgencies.length > 0) {
+      return res.status(400).json({
+        error: "Cannot remove this employee because they are a manager of an agency"
+      });
+    }
+
+    const { data: deletedEmployee, error: employeeError } = await supabase
+      .from('agency_employees')
+      .delete()
+      .eq('employee_id', employee_id)
+      .select()
+      .single();
+
+    if (employeeError) throw employeeError;
+
+    const { data: deletedUser, error: userError } = await supabase
+      .from('users')
+      .delete()
+      .eq('user_id', employee_id)
+      .select()
+      .single();
+
+    if (userError) throw userError;
+
+    res.status(200).json({
+      message: "Agency employee removed successfully",
+      employee: deletedEmployee,
+      user: deletedUser
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+
+// Get all employees of a specific agency by agency_id
+export async function getAgencyEmployees(req, res) {
+  const { agency_id } = req.params;
+
+  if (!agency_id) {
+    return res.status(400).json({ error: "agency_id is required" });
+  }
+
+  try {
+    const { data: employees, error } = await supabase
+      .from('agency_employees')
+      .select(`
+        employee_id,
+        users:employee_id (
+          email,
+          role
+        )
+      `)
+      .eq('agency_id', agency_id);
+
+    if (error) throw error;
+
+    res.status(200).json({ employees });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+

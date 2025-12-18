@@ -1,4 +1,5 @@
 //yacine
+import { json } from "node:stream/consumers";
 import {supabase} from "../config/supabasedb.js";
 
 
@@ -21,6 +22,15 @@ export async function addTour(tourData, images = []) {
       requirements,
       tour_not_included
   } = tourData;
+
+  let on = {
+    'xhzt':'uhfu'
+  }
+ let dbr =  JSON.stringify(on)
+
+  JSON.parse()
+
+
 
   // Validate required fields
   if (!tour_title || !location || !price || !start_date) {
