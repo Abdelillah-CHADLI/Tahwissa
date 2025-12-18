@@ -1,4 +1,4 @@
-
+//yacine
 const express = require('express');
 const {
   addPost,
@@ -7,26 +7,23 @@ const {
   likePost,
   unlikePost,
   getPostById,
-  getCommentsByPostId
-  , updateTravellerProfile,
+  getCommentsByPostId,
+  updateTravellerProfile,
   reportPost
 } = require('../controllers/postController');
 const router = express.Router();
 router.use(express.json());
 router.use(express.json({ limit: '50mb' }))
-
-
 router.post('/travellers/:travellerId/update', async (req, res) => {
   try {
     const travellerId = req.params.travellerId;
-    const updateData = req.body; // { traveller_fn, ..., profile_picture: { base64: '...', mimeType: 'image/jpeg' } }
+    const updateData = req.body;
     const result = await updateTravellerProfile(travellerId, updateData);
     res.status(200).json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.post('/posts/:postId/report', async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
@@ -37,8 +34,6 @@ router.post('/posts/:postId/report', async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 });
-
-
 router.post('/posts', async (req, res) => {
   try {
     const postData = req.body;
@@ -46,7 +41,7 @@ router.post('/posts', async (req, res) => {
       name: file.originalname,
       content: file.buffer,
       mimeType: file.mimetype
-    })) : []; // Placeholder; adjust based on your upload setup (e.g., multer)
+    })) : [];
     const newPost = await addPost(postData, images);
     res.status(201).json({ success: true, data: newPost });
   } catch (error) {
@@ -62,7 +57,6 @@ router.get('/posts/:postId/comments', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-// GET /posts - Browse posts with pagination
 router.get('/posts', async (req, res) => {
   try {
     const pageSize = parseInt(req.query.pageSize) || 10;
@@ -73,7 +67,6 @@ router.get('/posts', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.post('/posts/:postId/comments', async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
@@ -84,24 +77,20 @@ router.post('/posts/:postId/comments', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
-// POST /posts/:postId/like - Like a post
 router.post('/posts/:postId/like', async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
-    const { travellerId } = req.body; // Assume auth middleware provides this, or from req.user
+    const { travellerId } = req.body;
     const result = await likePost(travellerId, postId);
     res.status(200).json({ success: true, ...result });
   } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }
 });
-
-// POST /posts/:postId/unlike - Unlike a post (dislike)
 router.post('/posts/:postId/unlike', async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
-    const { travellerId } = req.body; // Assume auth middleware provides this
+    const { travellerId } = req.body;
     const result = await unlikePost(travellerId, postId);
     res.status(200).json({ success: true, ...result });
   } catch (error) {
