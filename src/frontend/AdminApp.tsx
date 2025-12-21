@@ -1,23 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminDashboardOverview } from './pages/admin/AdminDashboardOverview';
+import { VerificationRequests } from './pages/admin/VerificationRequests';
+import { ReportsManagement } from './pages/admin/ReportsManagement';
 import './App.css';
-
-function VerificationRequests() {
-    return (
-        <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Verification Requests</h2>
-        </div>
-    );
-}
-
-function ReportsManagement() {
-    return (
-        <div className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Reports Management</h2>
-        </div>
-    );
-}
 
 function AdminApp() {
     return (
