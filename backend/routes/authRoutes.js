@@ -8,6 +8,7 @@ const {
   login,
   logout,
   signUp,
+  googleAuth
 } = require("../controllers/authController");
 
 // AUTH ROUTES
@@ -20,6 +21,7 @@ router.post("/signUp" , async ( req , res) => {
     }
 }) 
 router.post("/logout", logout);               // logout
+router.get("/google" , googleAuth);
 
 
 

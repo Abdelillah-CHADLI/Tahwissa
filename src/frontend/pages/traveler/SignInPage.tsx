@@ -6,6 +6,9 @@ import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
 import type { LoginRequest } from "../../types/auth";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -90,6 +93,50 @@ export default function SignInPage() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      const email = decoded.email;
+      console.log("Google email:", email);
+
+      const response = await axios.get("http://localhost:5000/auth/google", {
+        params: { email },
+      });
+
+      const { user_id, role } = response.data;
+
+      // Map backend response to User interface
+      const user: User = {
+        id: user_id, // unique identifier for the user object
+        email,
+        userType: role as "traveller" | "guide" | "agency", // cast role
+        profileId: user_id, // assuming profileId = user_id
+        profileType: role as "traveller" | "guide" | "agency",
+        userId: user_id,
+      };
+
+      login(user);
+      if (user.userType === "AgencyEmployee" || user.userType === "Guide") {
+        console.log(" SignInPage: REDIRECTING TO AGENCY APP:", user.userType);
+        window.location.href = "/agency";
+      } else {
+        console.log(" SignInPage: REDIRECTING TO HOME (TRAVELLER)");
+        navigate(ROUTES.HOME, {
+          state: {
+            profileId: user.profileId,
+            profileType: "traveller",
+            userId: user.userId,
+          },
+        });
+      }
+    } catch (error) {
+      console.error(
+        "Google login error:",
+        error.response?.data || error.message
+      );
     }
   };
 
@@ -233,6 +280,14 @@ export default function SignInPage() {
               )}
               {isLoading ? "Signing In..." : "Sign In"}
             </button>
+          </div>
+
+          <br></br>
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <GoogleLogin
+              onSuccess={handleGoogleLogin}
+              onError={() => console.log("Login failed")}
+            />
           </div>
 
           <p className="text-center text-sm text-gray-600 mt-6">

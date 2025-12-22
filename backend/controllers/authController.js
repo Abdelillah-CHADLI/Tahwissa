@@ -273,3 +273,46 @@ export function logout(req, res) {
   //must redirect to the login from the frontEnd.
 }
 
+export async function googleAuth(req, res) {
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      return res.status(400).json({
+        error: "Email is required"
+      });
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .select("user_id, role")
+      .eq("email", email)
+      .single();
+
+    if (error && error.code !== "PGRST116") {
+      
+      return res.status(500).json({
+        error: error.message
+      });
+    }
+
+    if (!data) {
+    
+      return res.status(404).json({
+        error: "User not found"
+      });
+    }
+
+    return res.status(200).json({
+      user_id: data.user_id,
+      role: data.role
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      error: "Server error",
+      details: err.message
+    });
+  }
+}
+
