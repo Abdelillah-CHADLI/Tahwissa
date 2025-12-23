@@ -26,13 +26,13 @@ export function AgencyDashboard() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                let agencyId = localStorage.getItem('agencyId');
+                let agencyId = localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
                 const userStr = localStorage.getItem('user');
                 if (userStr && !agencyId) {
                     const user = JSON.parse(userStr);
                     agencyId = user.agencyId || user.id;
                 }
-                
+
                 if (!agencyId) return;
 
                 const response = await profileService.getProfile(agencyId, 'agency');
@@ -145,7 +145,7 @@ export function AgencyDashboard() {
                     </div>
 
                     <div className="mt-auto p-6 border-t border-gray-100">
-                        <button 
+                        <button
                             onClick={handleLogout}
                             className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                         >

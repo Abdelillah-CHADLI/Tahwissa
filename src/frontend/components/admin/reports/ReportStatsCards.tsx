@@ -8,7 +8,7 @@ interface ReportStatsCardsProps {
 export function ReportStatsCards({ openCount, resolvedCount }: ReportStatsCardsProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Open Reports Card */}
+            {/* Open Reports */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-4">
                     <div className="bg-red-100 p-4 rounded-xl">
@@ -21,7 +21,7 @@ export function ReportStatsCards({ openCount, resolvedCount }: ReportStatsCardsP
                 </div>
             </div>
 
-            {/* Resolved Reports Card */}
+            {/* Resolved Reports */}
             <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-center gap-4">
                     <div className="bg-green-100 p-4 rounded-xl">

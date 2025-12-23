@@ -66,11 +66,8 @@ export default function SignInPage() {
         console.log(" SignInPage: User role:", user.role);
 
         // ROUTING LOGIC
-        if (user.userType === "agency" || user.userType === "guide") {
-          console.log(
-            " SignInPage: REDIRECTING TO AGENCY APP:",
-            user.userType
-          );
+        if (user.userType === "AgencyEmployee" || user.userType === "Guide") {
+          console.log(" SignInPage: REDIRECTING TO AGENCY APP:", user.userType);
           window.location.href = "/agency";
         } else {
           console.log(" SignInPage: REDIRECTING TO HOME (TRAVELLER)");

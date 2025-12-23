@@ -95,79 +95,65 @@ export const useTours = (): UseToursReturn => {
       if (filters) setCurrentFilters(filters);
       if (searchQuery !== undefined) setCurrentSearch(searchQuery);
 
-      const hasActiveFilters = filters && Object.values(filters).some(value =>
-        !value.includes('All')
-      );
-
-      const apiParams: any = {
-        page: 1,
-        size: 15
-      };
-
-      if (filters?.category && filters.category !== 'All Categories') {
-        apiParams.cat = filters.category;
+      // Prepare search parameters for the backend POST endpoint
+      const searchParams: any = {};
+      
+      // Add search query to name parameter
+      if (searchQuery && searchQuery.trim()) {
+        searchParams.name = searchQuery.trim();
+      }
+      
+      // Add filters (only if they're not the default values)
+      const actualFilters = filters || currentFilters;
+      
+      if (actualFilters.region && actualFilters.region !== "All Regions") {
+        searchParams.region = actualFilters.region;
+      }
+      
+      if (actualFilters.category && actualFilters.category !== "All Categories") {
+        searchParams.category = actualFilters.category;
+      }
+      
+      if (actualFilters.priceRange && actualFilters.priceRange !== "All Budgets") {
+        searchParams.budget = actualFilters.priceRange;
+      }
+      
+      if (actualFilters.provider && actualFilters.provider !== "All Providers") {
+        searchParams.provider = actualFilters.provider;
       }
 
-      if (filters?.region && filters.region !== 'All Regions') {
-        apiParams.regions = filters.region;
-      }
+      console.log('🎯 Sending search params to backend:', searchParams);
 
-      if (filters?.priceRange && filters.priceRange !== 'All Budgets') {
-        const priceRanges: { [key: string]: { min: number; max: number } } = {
-          'Under $500': { min: 0, max: 500 },
-          '$500 - $1000': { min: 500, max: 1000 },
-          '$1000 - $2000': { min: 1000, max: 2000 },
-          'Over $2000': { min: 2000, max: 100000 },
-        };
+      let backendTours: any[] = [];
 
-        const range = priceRanges[filters.priceRange];
-        if (range) {
-          apiParams.priceMin = range.min;
-          apiParams.priceMax = range.max;
-        }
-      }
-
-      if (filters?.provider && filters.provider !== 'All Providers') {
-        apiParams.provider = filters.provider.toLowerCase();
-      }
-
-      let response;
-
-      if (searchQuery || hasActiveFilters) {
-        response = await tourService.browseTours(
-          apiParams.page,
-          apiParams.size,
-          {
-            cat: apiParams.cat ? [apiParams.cat] : undefined,
-            regions: apiParams.regions ? [apiParams.regions] : undefined,
-            priceMin: apiParams.priceMin,
-            priceMax: apiParams.priceMax,
-            provider: apiParams.provider
-          }
-        );
+      // Use the dedicated search endpoint if we have any search criteria
+      if (Object.keys(searchParams).length > 0) {
+        backendTours = await tourService.searchTours(searchParams);
       } else {
-        response = await tourService.browseTours(apiParams.page, apiParams.size);
+        // Otherwise, get all tours using the regular endpoint
+        backendTours = await tourService.getTours(20);
       }
 
-      if (!response.success) {
-        throw new Error(response.error || 'Failed to fetch tours');
-      }
+      console.log('✅ Received tours from backend:', backendTours);
 
-      const backendTours = response.data?.tours || [];
       const convertedTours = backendTours.map(convertBackendTourToFrontend);
-
       setTours(convertedTours);
-      setHasMore(response.data?.pagination?.hasNext || false);
+      
+      // For search results, we typically don't have pagination
+      // For initial load without filters, we can load more
+      const shouldHaveMore = Object.keys(searchParams).length === 0 && backendTours.length >= 20;
+      setHasMore(shouldHaveMore);
       setCurrentPage(1);
 
     } catch (err: any) {
+      console.error('❌ Error fetching tours:', err);
       setError(err.response?.data?.error || err.message || 'Failed to fetch tours');
       setTours([]);
       setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentFilters]);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -177,33 +163,37 @@ export const useTours = (): UseToursReturn => {
 
       const nextPage = currentPage + 1;
 
-      const hasActiveFilters = Object.values(currentFilters).some(value =>
-        !value.includes('All')
+      // Only load more if we don't have active filters/search
+      const hasActiveSearch = currentSearch && currentSearch.trim();
+      const hasActiveFilters = Object.values(currentFilters).some(
+        value => !value.includes('All')
       );
 
-      if (currentSearch || hasActiveFilters) {
+      if (hasActiveSearch || hasActiveFilters) {
         setHasMore(false);
         return;
       }
 
-      const response = await tourService.browseTours(nextPage, 10);
-      const backendTours = response.data?.tours || [];
-      const newTours = backendTours.map(convertBackendTourToFrontend);
-
-      if (newTours.length === 0) {
+      // For infinite scroll without filters, use getTours with limit
+      const limit = 20 * nextPage;
+      const moreTours = await tourService.getTours(limit);
+      
+      if (moreTours.length <= tours.length) {
         setHasMore(false);
       } else {
-        setTours(prev => [...prev, ...newTours]);
+        const convertedTours = moreTours.map(convertBackendTourToFrontend);
+        setTours(convertedTours);
         setCurrentPage(nextPage);
-        setHasMore(response.data?.pagination?.hasNext || false);
+        setHasMore(moreTours.length >= limit);
       }
 
     } catch (err: any) {
+      console.error('❌ Error loading more tours:', err);
       setError(err.response?.data?.error || err.message || 'Failed to load more tours');
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, currentPage, currentFilters, currentSearch]);
+  }, [loading, hasMore, currentPage, currentFilters, currentSearch, tours.length]);
 
   const clear = useCallback(() => {
     setTours([]);

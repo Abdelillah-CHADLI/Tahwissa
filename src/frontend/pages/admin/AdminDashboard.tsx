@@ -28,7 +28,7 @@ export function AdminDashboard() {
             end: true
         },
         {
-            path: "/admin/verification",
+            path: "/admin/verifications",
             label: "Verification Requests",
             description: "Manage agency and guide verifications",
             icon: Shield

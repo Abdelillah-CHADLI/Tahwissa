@@ -2,6 +2,8 @@ import { Eye } from 'lucide-react';
 
 export interface VerificationRequest {
     id: number;
+    agencyId?: string;
+    guideId?: string;
     name: string;
     type: 'Agency' | 'Guide';
     email: string;
@@ -38,53 +40,58 @@ export function VerificationTable({ requests, onViewRequest }: VerificationTable
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            {/* Table Header */}
-            <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <div className="col-span-3 text-sm font-semibold text-gray-700">Name</div>
-                <div className="col-span-2 text-sm font-semibold text-gray-700">Type</div>
-                <div className="col-span-3 text-sm font-semibold text-gray-700">Email</div>
-                <div className="col-span-2 text-sm font-semibold text-gray-700">Registration Date</div>
-                <div className="col-span-1 text-sm font-semibold text-gray-700">Status</div>
-                <div className="col-span-1 text-sm font-semibold text-gray-700">Action</div>
-            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full">
 
-            {/* Table Rows */}
-            <div className="divide-y divide-gray-200">
-                {requests.map((request) => (
-                    <div
-                        key={request.id}
-                        className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors items-center"
-                    >
-                        <div className="col-span-3 text-sm text-gray-900 font-medium">
-                            {request.name}
-                        </div>
-                        <div className="col-span-2">
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700">
-                                {request.type}
-                            </span>
-                        </div>
-                        <div className="col-span-3 text-sm text-gray-600">
-                            {request.email}
-                        </div>
-                        <div className="col-span-2 text-sm text-gray-600">
-                            {request.registrationDate}
-                        </div>
-                        <div className="col-span-1">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
-                                {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                            </span>
-                        </div>
-                        <div className="col-span-1">
-                            <button
-                                onClick={() => onViewRequest(request.id)}
-                                className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors"
+                    <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Name</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Type</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Registration Date</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Status</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-200">
+                        {requests.map((request) => (
+                            <tr
+                                key={request.id}
+                                className="hover:bg-gray-50 transition-colors"
                             >
-                                <Eye className="w-4 h-4" />
-                                <span className="text-sm font-medium">View</span>
-                            </button>
-                        </div>
-                    </div>
-                ))}
+                                <td className="px-6 py-4 text-sm text-gray-900 font-medium whitespace-nowrap">
+                                    {request.name}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700 whitespace-nowrap">
+                                        {request.type}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                    {request.email}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                    {request.registrationDate}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(request.status)}`}>
+                                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <button
+                                        onClick={() => onViewRequest(request.id)}
+                                        className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        <span className="text-sm font-medium">View</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );

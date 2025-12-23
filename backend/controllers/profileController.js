@@ -71,3 +71,89 @@ export async function editProfile(req, res) {
     res.status(400).json({ error: err.message });
   }
 }
+
+
+export async function getTravellerInfo(req, res) {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "id is required" });
+  }
+
+  try {
+    const { data: travellerData, error: travellerError } = await supabase
+      .from('travellers')
+      .select('traveller_fn, traveller_ls, bio, phone_number, location')
+      .eq('traveller_id', id)
+      .maybeSingle();
+
+    if (travellerError) throw travellerError;
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('email')
+      .eq('user_id', id)
+      .single();
+
+    if (userError) throw userError;
+    res.status(200).json({
+        ...travellerData,
+        email: userData.email
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+export async function updateTravellerInfo(req, res) {
+  const { id } = req.params;
+  const {
+    traveller_fn,
+    traveller_ls,
+    bio,
+    phone_number,
+    location,
+    email
+  } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: "id is required" });
+  }
+
+  try {
+    const travellerUpdate = {};
+
+    if (traveller_fn !== undefined) travellerUpdate.traveller_fn = traveller_fn;
+    if (traveller_ls !== undefined) travellerUpdate.traveller_ls = traveller_ls;
+    if (bio !== undefined) travellerUpdate.bio = bio;
+    if (phone_number !== undefined) travellerUpdate.phone_number = phone_number;
+    if (location !== undefined) travellerUpdate.location = location;
+
+    if (Object.keys(travellerUpdate).length > 0) {
+      const { error: travellerError } = await supabase
+        .from('travellers')
+        .update(travellerUpdate)
+        .eq('traveller_id', id);
+
+      if (travellerError) throw travellerError;
+    }
+
+    if (email !== undefined) {
+      const { error: userError } = await supabase
+        .from('users')
+        .update({ email })
+        .eq('user_id', id);
+
+      if (userError) throw userError;
+    }
+
+    res.status(200).json({
+      message: "Traveller information updated successfully"
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}

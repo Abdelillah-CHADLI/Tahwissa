@@ -38,8 +38,8 @@ interface TourWithBookings extends Tour {
 
 export const dashboardService = {
   async getDashboardData(): Promise<DashboardData> {
-    const agencyId = localStorage.getItem('agencyId') || '1';
-    
+    const agencyId = localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
+
     let bookings: Booking[] = [];
     let tours: Tour[] = [];
     let agencyProfile: AgencyProfile | null = null;
@@ -59,17 +59,17 @@ export const dashboardService = {
     } catch {
       bookings = [];
     }
-    
+
     // Fetch tours for this agency
     try {
       tours = await tourService.getAgencyTours(agencyId);
     } catch {
       tours = [];
     }
-    
+
     // Calculate stats
     const totalBookings = bookings.length;
-    
+
     // Calculate average rating from agency profile
     let averageRating = 0;
     let totalReviews = 0;
@@ -79,15 +79,15 @@ export const dashboardService = {
       averageRating = numRaters > 0 ? rating / numRaters : 0;
       totalReviews = numRaters;
     }
-    
+
     // Get recent bookings (last 5)
     const recentBookings = bookings.slice(0, 5).map((booking) => {
       const traveller = booking.travellers || {};
       const tour = booking.tours || {};
-      const travelerName = traveller.traveller_fn && traveller.traveller_ls 
-        ? `${traveller.traveller_fn} ${traveller.traveller_ls}` 
+      const travelerName = traveller.traveller_fn && traveller.traveller_ls
+        ? `${traveller.traveller_fn} ${traveller.traveller_ls}`
         : 'Unknown';
-      
+
       return {
         id: String(booking.booking_id || booking.id || ''),
         tour: String(tour.tour_title || booking.tour || 'Unknown Tour'),
@@ -97,7 +97,7 @@ export const dashboardService = {
         amount: `${tour.price || 0} DZD`,
       };
     });
-    
+
     // Get popular tours - sort by number of bookings associated
     const tourBookingCount: Record<string, number> = {};
     bookings.forEach((booking) => {
@@ -106,14 +106,14 @@ export const dashboardService = {
         tourBookingCount[tourId] = (tourBookingCount[tourId] || 0) + 1;
       }
     });
-    
+
     // Sort tours by booking count and get top 3
     const toursWithBookings: TourWithBookings[] = tours.map((tour) => ({
       ...tour,
       bookingCount: tourBookingCount[String(tour.tour_id)] || 0
     }));
     toursWithBookings.sort((a, b) => b.bookingCount - a.bookingCount);
-    
+
     const popularTours = toursWithBookings.slice(0, 3).map((tour) => ({
       id: String(tour.tour_id || tour.id || ''),
       name: String(tour.tour_title || tour.title || 'Unknown Tour'),
@@ -121,14 +121,14 @@ export const dashboardService = {
       views: Number(tour.views || 0),
       rating: parseFloat((averageRating > 0 ? averageRating : 4.5).toFixed(2)),
     }));
-    
+
     // Count active tours (tours with start_date in the future)
     const now = new Date();
     const activeTours = tours.filter((tour) => {
       const startDate = tour.start_date ? new Date(tour.start_date) : null;
       return startDate && startDate >= now;
     }).length;
-    
+
     return {
       stats: {
         activeTours: activeTours || tours.length,

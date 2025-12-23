@@ -4,11 +4,15 @@ interface QuickActionCardProps {
     icon: React.ComponentType<{ className?: string }>;
     iconColor: string;
     iconBgColor: string;
+    onClick?: () => void;
 }
 
-export function QuickActionCard({ label, value, icon: Icon, iconColor, iconBgColor }: QuickActionCardProps) {
+export function QuickActionCard({ label, value, icon: Icon, iconColor, iconBgColor, onClick }: QuickActionCardProps) {
     return (
-        <div className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all cursor-pointer">
+        <div
+            onClick={onClick}
+            className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+        >
             <div className="flex items-center gap-4">
                 <div className={`${iconBgColor} p-3 rounded-xl`}>
                     <Icon className={`w-5 h-5 ${iconColor}`} />

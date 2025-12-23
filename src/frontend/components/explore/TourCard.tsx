@@ -1,12 +1,12 @@
 // components/explore/TourCard.tsx
-import { motion } from 'motion/react';
-import { MapPin, Star, Calendar, Users, Building, User } from 'lucide-react';
-import type { Tour } from '../../types/explore';
+import { motion } from "motion/react";
+import { MapPin, Star, Calendar, Users, Building, User } from "lucide-react";
+import type { Tour } from "../../types/explore";
 
 // Update the interface to accept full tour object
 interface TourCardProps {
   tour: Tour;
-  onClick: (tour: Tour) => void;  // Change from (tourId: string) to (tour: Tour)
+  onClick: (tour: Tour) => void; // Change from (tourId: string) to (tour: Tour)
   index?: number;
 }
 
@@ -14,11 +14,19 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
   // Use backend field names with fallbacks
   const tourTitle = tour.tour_title || tour.title;
   const tourId = tour.tour_id || tour.id;
-  const displayPrice = tour.price?.toLocaleString() || '0';
+  const displayPrice = tour.price?.toLocaleString() || "0";
 
   // Determine if it's from agency or guide
-  const providerType = tour.agency_id ? 'Agency' : tour.guide_id ? 'Guide' : 'Provider';
-  const providerIcon = tour.agency_id ? <Building className="w-3 h-3" /> : <User className="w-3 h-3" />;
+  const providerType = tour.agency_id
+    ? "Agency"
+    : tour.guide_id
+    ? "Guide"
+    : "Provider";
+  const providerIcon = tour.agency_id ? (
+    <Building className="w-3 h-3" />
+  ) : (
+    <User className="w-3 h-3" />
+  );
 
   return (
     <motion.div
@@ -29,8 +37,8 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
       className="bg-white rounded-lg xs:rounded-xl shadow-sm hover:shadow-md overflow-hidden cursor-pointer border border-gray-100"
     >
       <div className="relative h-40 xs:h-48 overflow-hidden">
-        <motion.img 
-          src={tour.image} 
+        <motion.img
+          src={tour.image}
           alt={tourTitle}
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.1 }}
@@ -90,8 +98,8 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
 
           <motion.button
             onClick={(e) => {
-              e.stopPropagation(); 
-              onClick(tour);  // Pass the full tour object instead of just ID
+              e.stopPropagation();
+              onClick(tour); // Pass the full tour object instead of just ID
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

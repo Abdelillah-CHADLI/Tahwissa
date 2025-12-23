@@ -1,69 +1,78 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { VerificationSearchBar } from '../../components/admin/verification/VerificationSearchBar';
 import { VerificationTabs } from '../../components/admin/verification/VerificationTabs';
 import { VerificationTable } from '../../components/admin/verification/VerificationTable';
 import type { VerificationRequest } from '../../components/admin/verification/VerificationTable';
+import { getAgencyVerifications, getGuideVerifications } from '../../services/adminService';
 
 export function VerificationRequests() {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending');
     const [searchTerm, setSearchTerm] = useState('');
+    const [allRequests, setAllRequests] = useState<VerificationRequest[]>([]);
+    const [rawData, setRawData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // Mock data - replace with API call later
-    const allRequests: VerificationRequest[] = [
-        {
-            id: 1,
-            name: 'Desert Dreams Travel Agency',
-            type: 'Agency',
-            email: 'contact@desertdreams.dz',
-            registrationDate: '11/30/2024',
-            status: 'pending'
-        },
-        {
-            id: 2,
-            name: 'Karim Mansour',
-            type: 'Guide',
-            email: 'karim.mansour@email.com',
-            registrationDate: '12/2/2024',
-            status: 'pending'
-        },
-        {
-            id: 3,
-            name: 'Ahmed Benali',
-            type: 'Guide',
-            email: 'ahmed.benali@email.com',
-            registrationDate: '12/3/2024',
-            status: 'pending'
-        },
-        {
-            id: 4,
-            name: 'Sahara Adventures',
-            type: 'Agency',
-            email: 'info@saharaadventures.dz',
-            registrationDate: '11/28/2024',
-            status: 'approved'
-        },
-        {
-            id: 5,
-            name: 'Fatima Zara',
-            type: 'Guide',
-            email: 'fatima.zara@email.com',
-            registrationDate: '11/25/2024',
-            status: 'approved'
-        },
-        {
-            id: 6,
-            name: 'Atlas Tours',
-            type: 'Agency',
-            email: 'contact@atlastours.dz',
-            registrationDate: '11/20/2024',
-            status: 'rejected'
+    useEffect(() => {
+        fetchVerifications();
+    }, []);
+
+    const fetchVerifications = async () => {
+        try {
+            const [agencyData, guideData] = await Promise.all([
+                getAgencyVerifications(),
+                getGuideVerifications()
+            ]);
+
+            console.log('Agency Data:', agencyData);
+            console.log('Guide Data:', guideData);
+
+            const formattedAgencies: VerificationRequest[] = agencyData.requests.map((req: any) => {
+                console.log('Agency request:', req);
+                return {
+                    id: req.verification_id,
+                    agencyId: req.agency_id,
+                    name: req.agency?.agency_name || 'Unknown Agency',
+                    type: 'Agency',
+                    email: req.agency?.support_email || 'Not provided',
+                    phone: req.agency?.phone_number || 'Not provided',
+                    description: req.agency?.agency_description || 'No description available',
+                    registrationDate: new Date(req.created_at).toLocaleDateString('en-US'),
+                    verificationDocument: req.verification_document,
+                    status: req.status.toLowerCase()
+                };
+            });
+
+            const formattedGuides: VerificationRequest[] = guideData.requests.map((req: any) => {
+                console.log('Guide request:', req);
+                return {
+                    id: req.verification_id,
+                    guideId: req.guide_id,
+                    name: req.guide?.guide_name || 'Unknown Guide',
+                    type: 'Guide',
+                    email: req.guide?.support_email || 'Not provided',
+                    phone: req.guide?.phone_number || 'Not provided',
+                    description: req.guide?.guide_description || 'No description available',
+                    registrationDate: new Date(req.created_at).toLocaleDateString('en-US'),
+                    verificationDocument: req.verification_document,
+                    status: req.status.toLowerCase()
+                };
+            });
+
+            const allData = [...formattedAgencies, ...formattedGuides];
+            setAllRequests(allData);
+            setRawData(allData);
+        } catch (error) {
+            console.error('Error fetching verifications:', error);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
-    // Filter requests by active tab
+    // filter verifications
     const filteredByTab = allRequests.filter(request => request.status === activeTab);
 
-    // Filter by search term
     const filteredRequests = filteredByTab.filter(request => {
         const searchLower = searchTerm.toLowerCase();
         return (
@@ -73,7 +82,7 @@ export function VerificationRequests() {
         );
     });
 
-    // Count requests by status
+    // counts
     const counts = {
         pending: allRequests.filter(r => r.status === 'pending').length,
         approved: allRequests.filter(r => r.status === 'approved').length,
@@ -81,9 +90,32 @@ export function VerificationRequests() {
     };
 
     const handleViewRequest = (id: number) => {
-        console.log('View request:', id);
-        // TODO: Navigate to request details or open modal
+        const request = rawData.find(r => r.id === id);
+        if (!request) {
+            console.log('Request not found');
+            return;
+        }
+
+        const actualId = request.type === 'Agency' ? request.agencyId : request.guideId;
+        const type = request.type.toLowerCase();
+
+        const detailData = {
+            ...request,
+            actualId: actualId
+        };
+
+        sessionStorage.setItem('verificationRequestDetail', JSON.stringify(detailData));
+
+        navigate(`/admin/verifications/${type}/${actualId}`);
     };
+
+    if (loading) {
+        return (
+            <div className="p-6 flex items-center justify-center min-h-[400px]">
+                <p className="text-gray-600">Loading verifications...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6">

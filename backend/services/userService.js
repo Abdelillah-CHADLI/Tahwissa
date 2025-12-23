@@ -25,16 +25,31 @@ export async function getUser(email) {
   return user; 
 }
 
-export async function insertUser({ email, password, role }){
+export async function insertUser({ email, password, role, fn, ls }) {
   const { data: user, error: userError } = await supabase
-        .from('users')
-        .insert({
-          email: email,
-          password: password,
-          role: role
-        }).select().single();
+    .from('users')
+    .insert({
+      email,
+      password,
+      role
+    })
+    .select()
+    .single();
+
   if (userError) {
     throw new Error(userError.message);
+  }
+
+  const { error: travellerError } = await supabase
+    .from('travellers')
+    .insert({
+      traveller_id: user.user_id, 
+      traveller_fn: fn,
+      traveller_ls: ls
+    });
+
+  if (travellerError) {
+    throw new Error(travellerError.message);
   }
 
   return user;
