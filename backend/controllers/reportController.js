@@ -7,7 +7,7 @@ export async function reportAcc(req, res) {
     const {
       reporter_id,
       acc_type,               // "agency" or "guide" or "traveller"
-      reported_id,            
+      reported_id,
       reason,
       report_message
     } = req.body;
@@ -18,7 +18,7 @@ export async function reportAcc(req, res) {
       });
     }
 
-    if (!["agency", "guide" , "traveller"].includes(acc_type.toLowerCase())) {
+    if (!["agency", "guide", "traveller"].includes(acc_type.toLowerCase())) {
       return res.status(400).json({
         error: "acc_type must be either 'agency' or 'guide' or 'traveller"
       });
@@ -39,11 +39,11 @@ export async function reportAcc(req, res) {
     if (acc_type.toLowerCase() === "agency") {
       insertData.reported_agency = reported_id;
     } else {
-    if (acc_type.toLowerCase() === "guide")
-      insertData.reported_guide = reported_id;
-    else{
-      insertData.reported_traveller = reported_id;
-    }
+      if (acc_type.toLowerCase() === "guide")
+        insertData.reported_guide = reported_id;
+      else {
+        insertData.reported_traveller = reported_id;
+      }
     }
 
     const { data, error } = await supabase
@@ -223,12 +223,17 @@ export async function getPostReportDetails(req, res) {
       .select(`
         report_id,
         reporter:reporter_id (
-          email
+          traveller_fn,
+          traveller_ls,
+          users!fk_traveller_user (
+            email
+          )
         ),
         post:post_id (
           post_id,
           title,
           text,
+          location,
           owner:traveller_id (
             traveller_fn,
             traveller_ls
@@ -247,13 +252,15 @@ export async function getPostReportDetails(req, res) {
       return res.status(404).json({ error: "Report not found" });
     }
 
-    
+
     const reportDetails = {
       report_id: data.report_id,
-      reporter_email: `${data.reporter.email}`,
+      reporter_name: `${data.reporter.traveller_fn} ${data.reporter.traveller_ls}`,
+      reporter_email: `${data.reporter.users.email}`,
       post_id: data.post.post_id,
       post_title: data.post.title,
       post_text: data.post.text,
+      location: data.post.location,
       post_owner_name: `${data.post.owner.traveller_fn} ${data.post.owner.traveller_ls}`,
       reason: data.reason,
       report_message: data.report_message,
@@ -277,13 +284,17 @@ export async function getAccReportDetails(req, res) {
       return res.status(400).json({ error: "report_id is required" });
     }
 
-    
+
     const { data, error } = await supabase
       .from("accreports")
       .select(`
         report_id,
         reporter:reporter_id (
-          email
+          email,
+          travellers!fk_traveller_user (
+            traveller_fn,
+            traveller_ls
+          )
         ),
         reported_traveller,
         reported_guide,
@@ -303,7 +314,7 @@ export async function getAccReportDetails(req, res) {
 
     let reported_name = null;
 
-    
+
     if (data.reported_traveller) {
       const { data: travellerData, error: tError } = await supabase
         .from("travellers")
@@ -339,6 +350,7 @@ export async function getAccReportDetails(req, res) {
     const reportDetails = {
       report_id: data.report_id,
       reporter_email: `${data.reporter.email} `,
+      reporter_name: data.reporter?.travellers ? `${data.reporter.travellers.traveller_fn} ${data.reporter.travellers.traveller_ls}` : 'Unknown',
       reported_name,
       reason: data.reason,
       report_message: data.report_message,
@@ -356,7 +368,7 @@ export async function getAccReportDetails(req, res) {
 
 export async function deletePost(req, res) {
   try {
-    const { report_id } = req.body; 
+    const { report_id } = req.body;
 
     if (!report_id) {
       return res.status(400).json({ error: "report_id is required" });

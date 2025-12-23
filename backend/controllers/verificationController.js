@@ -83,6 +83,7 @@ export async function getAgencyVerifications(req, res) {
       .from("agencyverification")
       .select(`
         verification_id,
+        agency_id,
         verification_document,
         status,
         created_at,
@@ -111,9 +112,10 @@ export async function getGuideVerifications(req, res) {
   try {
     // Get all verification requests and join with guides table
     const { data, error } = await supabase
-  .from("guideverification")
-  .select(`
+      .from("guideverification")
+      .select(`
     verification_id,
+    guide_id,
     verification_document,
     status,
     created_at,
@@ -248,7 +250,7 @@ export async function approveVerification(req, res) {
     }
 
     let tableName = "";
-    let ida = "" 
+    let ida = ""
 
     if (acc_type.toLowerCase() === "agency") {
       tableName = "agencies";
@@ -260,7 +262,7 @@ export async function approveVerification(req, res) {
       return res.status(400).json({ error: "acc_type must be either 'agency' or 'guide'" });
     }
 
-    
+
     const { data, error } = await supabase
       .from(tableName)
       .update({ verified: true })

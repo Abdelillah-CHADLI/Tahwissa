@@ -95,11 +95,11 @@ export const tourService = {
   }) => {
     try {
       console.log('🔍 Searching tours with params:', searchParams);
-      
+
       // Use POST request with request body as backend expects
       const response = await api.post('/tour/searchTours', searchParams);
       console.log('✅ Search endpoint response:', response.data);
-      
+
       // Backend returns direct array
       if (Array.isArray(response.data)) {
         return response.data;
@@ -109,12 +109,12 @@ export const tourService = {
       }
     } catch (error) {
       console.error('❌ Search endpoint failed:', error);
-      
+
       // Fallback: Get all tours and filter client-side
       try {
         console.log('🔄 Using fallback client-side filtering...');
         const allTours = await tourService.getTours(100);
-        
+
         return allTours.filter((tour: any) => {
           let matches = true;
 
@@ -198,6 +198,23 @@ export const tourService = {
     }
     const response = await api.get('/api/tours/browse', { params });
     return response.data;
+  },
+
+  getAgencyTours: async (agencyId: string) => {
+    const response = await api.get('/api/tours/browse', {
+      params: { provider: 'agency', size: 100 }
+    });
+    const result = response.data?.data || response.data;
+    const tours = result?.tours || [];
+    return tours.filter((tour: Record<string, unknown>) => String(tour.agency_id) === agencyId);
+  },
+
+  getTourById: async (tourId: string) => {
+    const response = await api.get('/tour/gettours');
+    const tours = Array.isArray(response.data) ? response.data : [];
+    return tours.find((t: Record<string, unknown>) =>
+      String(t.tour_id) === tourId || String(t.id) === tourId
+    ) || null;
   },
 };
 

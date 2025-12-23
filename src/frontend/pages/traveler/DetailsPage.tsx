@@ -2,7 +2,7 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { ArrowLeft, MapPin, Users, Clock, Star, CheckCircle, XCircle, Shield, Calendar, MessageCircle, ShieldCheck, Phone, Mail, Globe, Building2, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { tourService, bookingService, profileService } from "../../services/api";
+import { tourService, profileService } from "../../services/api";
 
 interface DaySchedule {
     id: number;
@@ -235,7 +235,6 @@ const DetailsPage = () => {
     const [tourData, setTourData] = useState<Record<string, unknown> | null>(null);
     const [providerData, setProviderData] = useState<Record<string, unknown> | null>(null);
     const [bookingLoading, setBookingLoading] = useState(false);
-    const [bookingSuccess, setBookingSuccess] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -294,7 +293,9 @@ const DetailsPage = () => {
     }, [tourId, location.state]);
 
     const handleBookNow = () => {
+        setBookingLoading(true);
         if (!tourData) return;
+
 
         // Navigate to booking page with tour ID as state
         const tourId = String(tourData.tour_id || tourData.id || '');
@@ -457,16 +458,9 @@ const DetailsPage = () => {
                         </div>
                         <div className="bg-gray-300 h-px my-4"></div>
 
-                        {bookingSuccess && (
-                            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-green-600" />
-                                <p className="text-sm text-green-800">Booking successful!</p>
-                            </div>
-                        )}
-
                         <button
                             onClick={handleBookNow}
-                            disabled={bookingLoading || bookingSuccess}
+                            disabled={bookingLoading}
                             className="w-full bg-[#4d8b8b] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#274345] transition-colors flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {bookingLoading ? (
