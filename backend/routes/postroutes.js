@@ -1,4 +1,3 @@
-//yacine
 const express = require('express');
 const {
   addPost,
@@ -12,8 +11,7 @@ const {
   reportPost
 } = require('../controllers/postController');
 const router = express.Router();
-router.use(express.json());
-router.use(express.json({ limit: '50mb' }))
+router.use(express.json({ limit: '50mb' }));
 router.post('/travellers/:travellerId/update', async (req, res) => {
   try {
     const travellerId = req.params.travellerId;
