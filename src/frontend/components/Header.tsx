@@ -20,6 +20,14 @@ const Header = () => {
         }
     };
 
+    const handleNotificationsClick = () => {
+        if (!user) {
+            navigate(ROUTES.SIGN_IN);
+            return;
+        }
+        navigate(ROUTES.NOTIFICATIONS);
+    };
+
     const navItems = [
         { path: ROUTES.HOME, icon: Home, label: 'Home' },
         { path: ROUTES.EXPLORE, icon: Search, label: 'Explore' },
@@ -129,7 +137,9 @@ const Header = () => {
                         <motion.button
                             whileHover={{ scale: 1.05, y: -1 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={handleNotificationsClick}
                             className="p-1.5 sm:p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
+                            aria-label="Notifications"
                         >
                             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -153,7 +163,9 @@ const Header = () => {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
+                            onClick={handleNotificationsClick}
                             className="p-2 text-gray-600 hover:text-[#348086] hover:bg-gray-100 rounded-lg transition-colors relative"
+                            aria-label="Notifications"
                         >
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
