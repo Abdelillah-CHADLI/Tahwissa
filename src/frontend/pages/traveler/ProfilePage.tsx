@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { profileService } from '../../services/api';
+import api, { profileService } from '../../services/api';
 import type { User } from '../../types/auth';
 
 interface TravelerProfileData {
@@ -35,6 +35,47 @@ const normalizePhoneInput = (value: string): string => {
 const MIN_NAME_LENGTH = 2;
 const MIN_LOCATION_LENGTH = 3;
 const MIN_BIO_LENGTH = 10;
+
+const PROFILE_PIC_STORAGE_KEY_PREFIX = 'traveler_profile_picture:';
+
+const extractBackendErrorMessage = (error: unknown): string => {
+  const err = error as any;
+  if (err?.code === 'ECONNABORTED') return 'Request timed out. Please try again.';
+  if (typeof err?.message === 'string' && !err?.response) return err.message;
+
+  const data = err?.response?.data;
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  if (typeof data?.error === 'string') return data.error;
+  if (typeof data?.message === 'string') return data.message;
+  if (typeof data?.details === 'string') return data.details;
+
+  try {
+    return JSON.stringify(data);
+  } catch {
+    return '';
+  }
+};
+
+const toUserFriendlyBackendError = (rawMessage: string): string => {
+  const msg = rawMessage.trim();
+  const lower = msg.toLowerCase();
+
+  if (!msg) return 'Request failed. Please try again.';
+
+  if (msg.startsWith('<!doctype html') || msg.startsWith('<html')) {
+    if (lower.includes('payloadtoolargeerror') || lower.includes('request entity too large')) {
+      return 'Image is too large to upload. Please choose a smaller image (or reduce its resolution) and try again.';
+    }
+    return 'Request failed. Please try again.';
+  }
+
+  if (lower.includes('payloadtoolargeerror') || lower.includes('request entity too large')) {
+    return 'Image is too large to upload. Please choose a smaller image (or reduce its resolution) and try again.';
+  }
+
+  return msg;
+};
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -82,6 +123,8 @@ const ProfilePage = () => {
         
         const profile = await profileService.getTravellerInfo(travellerId);
 
+        const storedProfilePic = localStorage.getItem(`${PROFILE_PIC_STORAGE_KEY_PREFIX}${travellerId}`) || '';
+
         setProfileData({
           firstName: profile?.traveller_fn ?? '',
           lastName: profile?.traveller_ls ?? '',
@@ -89,7 +132,7 @@ const ProfilePage = () => {
           phone_number: profile?.phone_number ?? '',
           location: profile?.location ?? '',
           bio: profile?.bio ?? '',
-          profile_picture: ''
+          profile_picture: storedProfilePic
         });
       } catch {
         setMessage({text: 'Failed to load profile data', type: 'error'});
@@ -166,17 +209,69 @@ const ProfilePage = () => {
         setMessage({ text: `Bio must be at least ${MIN_BIO_LENGTH} characters.`, type: 'error' });
         return;
       }
-      
-      await profileService.updateTravellerInfo(travellerId, {
-        traveller_fn: firstName,
-        traveller_ls: lastName,
-        phone_number: phone,
-        location,
-        bio,
-        email,
-      });
 
-      setMessage({text: 'Profile updated successfully!', type: 'success'});
+      try {
+        await profileService.updateTravellerInfo(travellerId, {
+          traveller_fn: firstName,
+          traveller_ls: lastName,
+          phone_number: phone,
+          location,
+          bio,
+          email,
+        });
+      } catch (error: any) {
+        const backendError = toUserFriendlyBackendError(extractBackendErrorMessage(error));
+        setMessage({
+          text: backendError || 'Failed to update profile. Please try again.',
+          type: 'error'
+        });
+        return;
+      }
+
+      let photoUploadError: string | null = null;
+      if (profileImage && profileImage.startsWith('data:')) {
+        const base64 = profileImage.split(',')[1] || '';
+        const mimeType = profileImage.split(';')[0]?.split(':')[1] || '';
+
+        if (!base64 || !mimeType) {
+          photoUploadError = 'Invalid image data. Please try uploading again.';
+        } else {
+          try {
+            const uploadResponse = await api.post(`/pst/travellers/${travellerId}/update`, {
+              traveller_fn: firstName,
+              traveller_ls: lastName,
+              bio,
+              phone_number: phone,
+              location,
+              profile_picture: {
+                base64,
+                mimeType,
+              }
+            });
+
+            if (uploadResponse.data?.success && uploadResponse.data?.data?.profile_picture) {
+              const newUrl = String(uploadResponse.data.data.profile_picture);
+              setProfileData(prev => ({ ...prev, profile_picture: newUrl }));
+              localStorage.setItem(`${PROFILE_PIC_STORAGE_KEY_PREFIX}${travellerId}`, newUrl);
+              setProfileImage(null);
+            } else {
+              photoUploadError = 'Photo upload failed. Please try again.';
+            }
+          } catch (error: any) {
+            const backendError = toUserFriendlyBackendError(extractBackendErrorMessage(error));
+            if (backendError.toLowerCase().includes('bucket not found')) {
+              photoUploadError = 'Profile picture upload is not available.';
+            } else {
+              photoUploadError = backendError || 'Photo upload failed. Please try again.';
+            }
+          }
+        }
+      }
+
+      setMessage({
+        text: photoUploadError ? `Profile updated, but photo upload failed: ${photoUploadError}` : 'Profile updated successfully!',
+        type: photoUploadError ? 'error' : 'success'
+      });
 
       const updatedUser: User = {
         ...user,
@@ -189,8 +284,9 @@ const ProfilePage = () => {
       setTimeout(() => setMessage({text: '', type: 'success'}), 3000);
       
     } catch (error: any) {
+      const backendError = toUserFriendlyBackendError(extractBackendErrorMessage(error));
       setMessage({
-        text: error?.response?.data?.error || 'Failed to update profile. Please try again.',
+        text: backendError || 'Failed to update profile. Please try again.',
         type: 'error'
       });
     } finally {
@@ -446,7 +542,7 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, upl
     <div className="flex items-center mb-6">
       <div className="relative">
         <img
-          src={profileImage || "https://via.placeholder.com/100"}
+          src={profileImage || data.profile_picture || "https://via.placeholder.com/100"}
           alt="Profile"
           className="w-24 h-24 rounded-full object-cover"
         />
