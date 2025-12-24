@@ -1,4 +1,5 @@
-import { Clock, CheckCircle, XCircle, Calendar, MapPin, Users, Mail, Phone, MessageSquare } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Calendar, MapPin, Users, Banknote } from "lucide-react";
+
 
 type Request = {
     id: string;
@@ -9,7 +10,8 @@ type Request = {
     preferredDate: string;
     status: string;
     travelers: number;
-    budget: string;
+    price: number;
+    duration: number;
     location: string;
     message: string;
     contactEmail: string;
@@ -39,7 +41,7 @@ const getStatusColor = (status: string) => {
     return "bg-gray-100 text-gray-800";
 };
 
-function RequestCard({ request, onFollowUp, onRequestAgain, onViewDetails }: RequestCardProps) {
+function RequestCard({ request }: RequestCardProps) {
     return (
         <div className="border rounded-lg p-4 mb-4 shadow-sm">
             <div className="flex justify-between items-start mb-3">
@@ -67,8 +69,16 @@ function RequestCard({ request, onFollowUp, onRequestAgain, onViewDetails }: Req
                     <span>{request.travelers} people</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4" />
+                    <Calendar className="w-4 h-4" />
                     <span>Requested {request.requestDate}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{request.duration} day{request.duration !== 1 ? 's' : ''}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Banknote className="w-4 h-4" />
+                    <span className="font-medium">{request.price} DZD</span>
                 </div>
             </div>
 
@@ -88,45 +98,6 @@ function RequestCard({ request, onFollowUp, onRequestAgain, onViewDetails }: Req
                 </div>
             )}
 
-            <div className="flex justify-between items-center pt-3 border-t">
-                <div className="flex gap-4 text-sm">
-                    <div className="flex items-center gap-1">
-                        <Mail className="w-4 h-4" />
-                        <span>{request.contactEmail}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Phone className="w-4 h-4" />
-                        <span>{request.contactPhone}</span>
-                    </div>
-                </div>
-                <div>
-                    {request.status === "pending" && (
-                        <button
-                            className="border px-3 py-1 rounded flex items-center gap-1"
-                            onClick={() => onFollowUp?.(request.id)}
-                        >
-                            <MessageSquare className="w-4 h-4" />
-                            Follow Up
-                        </button>
-                    )}
-                    {request.status === "confirmed" && (
-                        <button
-                            className="bg-blue-500 text-white px-3 py-1 rounded"
-                            onClick={() => onViewDetails?.(request.id)}
-                        >
-                            View Details
-                        </button>
-                    )}
-                    {request.status === "declined" && (
-                        <button
-                            className="border px-3 py-1 rounded"
-                            onClick={() => onRequestAgain?.(request.id)}
-                        >
-                            Request Again
-                        </button>
-                    )}
-                </div>
-            </div>
         </div>
 
     );

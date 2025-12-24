@@ -4,7 +4,7 @@ import StatsCards from "../../components/traveler/requests/StatsCards";
 import TabsNavigation from "../../components/traveler/requests/TabsNavigation";
 import EmptyState from "../../components/traveler/requests/EmptyState";
 import PageHeader from "../../components/traveler/requests/PageHeader";
-import { bookingService } from "../../services/api";
+import { profileService, bookingService } from "../../services/api";
 
 interface BackendBooking {
   booking_id: string;
@@ -17,6 +17,8 @@ interface BackendBooking {
     tour_title?: string;
     price?: number;
     location?: string;
+    group_size?: number;
+    duration?: string;
     start_date?: string;
     agency_id?: string | null;
     guide_id?: string | null;
@@ -32,16 +34,15 @@ interface Request {
   preferredDate: string;
   status: "pending" | "confirmed" | "declined";
   travelers: number;
-  budget: string;
+  price: number;
+  duration: number;
   location: string;
   message: string;
   contactEmail: string;
   contactPhone: string;
   confirmedDetails?: string;
   declineReason?: string;
-  price: number;
   image: string;
-  duration: string;
   tourId: string;
   bookingDate: string;
   startDate?: string;
@@ -77,15 +78,14 @@ function RequestsPage() {
             requestDate: formatDate(booking.booking_date),
             preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
             status: status,
-            travelers: 1,
-            budget: tour?.price ? `${tour.price} DZD` : "Not specified",
+            travelers: tour?.group_size || 0,
             location: tour?.location || "Unknown Location",
             message: `Booking for ${tour?.tour_title || "tour"}`,
             contactEmail: "user@example.com",
             contactPhone: "+1234567890",
             price: tour?.price || 0,
             image: getTourImage(tour),
-            duration: "3 days",
+            duration: tour?.duration || "3 days",
             tourId: booking.tour_id,
             bookingDate: booking.booking_date,
             startDate: tour?.start_date,
@@ -105,38 +105,46 @@ function RequestsPage() {
     }
   };
 
-  const handleRequestAgain = async (requestId: string) => {
-    const request = requests.find(r => r.id === requestId);
-    if (request) {
-      try {
-        await bookingService.createBooking({
-          traveller_id: currentTravellerId,
-          tour_id: request.tourId
-        });
-
-        alert("New booking created successfully!");
-        fetchUserBookings();
-      } catch {
-        alert("Network error creating booking");
-      }
-    }
-  };
-
   // --- Effects ---
   useEffect(() => {
     fetchUserBookings();
   }, []);
 
   // --- Data Processing ---
-  const getProviderName = (tour?: BackendBooking['tours']): string => {
-    if (tour?.agency_id) {
-      return "Agency Provider";
+  const getProviderName = async (tour?: BackendBooking['tours']): Promise<string> => {
+    if (!tour) return "Unknown Provider";
+
+    try {
+      if (tour.agency_id) {
+        const response = await profileService.getProfile(tour.agency_id, 'agency');
+        // Access agency_name from response.data.agency_name
+        if (response?.success && response?.data?.agency_name) {
+          return response.data.agency_name;
+        }
+        return "Agency Provider"; // Fallback
+      }
+
+      if (tour.guide_id) {
+        const response = await profileService.getProfile(tour.guide_id, 'guide');
+        // For guide, check both guide_name and name fields
+        if (response?.success && response?.data) {
+          // Try different possible field names
+          return response.data.guide_name || response.data.name || "Guide Provider";
+        }
+        return "Guide Provider"; // Fallback
+      }
+
+      return "Unknown Provider";
+    } catch (error) {
+      console.error('Error fetching provider name:', error);
+      // Fallback to generic names
+      if (tour.agency_id) return "Agency Provider";
+      if (tour.guide_id) return "Guide Provider";
+      return "Unknown Provider";
     }
-    if (tour?.guide_id) {
-      return "Guide Provider";
-    }
-    return "Unknown Provider";
   };
+
+
 
   const mapStatus = (backendStatus: string): "pending" | "confirmed" | "declined" => {
     const statusMap: Record<string, "pending" | "confirmed" | "declined"> = {
@@ -153,7 +161,8 @@ function RequestsPage() {
       return new Date(dateString).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
+        timeZone: 'UTC'
       });
     } catch {
       return dateString;
@@ -188,27 +197,7 @@ function RequestsPage() {
     }
   };
 
-  // --- Handlers ---
-  const handleFollowUp = async (requestId: string) => {
-    const request = requests.find(r => r.id === requestId);
-    if (request) {
-      alert(`Following up on: ${request.tourName} with ${request.providerName}`);
-    }
-  };
 
-  const handleViewDetails = (requestId: string) => {
-    const request = requests.find(r => r.id === requestId);
-    if (request) {
-      alert(
-        `Tour: ${request.tourName}\n` +
-        `Provider: ${request.providerName}\n` +
-        `Status: ${request.status}\n` +
-        `Booking Date: ${request.bookingDate}\n` +
-        `Location: ${request.location}\n` +
-        `Price: ${request.price} DZD`
-      );
-    }
-  };
 
   const requestsToShow = getRequestsToShow();
 
@@ -275,9 +264,6 @@ function RequestsPage() {
             <RequestCard
               key={request.id}
               request={request}
-              onFollowUp={handleFollowUp}
-              onRequestAgain={handleRequestAgain}
-              onViewDetails={handleViewDetails}
             />
           ))
         ) : (

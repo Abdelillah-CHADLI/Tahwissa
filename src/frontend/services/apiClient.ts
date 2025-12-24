@@ -33,7 +33,6 @@ interface AuthResponse {
 }
 
 class ApiClient {
-  private useMockData: boolean = true;
 
   private async mockRequest(endpoint: string, options: RequestInit = {}): Promise<unknown> {
     await new Promise(resolve => setTimeout(resolve, 1000));

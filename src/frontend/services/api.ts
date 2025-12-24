@@ -210,12 +210,32 @@ export const tourService = {
   },
 
   getTourById: async (tourId: string) => {
-    const response = await api.get('/tour/gettours');
-    const tours = Array.isArray(response.data) ? response.data : [];
-    return tours.find((t: Record<string, unknown>) =>
-      String(t.tour_id) === tourId || String(t.id) === tourId
-    ) || null;
-  },
+    try {
+      const response = await api.get('/api/tours/browse');
+
+      // Check if request was successful
+      if (!response.data?.success) {
+        console.error('API request failed');
+        return null;
+      }
+
+      // Correct path: response.data.data.tours
+      const tours = Array.isArray(response.data?.data?.tours)
+        ? response.data.data.tours
+        : [];
+
+      // Find the specific tour
+      const foundTour = tours.find((t: any) =>
+        String(t.tour_id) === tourId || String(t.id) === tourId
+      );
+
+      return foundTour || null;
+
+    } catch (error) {
+      console.error('Error fetching tour by ID:', error);
+      return null;
+    }
+  }
 };
 
 export const bookingService = {
