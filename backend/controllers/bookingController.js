@@ -1,6 +1,6 @@
 //yacine
 import { json } from "node:stream/consumers";
-import {supabase} from "../config/supabasedb.js";
+import { supabase } from "../config/supabasedb.js";
 
 
 
@@ -18,15 +18,15 @@ export async function addTour(tourData, images = []) {
     tour_details,
     tour_included,
     start_date,
-    category ,
-      requirements,
-      tour_not_included
+    category,
+    requirements,
+    tour_not_included
   } = tourData;
 
   let on = {
-    'xhzt':'uhfu'
+    'xhzt': 'uhfu'
   }
- let dbr =  JSON.stringify(on)
+  let dbr = JSON.stringify(on)
 
   JSON.parse()
 
@@ -61,7 +61,7 @@ export async function addTour(tourData, images = []) {
       tour_details,
       tour_included,
       start_date,
-      category ,
+      category,
       requirements,
       tour_not_included
     })
@@ -257,24 +257,24 @@ export async function searchAgenciesByName(name, limit = 10) {
   return data;
 }
 
-export async function searchGuidesByName(name , page = 1, limit = 10) {
+export async function searchGuidesByName(name, page = 1, limit = 10) {
   const start = (page - 1) * limit;
   const end = start + limit - 1;
-  if(name == null){
-      const { data, error } = await supabase
-    .from('guides')
-    .select('*')
+  if (name == null) {
+    const { data, error } = await supabase
+      .from('guides')
+      .select('*')
       .range(start, end)
-      if (error) throw new Error(`Failed to search guides: ${error.message}`);
-  return data;
-  }else{
-      const { data, error } = await supabase
-    .from('guides')
-    .select('*')
-    .ilike('guide_name', `%${name}%`)
-    .range(start, end)
-      if (error) throw new Error(`Failed to search guides: ${error.message}`);
-  return data;
+    if (error) throw new Error(`Failed to search guides: ${error.message}`);
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('guides')
+      .select('*')
+      .ilike('guide_name', `%${name}%`)
+      .range(start, end)
+    if (error) throw new Error(`Failed to search guides: ${error.message}`);
+    return data;
   }
 
   if (error) throw new Error(`Failed to search guides: ${error.message}`);
@@ -318,19 +318,19 @@ export async function browseAgencies(page = 1, size = 10) {
 }
 
 export async function browseTours(
-  page = 1, 
-  size = 10, 
-  cat = null, 
-  regions = null, 
-  priceMin = null, 
-  priceMax = null, 
+  page = 1,
+  size = 10,
+  cat = null,
+  regions = null,
+  priceMin = null,
+  priceMax = null,
   provider = null
 ) {
   const start = (page - 1) * size;
   const end = start + size - 1;
-  
+
   const params = { cat, regions, priceMin, priceMax, provider };
-  
+
   const selectStr = `
     *,
     agencies!agency_id (
@@ -346,7 +346,7 @@ export async function browseTours(
       num_raters
     )
   `;
-  
+
   function applyFilters(query) {
     if (params.cat && params.cat.length > 0) {
       query = query.in('category', params.cat);
@@ -367,7 +367,7 @@ export async function browseTours(
     }
     return query;
   }
-  
+
   // Count query
   let countQuery = supabase
     .from('tours')
@@ -375,7 +375,7 @@ export async function browseTours(
   countQuery = applyFilters(countQuery);
   const { count, error: countError } = await countQuery;
   if (countError) throw new Error(`Failed to count tours: ${countError.message}`);
-  
+
   // Data query
   let dataQuery = supabase
     .from('tours')
@@ -386,7 +386,7 @@ export async function browseTours(
     .order('created_at', { ascending: false });
   const { data: tours, error: tourError } = await dataQuery;
   if (tourError) throw new Error(`Failed to fetch tours: ${tourError.message}`);
-  
+
   return {
     tours,
     pagination: {
@@ -433,6 +433,8 @@ export async function getUserBookings(userId) {
         tour_title,
         location,
         price,
+        group_size,
+        duration,
         agency_id,
         guide_id,
         start_date
