@@ -54,7 +54,6 @@ function RequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  console.log("user Id", localStorage.getItem('userId'));
   const { user } = useAuth();
   const currentTravellerId = user?.id || "550e8400-e29b-41d4-a716-446655440001";
 
