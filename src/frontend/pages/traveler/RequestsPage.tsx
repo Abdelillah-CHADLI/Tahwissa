@@ -65,34 +65,36 @@ function RequestsPage() {
       const response = await bookingService.getUserBookings(currentTravellerId);
 
       if (response.success && response.data) {
-        const transformedRequests: Request[] = response.data.map((booking: BackendBooking) => {
-          const tour = booking.tours;
-          const providerName = getProviderName(tour);
-          const status = mapStatus(booking.status);
+        const transformedRequests = await Promise.all(
+          response.data.map(async (booking: BackendBooking) => {
+            const tour = booking.tours;
+            const providerDetails = await getProviderDetails(tour);
+            const status = mapStatus(booking.status);
 
-          return {
-            id: booking.booking_id,
-            type: tour?.agency_id ? "agency" : "guide",
-            providerName: providerName,
-            tourName: tour?.tour_title || "Unknown Tour",
-            requestDate: formatDate(booking.booking_date),
-            preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
-            status: status,
-            travelers: tour?.group_size || 0,
-            location: tour?.location || "Unknown Location",
-            message: `Booking for ${tour?.tour_title || "tour"}`,
-            contactEmail: "user@example.com",
-            contactPhone: "+1234567890",
-            price: tour?.price || 0,
-            image: getTourImage(tour),
-            duration: tour?.duration || "3 days",
-            tourId: booking.tour_id,
-            bookingDate: booking.booking_date,
-            startDate: tour?.start_date,
-            confirmedDetails: status === "confirmed" ? "Your booking has been confirmed!" : undefined,
-            declineReason: status === "declined" ? "Booking was declined by the provider" : undefined,
-          };
-        });
+            return {
+              id: booking.booking_id,
+              type: tour?.agency_id ? "agency" : "guide",
+              providerName: providerDetails?.name || "Unknown Provider",
+              contactEmail: providerDetails?.email || "No email",
+              contactPhone: providerDetails?.phone || "No phone",
+              tourName: tour?.tour_title || "Unknown Tour",
+              requestDate: formatDate(booking.booking_date),
+              preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
+              status: status,
+              travelers: tour?.group_size || 0,
+              location: tour?.location || "Unknown Location",
+              message: `Booking for ${tour?.tour_title || "tour"}`,
+              price: tour?.price || 0,
+              image: getTourImage(tour),
+              duration: tour?.duration || "3 days",
+              tourId: booking.tour_id,
+              bookingDate: booking.booking_date,
+              startDate: tour?.start_date,
+              confirmedDetails: status === "confirmed" ? "Your booking has been confirmed!" : undefined,
+              declineReason: status === "declined" ? "Booking was declined by the provider" : undefined,
+            };
+          })
+        );
 
         setRequests(transformedRequests);
       } else {
@@ -111,36 +113,43 @@ function RequestsPage() {
   }, []);
 
   // --- Data Processing ---
-  const getProviderName = async (tour?: BackendBooking['tours']): Promise<string> => {
-    if (!tour) return "Unknown Provider";
+  const getProviderDetails = async (tour?: BackendBooking['tours']): Promise<any> => {
+    if (!tour) return null;
 
     try {
+      // Handle agency tours
       if (tour.agency_id) {
         const response = await profileService.getProfile(tour.agency_id, 'agency');
-        // Access agency_name from response.data.agency_name
-        if (response?.success && response?.data?.agency_name) {
-          return response.data.agency_name;
+
+        if (response?.success && response?.data) {
+          return {
+            name: response.data.agency_name || "Agency Provider",
+            email: response.data.support_email || "No email",
+            phone: response.data.phone_number || "No phone",
+          };
         }
-        return "Agency Provider"; // Fallback
+
       }
 
+      // Handle guide tours
       if (tour.guide_id) {
         const response = await profileService.getProfile(tour.guide_id, 'guide');
-        // For guide, check both guide_name and name fields
+
         if (response?.success && response?.data) {
-          // Try different possible field names
-          return response.data.guide_name || response.data.name || "Guide Provider";
+          return {
+            name: response.data.guide_name || "Guide Provider",
+            email: response.data.support_email || "No email",
+            phone: response.data.phone_number || "No phone",
+          };
         }
-        return "Guide Provider"; // Fallback
+
       }
 
-      return "Unknown Provider";
+      return null;
+
     } catch (error) {
-      console.error('Error fetching provider name:', error);
-      // Fallback to generic names
-      if (tour.agency_id) return "Agency Provider";
-      if (tour.guide_id) return "Guide Provider";
-      return "Unknown Provider";
+      console.error('Error fetching provider details:', error);
+      return null;
     }
   };
 

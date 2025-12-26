@@ -1,4 +1,4 @@
-import { Clock, CheckCircle, XCircle, Calendar, MapPin, Users, Banknote } from "lucide-react";
+import { Clock, CheckCircle, XCircle, Calendar, MapPin, Users, Banknote, Mail, Phone } from "lucide-react";
 
 
 type Request = {
@@ -98,6 +98,18 @@ function RequestCard({ request }: RequestCardProps) {
                 </div>
             )}
 
+            <div className="flex justify-between items-center pt-3 border-t">
+                <div className="flex gap-4 text-sm">
+                    <div className="flex items-center gap-1">
+                        <Mail className="w-4 h-4" />
+                        <span>{request.contactEmail}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Phone className="w-4 h-4" />
+                        <span>{request.contactPhone}</span>
+                    </div>
+                </div>
+            </div>
         </div>
 
     );
