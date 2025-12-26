@@ -5,6 +5,7 @@ import TabsNavigation from "../../components/traveler/requests/TabsNavigation";
 import EmptyState from "../../components/traveler/requests/EmptyState";
 import PageHeader from "../../components/traveler/requests/PageHeader";
 import { profileService, bookingService } from "../../services/api";
+import { useAuth } from '../../contexts/AuthContext';
 
 interface BackendBooking {
   booking_id: string;
@@ -53,8 +54,9 @@ function RequestsPage() {
   const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const currentTravellerId = localStorage.getItem('userId') || "550e8400-e29b-41d4-a716-446655440001";
+  console.log("user Id", localStorage.getItem('userId'));
+  const { user } = useAuth();
+  const currentTravellerId = user?.id || "550e8400-e29b-41d4-a716-446655440001";
 
   // --- API Calls ---
   const fetchUserBookings = async () => {
