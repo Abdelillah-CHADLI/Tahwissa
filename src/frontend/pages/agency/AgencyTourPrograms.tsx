@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Loader2, AlertCircle } from 'lucide-react';
 import { TourCard } from '../../types/tourcard';
-import { tourService } from '../../services/api';
-import { getCurrentAgencyId } from '../../utils/session';
+import { bookingService, tourService } from '../../services/api';
+import { getCurrentAgencyUuid } from '../../utils/session';
 
 export function AgencyTourPrograms() {
     const navigate = useNavigate();
@@ -19,7 +19,7 @@ export function AgencyTourPrograms() {
     const fetchTours = async () => {
         try {
             setLoading(true);
-            const agencyId = getCurrentAgencyId();
+            const agencyId = getCurrentAgencyUuid();
 
             if (!agencyId) {
                 setError("Agency ID not found. Please log in.");
@@ -27,11 +27,34 @@ export function AgencyTourPrograms() {
                 return;
             }
 
-            const data = await tourService.getAgencyTours(agencyId);
-            setTours(data);
+            const [toursData, bookingsResponse] = await Promise.all([
+                tourService.getAgencyTours(agencyId),
+                bookingService.getBookings({ agencyId })
+            ]);
+
+            const bookingsData = bookingsResponse?.success && Array.isArray(bookingsResponse?.data)
+                ? bookingsResponse.data
+                : Array.isArray(bookingsResponse)
+                    ? bookingsResponse
+                    : [];
+
+            const bookingCounts: Record<string, number> = {};
+            for (const b of bookingsData as any[]) {
+                const tourId = String(b?.tour_id ?? b?.tours?.tour_id ?? '');
+                if (tourId) bookingCounts[tourId] = (bookingCounts[tourId] || 0) + 1;
+            }
+
+            const enriched = (Array.isArray(toursData) ? toursData : []).map((t: any) => {
+                const tid = String(t?.tour_id ?? t?.id ?? '');
+                return {
+                    ...t,
+                    bookings_count: bookingCounts[tid] || 0,
+                };
+            });
+
+            setTours(enriched);
             setError(null);
         } catch (err) {
-            console.error("Error fetching tours:", err);
             setError("Failed to load tour programs.");
         } finally {
             setLoading(false);

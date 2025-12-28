@@ -6,7 +6,8 @@ import { TabsNavigation } from "../../components/agency/bookings/TabsNavigation"
 import { EmptyState } from "../../components/agency/bookings/EmptyState";
 import { BookingDetails } from "../../components/agency/bookings/BookingDetails";
 import { bookingService, advancedBookingService } from "../../services/api";
-import { getCurrentAgencyId } from "../../utils/session";
+import { getCurrentAgencyUuid } from "../../utils/session";
+import { getApiErrorMessage } from "../../services/api";
 
 interface Booking {
     id: string;
@@ -31,7 +32,7 @@ export function AgencyBookingPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const getAgencyId = () => getCurrentAgencyId();
+    const getAgencyId = () => getCurrentAgencyUuid();
 
     const fetchAgencyBookings = useCallback(async () => {
         try {
@@ -86,8 +87,12 @@ export function AgencyBookingPage() {
             await fetchAgencyBookings();
             setSelectedBooking(null);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to confirm booking";
-            setError(errorMessage);
+            const msg = getApiErrorMessage(err);
+            if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+                setError('Booking confirmation isn\'t available on the backend API yet.');
+            } else {
+                setError(msg || 'Failed to confirm booking');
+            }
         }
     };
 
@@ -99,8 +104,12 @@ export function AgencyBookingPage() {
             await fetchAgencyBookings();
             setSelectedBooking(null);
         } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : "Failed to cancel booking";
-            setError(errorMessage);
+            const msg = getApiErrorMessage(err);
+            if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
+                setError('Booking cancellation isn\'t available on the backend API yet.');
+            } else {
+                setError(msg || 'Failed to cancel booking');
+            }
         }
     };
 

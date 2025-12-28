@@ -7,6 +7,7 @@ import { AgencyBookingPage } from './pages/agency/AgencyBookingPage';
 import { AgencyReviewsPage } from './pages/agency/AgencyReviewsPage';
 import { AgencySettings } from './pages/agency/AgencySettings';
 import { AgencyAddTourProgram } from './pages/agency/AgencyAddTourPrograms';
+import { AgencyEditTourProgram } from './pages/agency/AgencyEditTourProgram';
 import { AdminPage } from './pages/agency/AdminPage';
 import { PremiumOffersPage } from './pages/agency/PremiumOffersPage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -40,7 +41,6 @@ function AgencyAppContent() {
         guideName: guideName || undefined
       };
 
-      console.log('📥 Storing user from URL params:', userFromParams);
       localStorage.setItem('user', JSON.stringify(userFromParams));
 
       // Clean up URL by removing params (optional)
@@ -59,6 +59,7 @@ function AgencyAppContent() {
         <Route path="settings" element={<AgencySettings />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="add-tour" element={<AgencyAddTourProgram />} />
+        <Route path="edit-tour/:tourId" element={<AgencyEditTourProgram />} />
         <Route path="premium" element={<PremiumOffersPage />} />
       </Route>
     </Routes>
