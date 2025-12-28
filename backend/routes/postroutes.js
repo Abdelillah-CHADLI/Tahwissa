@@ -1,3 +1,4 @@
+//yacine
 const express = require('express');
 const {
   addPost,
@@ -11,7 +12,8 @@ const {
   reportPost
 } = require('../controllers/postController');
 const router = express.Router();
-router.use(express.json({ limit: '50mb' }));
+router.use(express.json());
+router.use(express.json({ limit: '50mb' }))
 router.post('/travellers/:travellerId/update', async (req, res) => {
   try {
     const travellerId = req.params.travellerId;
@@ -59,7 +61,8 @@ router.get('/posts', async (req, res) => {
   try {
     const pageSize = parseInt(req.query.pageSize) || 10;
     const pageNum = parseInt(req.query.pageNum) || 1;
-    const result = await browsePosts(pageSize, pageNum);
+    const travellerId = req.query.travellerId ? String(req.query.travellerId) : null;
+    const result = await browsePosts(pageSize, pageNum, travellerId);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

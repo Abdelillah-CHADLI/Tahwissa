@@ -3,6 +3,7 @@ import { Loader2, AlertCircle, Star } from "lucide-react";
 import PageHeader from "../../components/traveler/requests/PageHeader";
 import { ReviewCard } from "../../components/agency/reviews/ReviewCard";
 import { reviewService, tourService } from "../../services/api";
+import { getCurrentAgencyId } from "../../utils/session";
 
 interface Review {
     id: string;
@@ -25,9 +26,7 @@ export function AgencyReviewsPage() {
         ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
     });
 
-    const getAgencyId = () => {
-        return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
-    };
+    const getAgencyId = () => getCurrentAgencyId();
 
     const fetchReviews = useCallback(async () => {
         try {
@@ -35,6 +34,17 @@ export function AgencyReviewsPage() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setReviews([]);
+                setStats({
+                    averageRating: 0,
+                    totalReviews: 0,
+                    ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+                });
+                setError("Agency ID not found. Please log in.");
+                setLoading(false);
+                return;
+            }
 
             const agencyTours = await tourService.getAgencyTours(agencyId);
 

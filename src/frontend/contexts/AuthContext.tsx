@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types/auth";
+import { syncLegacyIdsFromUser } from "../utils/session";
 
 interface AuthContextType {
   user: User | null;
@@ -22,24 +23,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      console.log("🔄 AuthContext: Checking authentication...");
       const savedUser = localStorage.getItem("user");
-      console.log("🔄 AuthContext: Saved user from localStorage:", savedUser);
 
       if (savedUser) {
         try {
           const userData: User = JSON.parse(savedUser);
-          console.log("🔄 AuthContext: Parsed user data:", userData);
           setUser(userData);
+          syncLegacyIdsFromUser(userData);
         } catch (error) {
-          console.error(
-            "❌ AuthContext: Error parsing saved user data:",
-            error
-          );
+          console.error("AuthContext: failed to parse saved user", error);
           localStorage.removeItem("user");
         }
-      } else {
-        console.log("🔄 AuthContext: No saved user found");
       }
       setIsLoading(false);
     };
@@ -49,22 +43,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = (userData: User) => {
     if (!userData.id || !userData.email || !userData.userType) {
-      console.error(
-        " AuthContext: Incomplete user data during login:",
-        userData
-      );
+      console.error("AuthContext: incomplete user data during login", userData);
     }
 
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
-    console.log(" AuthContext: User stored in localStorage");
+    syncLegacyIdsFromUser(userData);
   };
 
   const logout = () => {
-    console.log("AuthContext: Logout called");
     setUser(null);
     localStorage.removeItem("user");
-    console.log("AuthContext: User removed from localStorage");
+    localStorage.removeItem("agencyId");
+    localStorage.removeItem("profileId");
   };
 
   const value: AuthContextType = {

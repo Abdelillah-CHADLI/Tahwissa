@@ -30,11 +30,8 @@ function AppContent() {
 
   const showHeader = !isAuthPage;
 
-// In TravelerApp.tsx - Update the useEffect
-useEffect(() => {
+  useEffect(() => {
   if (user && (user.userType === "agency" || user.userType === "guide")) {
-    console.log('🔄 AUTO-REDIRECTING TO AGENCY APP:', user.userType);
-    
     const params = new URLSearchParams({
       userId: user.userId,
       profileId: user.profileId,
@@ -52,7 +49,7 @@ useEffect(() => {
     
     window.location.href = `/agency?${params.toString()}`;
   }
-}, [user]);
+  }, [user]);
 
   const handleProfileComplete = () => {
     const accountType = location.state?.accountType || 'traveler';

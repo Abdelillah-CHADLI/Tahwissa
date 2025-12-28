@@ -3,13 +3,13 @@ import { motion } from "motion/react";
 import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X, Shield, Crown } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/api';
-import { mockAgencyProvider } from '../../data/mockAgency';
 import { ROUTES } from '../../utils/routes';
+import { getCurrentAgencyId } from '../../utils/session';
 
 export function AgencyDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
-    const [agencyProfile, setAgencyProfile] = useState<any>(mockAgencyProvider);
+    const [agencyProfile, setAgencyProfile] = useState<any>({});
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -26,12 +26,7 @@ export function AgencyDashboard() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                let agencyId = localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
-                const userStr = localStorage.getItem('user');
-                if (userStr && !agencyId) {
-                    const user = JSON.parse(userStr);
-                    agencyId = user.agencyId || user.id;
-                }
+                const agencyId = getCurrentAgencyId();
 
                 if (!agencyId) return;
 
@@ -43,8 +38,8 @@ export function AgencyDashboard() {
                         ...response.data
                     });
                 }
-            } catch {
-                // Keep using mock data on error
+            } catch (error) {
+                console.error('Failed to load agency profile:', error);
             }
         };
         fetchProfile();
@@ -65,6 +60,8 @@ export function AgencyDashboard() {
     const handleLogout = () => {
         localStorage.removeItem('agencyId');
         localStorage.removeItem('token'); // If you use tokens
+        localStorage.removeItem('user');
+        localStorage.removeItem('profileId');
         navigate(ROUTES.HOME);
     };
 

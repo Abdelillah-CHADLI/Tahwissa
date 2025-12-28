@@ -4,8 +4,7 @@ import { EmployeeList } from "../../components/agency/admin/EmployeeList";
 import { AddEditModal } from "../../components/agency/admin/AddEditModal";
 import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
-
-const API_BASE_URL = "http://localhost:5000";
+import api from "../../services/api";
 
 interface BackendEmployee {
     employee_id: string;
@@ -28,7 +27,16 @@ export function AdminPage() {
     const [fetchLoading, setFetchLoading] = useState(true);
 
     const getAgencyId = () => {
-        return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
+        const direct = localStorage.getItem('agencyId');
+        if (direct) return direct;
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return null;
+        try {
+            const user = JSON.parse(userStr) as any;
+            return user.agencyId || user.profileId || null;
+        } catch {
+            return null;
+        }
     };
 
     // --- API Calls ---
@@ -36,18 +44,11 @@ export function AdminPage() {
         setFetchLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${getAgencyId()}`, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
+            const agencyId = getAgencyId();
+            if (!agencyId) throw new Error('No agency account found.');
 
-            if (!response.ok) {
-                throw new Error(`Failed to fetch employees: ${response.statusText}`);
-            }
-
-            const result = await response.json();
+            const response = await api.get(`/manager/employeesOp/${agencyId}`);
+            const result = response.data;
 
             // Transform backend data to frontend format
             const transformedEmployees: Employee[] = result.employees.map((emp: BackendEmployee) => ({
@@ -73,16 +74,7 @@ export function AdminPage() {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`${API_BASE_URL}/manager/employeesOp/${id}`, {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error(`Failed to delete employee: ${response.statusText}`);
-                }
+                await api.delete(`/manager/employeesOp/${id}`);
 
                 await fetchEmployees();
             } catch (err) {
@@ -99,28 +91,19 @@ export function AdminPage() {
         setError(null);
 
         try {
-            const response = await fetch(`${API_BASE_URL}/manager/employees`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: employeeData.email,
-                    password: "123",
-                    agency_id: getAgencyId(),
-                    name: employeeData.name,
-                    role: employeeData.role,
-                    phone: employeeData.phone
-                })
-            });
+            const agencyId = getAgencyId();
+            if (!agencyId) throw new Error('No agency account found.');
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `Failed to add employee: ${response.statusText}`);
-            }
+            const generatedPassword = `Emp-${Math.random().toString(36).slice(2, 10)}!`;
+            await api.post(`/manager/employees`, {
+                email: employeeData.email,
+                password: generatedPassword,
+                agency_id: agencyId,
+            });
 
             await fetchEmployees();
             setIsAddModalOpen(false);
+            alert(`Employee created. Temporary password: ${generatedPassword}`);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to add employee";
             setError(errorMessage);
@@ -131,12 +114,12 @@ export function AdminPage() {
 
     // Remove toggle status and edit since backend doesn't support them
     const handleToggleStatus = async (id: string) => {
-        alert(id);
+        void id;
         alert("Status toggle not supported by backend API");
     };
 
     const handleEditEmployee = async (employeeData: Omit<Employee, "id">) => {
-        alert(employeeData.name);
+        void employeeData;
         alert("Edit employee functionality not implemented in backend");
         setIsEditModalOpen(false);
         setSelectedEmployee(null);

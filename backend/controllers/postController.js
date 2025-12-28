@@ -230,7 +230,7 @@ export async function reportPost(reportData) {
   if (error) throw new Error(`Failed to report post: ${error.message}`);
   return { success: true, data: newReport };
 }
-export async function browsePosts(pageSize = 10, pageNum = 1) {
+export async function browsePosts(pageSize = 10, pageNum = 1, travellerId = null) {
   const offset = (pageNum - 1) * pageSize;
   const { data: posts, error: postsError } = await supabase
     .from('posts')
@@ -257,6 +257,70 @@ export async function browsePosts(pageSize = 10, pageNum = 1) {
     }
     return post;
   }));
+
+  // Compute commentsCount for posts on this page
+  try {
+    const postIds = enhancedPosts.map(p => p.post_id).filter(Boolean);
+    if (postIds.length > 0) {
+      const { data: commentRows, error: commentsError } = await supabase
+        .from('comments')
+        .select('postId')
+        .in('postId', postIds);
+
+      if (!commentsError && Array.isArray(commentRows)) {
+        const counts = {};
+        for (const row of commentRows) {
+          const pid = row.postId;
+          if (pid === undefined || pid === null) continue;
+          counts[pid] = (counts[pid] || 0) + 1;
+        }
+        enhancedPosts.forEach(p => {
+          p.commentsCount = counts[p.post_id] || 0;
+        });
+      } else {
+        enhancedPosts.forEach(p => {
+          p.commentsCount = 0;
+        });
+      }
+    }
+  } catch {
+    enhancedPosts.forEach(p => {
+      p.commentsCount = 0;
+    });
+  }
+
+  // Compute likedByMe if travellerId is provided
+  if (travellerId) {
+    try {
+      const postIds = enhancedPosts.map(p => p.post_id).filter(Boolean);
+      if (postIds.length > 0) {
+        const { data: likesRows, error: likesError } = await supabase
+          .from('likes')
+          .select('postId')
+          .eq('travellerid', travellerId)
+          .in('postId', postIds);
+
+        const likedSet = new Set();
+        if (!likesError && Array.isArray(likesRows)) {
+          likesRows.forEach(r => {
+            if (r?.postId !== undefined && r?.postId !== null) likedSet.add(r.postId);
+          });
+        }
+
+        enhancedPosts.forEach(p => {
+          p.likedByMe = likedSet.has(p.post_id);
+        });
+      }
+    } catch {
+      enhancedPosts.forEach(p => {
+        p.likedByMe = false;
+      });
+    }
+  } else {
+    enhancedPosts.forEach(p => {
+      p.likedByMe = false;
+    });
+  }
   const { count, error: countError } = await supabase
     .from('posts')
     .select('*', { count: 'exact', head: true });

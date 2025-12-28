@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
@@ -8,7 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import type { LoginRequest } from "../../types/auth";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
-import axios from "axios";
+import api from "../../services/api";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -26,11 +26,11 @@ export default function SignInPage() {
   const signupMessage = location.state?.message;
 
   // Pre-fill email if coming from signup
-  useState(() => {
+  useEffect(() => {
     if (justSignedUp && signupEmail && !email) {
       setEmail(signupEmail);
     }
-  });
+  }, [justSignedUp, signupEmail, email]);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -47,33 +47,18 @@ export default function SignInPage() {
         password,
       };
 
-      console.log(" SignInPage: Starting login process...");
-
       const response = await authService.login(loginData);
 
-      console.log(" SignInPage: AuthService response:", response);
-
       if (response.success && response.user) {
-        console.log(
-          " SignInPage: Login successful, calling AuthContext login..."
-        );
-
         // Store user in context and localStorage
         login(response.user);
 
         const user = response.user;
 
-        console.log(" SignInPage: Current user after login:", user);
-        console.log(" SignInPage: User type:", user.userType);
-        console.log(" SignInPage: User ID:", user.id);
-        console.log(" SignInPage: User role:", user.role);
-
         // ROUTING LOGIC
-        if (user.userType === "AgencyEmployee" || user.userType === "Guide") {
-          console.log(" SignInPage: REDIRECTING TO AGENCY APP:", user.userType);
+          if (user.userType === "agency" || user.userType === "guide") {
           window.location.href = "/agency";
         } else {
-          console.log(" SignInPage: REDIRECTING TO HOME (TRAVELLER)");
           navigate(ROUTES.HOME, {
             state: {
               profileId: user.profileId,
@@ -83,11 +68,9 @@ export default function SignInPage() {
           });
         }
       } else {
-        console.log(" SignInPage: Login failed:", response.message);
         setError(response.message || "Login failed");
       }
     } catch (err) {
-      console.log(" SignInPage: Login error:", err);
       setError(
         err instanceof Error ? err.message : "Login failed. Please try again."
       );
@@ -96,47 +79,54 @@ export default function SignInPage() {
     }
   };
 
-  const handleGoogleLogin = async (credentialResponse) => {
+  const handleGoogleLogin = async (credentialResponse: any) => {
     try {
       const decoded = jwtDecode(credentialResponse.credential);
-      const email = decoded.email;
-      console.log("Google email:", email);
+      const googleEmail = (decoded as any)?.email;
+      if (!googleEmail) throw new Error('Google login did not return an email.');
 
-      const response = await axios.get("http://localhost:5000/auth/google", {
-        params: { email },
+      const response = await api.get("/auth/google", {
+        params: { email: googleEmail },
       });
 
       const { user_id, role } = response.data;
+      if (!user_id || !role) throw new Error('Invalid Google auth response.');
 
-      // Map backend response to User interface
-      const user: User = {
-        id: user_id, // unique identifier for the user object
-        email,
-        userType: role as "traveller" | "guide" | "agency", // cast role
-        profileId: user_id, // assuming profileId = user_id
-        profileType: role as "traveller" | "guide" | "agency",
+      // Store minimal user shape expected by the app
+      const googleUser = {
+        id: user_id,
+        email: googleEmail,
+        userType: String(role).toLowerCase().includes('agency') || String(role).toLowerCase().includes('employee')
+          ? 'agency'
+          : String(role).toLowerCase().includes('guide')
+            ? 'guide'
+            : 'traveller',
+        profileId: user_id,
+        profileType: String(role).toLowerCase().includes('agency') || String(role).toLowerCase().includes('employee')
+          ? 'agency'
+          : String(role).toLowerCase().includes('guide')
+            ? 'guide'
+            : 'traveller',
         userId: user_id,
-      };
+      } as any;
 
-      login(user);
-      if (user.userType === "AgencyEmployee" || user.userType === "Guide") {
-        console.log(" SignInPage: REDIRECTING TO AGENCY APP:", user.userType);
+      login(googleUser);
+
+      if (googleUser.userType === "AgencyEmployee" || googleUser.userType === "Guide") {
         window.location.href = "/agency";
       } else {
-        console.log(" SignInPage: REDIRECTING TO HOME (TRAVELLER)");
         navigate(ROUTES.HOME, {
           state: {
-            profileId: user.profileId,
+            profileId: googleUser.profileId,
             profileType: "traveller",
-            userId: user.userId,
+            userId: googleUser.userId,
           },
         });
       }
     } catch (error) {
-      console.error(
-        "Google login error:",
-        error.response?.data || error.message
-      );
+      const err = error as any;
+      console.error("Google login error:", err?.response?.data || err?.message || err);
+      setError("Google login failed. Please try again.");
     }
   };
 
@@ -149,8 +139,7 @@ export default function SignInPage() {
   };
 
   const handleForgotPassword = () => {
-    console.log("Navigate to forgot password");
-    // TODO: Implement forgot password flow
+    // Not implemented yet
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

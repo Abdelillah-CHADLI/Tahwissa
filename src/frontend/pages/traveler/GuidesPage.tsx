@@ -7,9 +7,9 @@ import AgencyCard from "../../components/guides_agencies/AgencyCard";
 import GuideCard from "../../components/guides_agencies/GuideCard";
 import LoadMoreButton from "../../components/guides_agencies/LoadMoreButton";
 import { agencyService, guideService } from "../../services/api";
-import { agencies as mockAgencies } from "../../data/agencies";
-import { guides as mockGuides } from "../../data/guides";
 import { ROUTES } from "../../utils/routes";
+import agencyImage from "../../assets/imgs/agency.jpeg";
+import guideImage from "../../assets/imgs/guide.png";
 
 const ITEMS_PER_LOAD = 3;
 
@@ -74,7 +74,7 @@ const mapAgencyData = (backendAgency: BackendAgency) => {
     id: backendAgency.agency_id,
     name: backendAgency.agency_name,
     subtitle: `Rated ${avgRating} ⭐ • ${backendAgency.num_raters || 0} reviews`,
-    image: "../src/frontend/data/mock_img.jpg",
+    image: agencyImage,
     location: "Algeria",
     tours: toursCount,
     teamSize: "Professional Team",
@@ -93,7 +93,7 @@ const mapGuideData = (backendGuide: BackendGuide) => {
     id: backendGuide.guide_id,
     name: backendGuide.guide_name,
     subtitle: `Rated ${avgRating} ⭐ • ${backendGuide.num_raters || 0} reviews`,
-    image: "../src/frontend/data/mock_img.jpg",
+    image: guideImage,
     location: "Algeria",
     tours: 0,
     experience: "Professional Guide",
@@ -112,97 +112,66 @@ const TravelAgenciesPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [visibleAgencies, setVisibleAgencies] = useState<any[]>([]);
   const [visibleGuides, setVisibleGuides] = useState<any[]>([]);
-  const [usingMockData, setUsingMockData] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       setError(null);
-      setUsingMockData(false);
 
       try {
         if (activeTab === "agencies") {
           if (searchQuery.trim()) {
-            try {
-              const response = await agencyService.searchAgencies(
-                searchQuery,
-                50
-              ) as SearchAgenciesResponse;
+            const response = await agencyService.searchAgencies(
+              searchQuery,
+              50
+            ) as SearchAgenciesResponse;
 
-              if (response.success && Array.isArray(response.data)) {
-                const mappedAgencies = response.data.map(mapAgencyData);
-                setAgencies(mappedAgencies);
-                setVisibleAgencies(mappedAgencies.slice(0, ITEMS_PER_LOAD));
-              } else {
-                throw new Error("Invalid search response format");
-              }
-            } catch (apiError) {
-              console.warn("Agencies search API failed, using mock data");
-              setAgencies(mockAgencies);
-              setVisibleAgencies(mockAgencies.slice(0, ITEMS_PER_LOAD));
-              setUsingMockData(true);
+            if (response.success && Array.isArray(response.data)) {
+              const mappedAgencies = response.data.map(mapAgencyData);
+              setAgencies(mappedAgencies);
+              setVisibleAgencies(mappedAgencies.slice(0, ITEMS_PER_LOAD));
+            } else {
+              throw new Error("Invalid search response format");
             }
           } else {
-            try {
-              const response = await agencyService.browseAgencies(1, 50) as BrowseAgenciesResponse;
+            const response = await agencyService.browseAgencies(1, 50) as BrowseAgenciesResponse;
 
-              if (
-                response.success &&
-                response.data &&
-                Array.isArray(response.data.agencies)
-              ) {
-                const mappedAgencies = response.data.agencies.map(mapAgencyData);
-                setAgencies(mappedAgencies);
-                setVisibleAgencies(mappedAgencies.slice(0, ITEMS_PER_LOAD));
-              } else {
-                throw new Error("Invalid browse response format");
-              }
-            } catch (apiError) {
-              console.warn("Agencies browse API failed, using mock data");
-              setAgencies(mockAgencies);
-              setVisibleAgencies(mockAgencies.slice(0, ITEMS_PER_LOAD));
-              setUsingMockData(true);
+            if (
+              response.success &&
+              response.data &&
+              Array.isArray(response.data.agencies)
+            ) {
+              const mappedAgencies = response.data.agencies.map(mapAgencyData);
+              setAgencies(mappedAgencies);
+              setVisibleAgencies(mappedAgencies.slice(0, ITEMS_PER_LOAD));
+            } else {
+              throw new Error("Invalid browse response format");
             }
           }
         } else {
           if (searchQuery.trim()) {
-            try {
-              const response = await guideService.searchGuides(searchQuery, 50) as SearchGuidesResponse;
+            const response = await guideService.searchGuides(searchQuery, 50) as SearchGuidesResponse;
 
-              if (response.success && Array.isArray(response.data)) {
-                const mappedGuides = response.data.map(mapGuideData);
-                setGuides(mappedGuides);
-                setVisibleGuides(mappedGuides.slice(0, ITEMS_PER_LOAD));
-              } else {
-                throw new Error("Invalid guides response format");
-              }
-            } catch (apiError) {
-              console.warn("Guides search API failed, using mock data");
-              setGuides(mockGuides);
-              setVisibleGuides(mockGuides.slice(0, ITEMS_PER_LOAD));
-              setUsingMockData(true);
+            if (response.success && Array.isArray(response.data)) {
+              const mappedGuides = response.data.map(mapGuideData);
+              setGuides(mappedGuides);
+              setVisibleGuides(mappedGuides.slice(0, ITEMS_PER_LOAD));
+            } else {
+              throw new Error("Invalid guides response format");
             }
           } else {
-            console.warn(
-              "No search query for guides - search parameter is required, using mock data"
-            );
-            setGuides(mockGuides);
-            setVisibleGuides(mockGuides.slice(0, ITEMS_PER_LOAD));
-            setUsingMockData(true);
+            setGuides([]);
+            setVisibleGuides([]);
             setError("Enter a search term to find guides");
           }
         }
       } catch (err) {
-        console.error("Unexpected error:", err);
+        console.error("Failed to load data:", err);
         setError("Failed to load data");
-        if (activeTab === "agencies") {
-          setAgencies(mockAgencies);
-          setVisibleAgencies(mockAgencies.slice(0, ITEMS_PER_LOAD));
-        } else {
-          setGuides(mockGuides);
-          setVisibleGuides(mockGuides.slice(0, ITEMS_PER_LOAD));
-        }
-        setUsingMockData(true);
+        setAgencies([]);
+        setVisibleAgencies([]);
+        setGuides([]);
+        setVisibleGuides([]);
       } finally {
         setLoading(false);
       }
@@ -228,12 +197,6 @@ const TravelAgenciesPage = () => {
   );
 
   const handleViewProfile = (profileData: any, type: "agency" | "guide") => {
-    console.log("Navigating to profile with tours data:", {
-      profileId: profileData.id,
-      toursCount: profileData.tours,
-      toursData: profileData.toursData
-    });
-    
     navigate(ROUTES.GUIDE_PROFILE, {
       state: {
         profileId: profileData.id,
@@ -291,14 +254,10 @@ const TravelAgenciesPage = () => {
         </div>
       </div>
 
-      {usingMockData && (
+      {error && activeTab === "guides" && !searchQuery && (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-yellow-800 font-medium">
-              {activeTab === "guides" && !searchQuery
-                ? "🔍 Enter a search term to find guides"
-                : "🔄 Using demo data"}
-            </p>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <p className="text-sm text-blue-800 font-medium">Enter a search term to find guides.</p>
           </div>
         </div>
       )}
@@ -316,7 +275,7 @@ const TravelAgenciesPage = () => {
           </h1>
           <p className="text-gray-600">{getDescription()}</p>
 
-          {error && !usingMockData && (
+          {error && (
             <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-800 text-sm">{error}</p>
             </div>

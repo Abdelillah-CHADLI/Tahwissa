@@ -55,7 +55,7 @@ export function DashboardOverview() {
       icon: Package,
       label: "Active Tours",
       value: data.stats.activeTours.toString(),
-      change: "+2 this month",
+      change: data.stats.activeTours === 0 ? "No tours yet" : "Active right now",
       color: "bg-[#375E5E]",
       trend: "up" as const,
     },

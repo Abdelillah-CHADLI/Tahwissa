@@ -258,7 +258,37 @@ export async function login(req, res) {
       sameSite: "none",
   });
     // sending the response to the fronend
-    res.json( { id: user.user_id, email: user.email, role : user.role } );
+    const responsePayload = { id: user.user_id, email: user.email, role: user.role };
+
+    // Enrich agency employees with their agency linkage so the frontend can load agency pages.
+    if (String(user.role).toLowerCase().includes('agency')) {
+      try {
+        const { data: employeeRow, error: employeeError } = await supabase
+          .from('agency_employees')
+          .select('agency_id')
+          .eq('employee_id', user.user_id)
+          .maybeSingle();
+
+        if (!employeeError && employeeRow?.agency_id) {
+          responsePayload.agencyId = employeeRow.agency_id;
+
+          const { data: agencyRow, error: agencyError } = await supabase
+            .from('agencies')
+            .select('agency_id, agency_name, manager_id')
+            .eq('agency_id', employeeRow.agency_id)
+            .maybeSingle();
+
+          if (!agencyError && agencyRow) {
+            responsePayload.agencyName = agencyRow.agency_name;
+            responsePayload.isManager = String(agencyRow.manager_id) === String(user.user_id);
+          }
+        }
+      } catch (enrichError) {
+        console.warn('Login enrich agency failed:', enrichError?.message || enrichError);
+      }
+    }
+
+    res.json(responsePayload);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });

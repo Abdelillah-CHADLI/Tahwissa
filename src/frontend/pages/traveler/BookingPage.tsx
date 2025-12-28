@@ -8,6 +8,7 @@ import { ConfirmationStep } from "../../components/traveler/booking/Confirmation
 import { BookingSummary } from "../../components/traveler/booking/BookingSummary";
 import { BookingSuccessPage } from "../../components/traveler/booking/BookingSuccessPage";
 import { bookingService, tourService } from "../../services/api";
+import defaultTourImage from "../../assets/imgs/tour1.jpeg";
 
 interface FormData {
     firstName: string;
@@ -37,6 +38,7 @@ export function BookingPage() {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [tour, setTour] = useState<Tour | null>(null);
+    const [bookingRef, setBookingRef] = useState<string | undefined>(undefined);
     const [formData, setFormData] = useState<FormData>({
         firstName: "",
         lastName: "",
@@ -68,7 +70,7 @@ export function BookingPage() {
                         location: String(stateData.location),
                         duration: String(stateData.duration),
                         price: Number(stateData.price),
-                        image: String(stateData.images?.[0] || stateData.image || "https://images.unsplash.com/photo-1670015239006-610536cc0593"),
+                        image: String(stateData.images?.[0] || stateData.image || defaultTourImage),
                     });
                     setLoading(false);
                     return;
@@ -83,7 +85,7 @@ export function BookingPage() {
                         location: String(tourData.location),
                         duration: String(tourData.duration),
                         price: Number(tourData.price),
-                        image: String(tourData.images?.[0] || tourData.image || "https://images.unsplash.com/photo-1670015239006-610536cc0593"),
+                        image: String(tourData.images?.[0] || tourData.image || defaultTourImage),
                     });
                 } else {
                     setError("Tour not found");
@@ -114,6 +116,32 @@ export function BookingPage() {
         }
     }, [tourId, location]);
 
+    const getCurrentTravellerId = (): string | null => {
+        const stored = localStorage.getItem('user');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                return (
+                    parsed?.traveller_id ||
+                    parsed?.profileId ||
+                    parsed?.userId ||
+                    parsed?.id ||
+                    null
+                );
+            } catch {
+                // ignore
+            }
+        }
+
+        return (
+            localStorage.getItem('traveller_id') ||
+            localStorage.getItem('profileId') ||
+            localStorage.getItem('userId') ||
+            localStorage.getItem('id') ||
+            null
+        );
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
@@ -132,12 +160,11 @@ export function BookingPage() {
         if (!tour || !tourId) return;
 
         try {
-            const travellerId = localStorage.getItem('userId') || '550e8400-e29b-41d4-a716-446655440001';
-
-            console.log('Creating booking with:', {
-                traveller_id: travellerId,
-                tour_id: tourId
-            });
+            const travellerId = getCurrentTravellerId();
+            if (!travellerId) {
+                alert('Missing traveler information. Please sign in again.');
+                return;
+            }
 
             const response = await bookingService.createBooking({
                 traveller_id: travellerId,
@@ -146,6 +173,8 @@ export function BookingPage() {
 
             // Check if the booking was successful
             if (response.success) {
+                const ref = response.data?.booking_ref || response.data?.reference || response.data?.id;
+                if (ref) setBookingRef(String(ref));
                 setShowSuccess(true);
             } else {
                 alert(`Failed to create booking: ${response.error || 'Please try again'}`);
@@ -202,7 +231,14 @@ export function BookingPage() {
     const totalPrice = tour.price * parseInt(formData.numberOfPeople || "1");
 
     if (showSuccess) {
-        return <BookingSuccessPage onNavigate={handleNavigate} />;
+        return (
+            <BookingSuccessPage
+                onNavigate={handleNavigate}
+                tourTitle={tour?.title}
+                email={formData.email}
+                bookingRef={bookingRef}
+            />
+        );
     }
 
     return (

@@ -1,26 +1,24 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:5000';
+import api from './api';
 
 // Dashboard Stats
 export const getDashboardStats = async () => {
-    const response = await axios.get(`${API_BASE_URL}/verification/getDashboardStats`);
+    const response = await api.get(`/verification/getDashboardStats`);
     return response.data;
 };
 
 // Verification Requests
 export const getAgencyVerifications = async () => {
-    const response = await axios.get(`${API_BASE_URL}/verification/getAgencyVerifications`);
+    const response = await api.get(`/verification/getAgencyVerifications`);
     return response.data;
 };
 
 export const getGuideVerifications = async () => {
-    const response = await axios.get(`${API_BASE_URL}/verification/getGuideVerifications`);
+    const response = await api.get(`/verification/getGuideVerifications`);
     return response.data;
 };
 
 export const approveVerification = async (acc_type: string, id: string) => {
-    const response = await axios.post(`${API_BASE_URL}/verification/approveVerification`, {
+    const response = await api.post(`/verification/approveVerification`, {
         acc_type,
         id
     });
@@ -29,26 +27,26 @@ export const approveVerification = async (acc_type: string, id: string) => {
 
 // Reports
 export const getPostReports = async () => {
-    const response = await axios.get(`${API_BASE_URL}/report/getPostReports`);
+    const response = await api.get(`/report/getPostReports`);
     return response.data;
 };
 
 export const getAccReports = async () => {
-    const response = await axios.get(`${API_BASE_URL}/report/getAccReports`);
+    const response = await api.get(`/report/getAccReports`);
     return response.data;
 };
 
 export const getPostReportDetails = async (report_id: number) => {
-    const response = await axios.get(`${API_BASE_URL}/report/getPostReportDetails/${report_id}`);
+    const response = await api.get(`/report/getPostReportDetails/${report_id}`);
     return response.data;
 };
 
 export const getAccReportDetails = async (report_id: number) => {
-    const response = await axios.get(`${API_BASE_URL}/report/getAccReportDetails/${report_id}`);
+    const response = await api.get(`/report/getAccReportDetails/${report_id}`);
     return response.data;
 };
 
 export const deletePost = async (report_id: number) => {
-    const response = await axios.post(`${API_BASE_URL}/report/deletePost`, { report_id });
+    const response = await api.post(`/report/deletePost`, { report_id });
     return response.data;
 };

@@ -1,5 +1,6 @@
 import type { DashboardData } from '../types/dashboard';
 import { bookingService, tourService, profileService } from './api';
+import { getCurrentAgencyId } from '../utils/session';
 
 interface Traveller {
   traveller_fn?: string;
@@ -38,7 +39,20 @@ interface TourWithBookings extends Tour {
 
 export const dashboardService = {
   async getDashboardData(): Promise<DashboardData> {
-    const agencyId = localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
+    const agencyId = getCurrentAgencyId();
+    if (!agencyId) {
+      return {
+        stats: {
+          activeTours: 0,
+          totalBookings: 0,
+          averageRating: 0,
+          monthlyBookingChange: 0,
+          totalReviews: 0,
+        },
+        recentBookings: [],
+        popularTours: [],
+      };
+    }
 
     let bookings: Booking[] = [];
     let tours: Tour[] = [];

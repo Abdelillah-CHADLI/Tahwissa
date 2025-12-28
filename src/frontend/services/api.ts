@@ -1,4 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { getCurrentAgencyId } from '../utils/session';
 
 // Base axios instance
 const api = axios.create({
@@ -94,25 +95,21 @@ export const tourService = {
     provider?: string;
   }) => {
     try {
-      console.log('🔍 Searching tours with params:', searchParams);
-
       // Use POST request with request body as backend expects
       const response = await api.post('/tour/searchTours', searchParams);
-      console.log('✅ Search endpoint response:', response.data);
 
       // Backend returns direct array
       if (Array.isArray(response.data)) {
         return response.data;
       } else {
-        console.warn('⚠️ Unexpected response format:', response.data);
+        console.warn('Unexpected response format:', response.data);
         return [];
       }
     } catch (error) {
-      console.error('❌ Search endpoint failed:', error);
+      console.error('Search endpoint failed:', error);
 
       // Fallback: Get all tours and filter client-side
       try {
-        console.log('🔄 Using fallback client-side filtering...');
         const allTours = await tourService.getTours(100);
 
         return allTours.filter((tour: any) => {
@@ -157,14 +154,17 @@ export const tourService = {
           return matches;
         });
       } catch (fallbackError) {
-        console.error('❌ Fallback also failed:', fallbackError);
+        console.error('Fallback also failed:', fallbackError);
         throw new Error('Search functionality is currently unavailable');
       }
     }
   },
 
   createTour: async (tourData: Record<string, unknown>) => {
-    const agencyId = localStorage.getItem('agencyId') || '1';
+    const agencyId = getCurrentAgencyId();
+    if (!agencyId) {
+      throw new Error('Agency ID not found. Please log in.');
+    }
     const backendData = {
       tour_title: tourData.title,
       location: tourData.location,

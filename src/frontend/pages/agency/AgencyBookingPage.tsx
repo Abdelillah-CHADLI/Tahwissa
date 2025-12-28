@@ -6,6 +6,7 @@ import { TabsNavigation } from "../../components/agency/bookings/TabsNavigation"
 import { EmptyState } from "../../components/agency/bookings/EmptyState";
 import { BookingDetails } from "../../components/agency/bookings/BookingDetails";
 import { bookingService, advancedBookingService } from "../../services/api";
+import { getCurrentAgencyId } from "../../utils/session";
 
 interface Booking {
     id: string;
@@ -30,9 +31,7 @@ export function AgencyBookingPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const getAgencyId = () => {
-        return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
-    };
+    const getAgencyId = () => getCurrentAgencyId();
 
     const fetchAgencyBookings = useCallback(async () => {
         try {
@@ -40,6 +39,11 @@ export function AgencyBookingPage() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                setBookings([]);
+                return;
+            }
             const response = await bookingService.getBookings({ agencyId });
             const bookingsData = response.success && response.data ? response.data : response;
 

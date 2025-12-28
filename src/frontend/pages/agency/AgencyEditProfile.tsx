@@ -2,11 +2,10 @@ import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { profileService } from '../../services/api';
-import { mockAgencyProvider } from '../../data/mockAgency';
+import { getCurrentAgencyId } from '../../utils/session';
 
 export function AgencyEditProfile() {
-    // Hardcoded ID for now
-    const agencyId = localStorage.getItem('agencyId') || '1';
+    const agencyId = getCurrentAgencyId();
     
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -34,6 +33,11 @@ export function AgencyEditProfile() {
             try {
                 setLoading(true);
                 setError(null);
+
+                if (!agencyId) {
+                    throw new Error('No agency account found. Please sign in again.');
+                }
+
                 const response = await profileService.getProfile(agencyId, 'agency');
                 const profile = response.data;
                 
@@ -60,20 +64,8 @@ export function AgencyEditProfile() {
                 } else {
                     throw new Error("Profile not found");
                 }
-            } catch {
-                // Use fallback mock data
-                setFormData({
-                    agency_name: mockAgencyProvider.name,
-                    agency_email: mockAgencyProvider.email,
-                    agency_phone: mockAgencyProvider.phone,
-                    agency_website: 'https://www.saharaadventures.dz',
-                    description: mockAgencyProvider.description,
-                    location: `${mockAgencyProvider.location.city}, ${mockAgencyProvider.location.country}`,
-                    emergency_phone: mockAgencyProvider.phone,
-                    support_email: mockAgencyProvider.email,
-                    working_hours: 'Mon-Fri: 9AM-6PM'
-                });
-                setSelectedLocations(['Tamanrasset', 'Djanet']);
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to load profile');
             } finally {
                 setLoading(false);
             }
@@ -101,7 +93,6 @@ export function AgencyEditProfile() {
                 }
             };
             reader.readAsDataURL(file);
-            // upload to backend here
         }
     };
 
@@ -118,6 +109,11 @@ export function AgencyEditProfile() {
             setSaving(true);
             setError(null);
             setSuccess(false);
+
+            if (!agencyId) {
+                setError('No agency account found. Please sign in again.');
+                return;
+            }
             
             const dataToSend = {
                 agency_name: formData.agency_name,

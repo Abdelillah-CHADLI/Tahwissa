@@ -6,6 +6,7 @@ import { NotificationSettings } from "../../components/agency/settings/Notificat
 import { PaymentSettings } from "../../components/agency/settings/PaymentSettings";
 import { PrivacySettings } from "../../components/agency/settings/PrivacySettings";
 import { settingsService } from "../../services/api";
+import { getCurrentAgencyId } from "../../utils/session";
 
 interface Settings {
     agencyName: string;
@@ -55,9 +56,7 @@ export function AgencySettings() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    const getAgencyId = () => {
-        return localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
-    };
+    const getAgencyId = () => getCurrentAgencyId();
 
     // --- API Calls ---
     const fetchAllSettings = async () => {
@@ -66,6 +65,10 @@ export function AgencySettings() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                return;
+            }
 
             const accountResponse = await settingsService.getAccountSettings(agencyId);
             const notificationResponse = await settingsService.getNotificationSettings(agencyId);
@@ -104,6 +107,10 @@ export function AgencySettings() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                return;
+            }
 
             await settingsService.updateAccountSettings(agencyId, {
                 agency_name: settings.agencyName,
@@ -133,6 +140,10 @@ export function AgencySettings() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                return;
+            }
 
             await settingsService.changePassword(agencyId, {
                 current_password: settings.currentPassword,
@@ -158,6 +169,10 @@ export function AgencySettings() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                return;
+            }
 
             await settingsService.updateNotificationSettings(agencyId, {
                 email_notifications: settings.emailNotifications,
@@ -179,6 +194,10 @@ export function AgencySettings() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                return;
+            }
 
             await settingsService.updatePaymentSettings(agencyId, {
                 account_holder: settings.accountHolder,
@@ -199,6 +218,10 @@ export function AgencySettings() {
             setError(null);
 
             const agencyId = getAgencyId();
+            if (!agencyId) {
+                setError("Agency ID not found. Please log in.");
+                return;
+            }
 
             await settingsService.updatePrivacySettings(agencyId, {
                 profile_visibility: settings.profileVisibility,
@@ -245,8 +268,7 @@ export function AgencySettings() {
 
     return (
         <div className="p-6">
-            { /* uncomment after implementing settings endpoints
-             error && (
+            {error && (
                 <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                     <div className="flex-1">
@@ -260,7 +282,7 @@ export function AgencySettings() {
                         ×
                     </button>
                 </div>
-            ) */}
+            )}
 
             {success && (
                 <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">

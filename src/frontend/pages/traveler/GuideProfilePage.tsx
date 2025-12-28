@@ -8,6 +8,9 @@ import { colors } from "../../assets/colors";
 import { profileService, tourService } from "../../services/api";
 import { ROUTES } from "../../utils/routes";
 import type { Tour } from "../../types/explore";
+import defaultGuideImage from "../../assets/imgs/guide.png";
+import defaultAgencyImage from "../../assets/imgs/agency.jpeg";
+import defaultTourImage from "../../assets/imgs/tour1.jpeg";
 
 interface ProfileApiResponse {
   success: boolean;
@@ -58,18 +61,25 @@ interface MappedProfile {
   num_raters?: number;
 }
 
-interface TourServiceResponse {
-  success: boolean;
-  data: Tour[] | Array<{
-    tour_id: string;
-    tour_title: string;
-    location: string;
-    price: number;
-    agency_id?: string;
-    guide_id?: string;
-    [key: string]: unknown;
-  }>;
-}
+type BackendTour = {
+  id?: string;
+  tour_id?: string;
+  title?: string;
+  tour_title?: string;
+  description?: string;
+  tour_details?: string;
+  price?: number;
+  rating?: number;
+  image?: string;
+  duration?: string;
+  location?: string;
+  category?: string;
+  groupSize?: string;
+  group_size?: string;
+  guide_id?: string;
+  agency_id?: string;
+  [key: string]: unknown;
+};
 
 const GuideProfilePage = () => {
   const location = useLocation();
@@ -81,6 +91,37 @@ const GuideProfilePage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const { profileId, profileType, initialData } = location.state || {};
+
+  const mapBackendTourToTour = (tour: BackendTour): Tour => {
+    const id = String(tour.id || tour.tour_id || "");
+    const title = String(tour.title || tour.tour_title || "");
+    const location = String(tour.location || "");
+    const price = typeof tour.price === "number" ? tour.price : Number(tour.price) || 0;
+    const duration = String(tour.duration || "");
+    const category = String(tour.category || "");
+    const groupSize = String(tour.groupSize || tour.group_size || "");
+    const description = String(tour.description || tour.tour_details || title || "");
+    const rating = typeof tour.rating === "number" ? tour.rating : 0;
+    const image = typeof tour.image === "string" && tour.image.trim() ? tour.image : defaultTourImage;
+
+    return {
+      id,
+      tour_id: tour.tour_id,
+      title,
+      tour_title: tour.tour_title,
+      description,
+      price,
+      rating,
+      image,
+      duration,
+      location,
+      category,
+      groupSize,
+      guide_id: tour.guide_id,
+      agency_id: tour.agency_id,
+      guide: undefined,
+    };
+  };
 
   useEffect(() => {
     const fetchProfileData = async () => {
@@ -95,17 +136,7 @@ const GuideProfilePage = () => {
         setError(null);
         
         if (initialData && initialData.tours && initialData.tours.length > 0) {
-          const mappedTours = initialData.tours.map((tour: any) => ({
-            id: tour.tour_id,
-            title: tour.tour_title,
-            location: tour.location,
-            price: tour.price,
-            rating: 0,
-            image: "../src/frontend/data/mock_img.jpg",
-            category: "Adventure",
-            duration: "1 day",
-            description: tour.tour_title
-          } as Tour));
+          const mappedTours = (initialData.tours as BackendTour[]).map(mapBackendTourToTour);
           setTours(mappedTours);
         }
         
@@ -116,17 +147,7 @@ const GuideProfilePage = () => {
           
           if (!initialData?.tours || initialData.tours.length === 0) {
             if (response.data.tours && response.data.tours.length > 0) {
-              const mappedTours = response.data.tours.map((tour: any) => ({
-                id: tour.tour_id,
-                title: tour.tour_title,
-                location: tour.location,
-                price: tour.price,
-                rating: 0,
-                image: "../src/frontend/data/mock_img.jpg",
-                category: "Adventure",
-                duration: "1 day",
-                description: tour.tour_title
-              } as Tour));
+              const mappedTours = (response.data.tours as BackendTour[]).map(mapBackendTourToTour);
               setTours(mappedTours);
             } else {
               await fetchToursForProfile(profileId, profileType);
@@ -140,17 +161,7 @@ const GuideProfilePage = () => {
         if (initialData) {
           setProfileData(initialData);
           if (initialData.tours && initialData.tours.length > 0) {
-            const mappedTours = initialData.tours.map((tour: any) => ({
-              id: tour.tour_id,
-              title: tour.tour_title,
-              location: tour.location,
-              price: tour.price,
-              rating: 0,
-              image: "../src/frontend/data/mock_img.jpg",
-              category: "Adventure",
-              duration: "1 day",
-              description: tour.tour_title
-            } as Tour));
+            const mappedTours = (initialData.tours as BackendTour[]).map(mapBackendTourToTour);
             setTours(mappedTours);
           }
         }
@@ -161,24 +172,17 @@ const GuideProfilePage = () => {
 
     const fetchToursForProfile = async (id: string, type: string) => {
       try {
-        if (type === 'agency') {
-          const toursResponse = await tourService.searchTours({ provider: 'agency' }) as TourServiceResponse;
-          if (toursResponse.success) {
-            const agencyTours = toursResponse.data.filter((tour: Tour | { agency_id?: string }) => 
-              'agency_id' in tour && tour.agency_id === id
-            ) as Tour[];
-            setTours(agencyTours);
-          }
-        } else {
-          const toursResponse = await tourService.searchTours({ provider: 'guide' }) as TourServiceResponse;
-          if (toursResponse.success) {
-            const guideTours = toursResponse.data.filter((tour: Tour | { guide_id?: string }) => 
-              'guide_id' in tour && tour.guide_id === id
-            ) as Tour[];
-            setTours(guideTours);
-          }
-        }
-      } catch (err) {
+        const provider = type === 'agency' ? 'Agency' : 'Guide';
+        const toursResponse = await tourService.searchTours({ provider });
+        const allTours = Array.isArray(toursResponse) ? (toursResponse as BackendTour[]) : [];
+
+        const filtered = allTours.filter((tour) => {
+          if (type === 'agency') return String(tour.agency_id || '') === id;
+          return String(tour.guide_id || '') === id;
+        });
+
+        setTours(filtered.map(mapBackendTourToTour));
+      } catch (_err) {
       }
     };
 
@@ -187,6 +191,10 @@ const GuideProfilePage = () => {
 
   const getMappedProfile = (): MappedProfile | null => {
     if (!profileData) return null;
+
+    const fallbackImage = profileType === 'agency' ? defaultAgencyImage : defaultGuideImage;
+    const image = (typeof initialData?.image === 'string' && initialData.image.trim()) ? initialData.image : fallbackImage;
+    const about = typeof initialData?.subtitle === 'string' ? initialData.subtitle : '';
 
     if (profileType === 'agency') {
       const avgRating = profileData.num_raters && profileData.num_raters > 0 && profileData.rating
@@ -199,20 +207,14 @@ const GuideProfilePage = () => {
         location: "", // Removed location
         rating: parseFloat(avgRating),
         toursCount: tours.length,
-        experience: "Professional Service",
-        email: profileData.manager?.email || "contact@agency.com",
-        phone: "+213 XXX XXX XXX",
-        about: `Professional travel agency ${profileData.agency_name} providing quality tours and experiences.`,
-        languages: ["Arabic", "French", "English"],
-        certifications: [
-          "Licensed Travel Agency",
-          "Quality Certified",
-          "Professional Service"
-        ],
+        experience: "",
+        email: profileData.manager?.email || "",
+        phone: "",
+        about,
+        languages: [],
+        certifications: [],
         type: "agency",
-        image: "../src/frontend/data/mock_img.jpg",
-        employeesCount: 10,
-        establishedYear: 2020,
+        image,
         num_raters: profileData.num_raters
       };
     } else {
@@ -226,18 +228,14 @@ const GuideProfilePage = () => {
         location: "", // Removed location
         rating: parseFloat(avgRating),
         toursCount: tours.length,
-        experience: "Professional Guide",
-        email: profileData.user?.email || "guide@example.com",
-        phone: "+213 XXX XXX XXX",
-        about: `Professional local guide ${profileData.guide_name} with extensive knowledge and experience.`,
-        languages: ["Arabic", "French", "English"],
-        certifications: [
-          "Licensed Tour Guide",
-          "First Aid Certified",
-          "Local Expert"
-        ],
+        experience: "",
+        email: profileData.user?.email || "",
+        phone: "",
+        about,
+        languages: [],
+        certifications: [],
         type: "guide",
-        image: "../src/frontend/data/mock_img.jpg",
+        image,
         num_raters: profileData.num_raters
       };
     }

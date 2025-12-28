@@ -2,10 +2,12 @@ import { CheckCircle, Calendar, Mail, Home } from "lucide-react";
 
 interface BookingSuccessPageProps {
     onNavigate: (page: string) => void;
+    tourTitle?: string;
+    email?: string;
+    bookingRef?: string;
 }
 
-export function BookingSuccessPage({ onNavigate }: BookingSuccessPageProps) {
-    const bookingRef = `BK${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`;
+export function BookingSuccessPage({ onNavigate, tourTitle, email, bookingRef }: BookingSuccessPageProps) {
     const currentDate = new Date().toLocaleDateString();
 
     return (
@@ -30,34 +32,42 @@ export function BookingSuccessPage({ onNavigate }: BookingSuccessPageProps) {
 
                 {/* Booking Details */}
                 <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                    <h3 className="text-xl font-semibold text-center mb-4">
-                        Booking Reference
-                    </h3>
-                    <div className="text-center mb-6">
-                        <span className="text-3xl font-mono font-bold text-blue-600">
-                            {bookingRef}
-                        </span>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Keep this reference number for your records
-                        </p>
-                    </div>
+                    {bookingRef ? (
+                        <>
+                            <h3 className="text-xl font-semibold text-center mb-4">
+                                Booking Reference
+                            </h3>
+                            <div className="text-center mb-6">
+                                <span className="text-3xl font-mono font-bold text-blue-600">
+                                    {bookingRef}
+                                </span>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Keep this reference number for your records
+                                </p>
+                            </div>
+                        </>
+                    ) : null}
 
                     <div className="space-y-3 text-sm">
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-gray-500" />
-                            <span className="text-gray-500">Tour:</span>
-                            <span className="ml-auto font-medium">Sahara Desert 5-Day Adventure</span>
-                        </div>
+                        {tourTitle ? (
+                            <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-gray-500" />
+                                <span className="text-gray-500">Tour:</span>
+                                <span className="ml-auto font-medium">{tourTitle}</span>
+                            </div>
+                        ) : null}
                         <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-gray-500" />
                             <span className="text-gray-500">Booking Date:</span>
                             <span className="ml-auto font-medium">{currentDate}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4 text-gray-500" />
-                            <span className="text-gray-500">Confirmation Sent To:</span>
-                            <span className="ml-auto font-medium">your.email@example.com</span>
-                        </div>
+                        {email ? (
+                            <div className="flex items-center gap-2">
+                                <Mail className="w-4 h-4 text-gray-500" />
+                                <span className="text-gray-500">Confirmation Sent To:</span>
+                                <span className="ml-auto font-medium">{email}</span>
+                            </div>
+                        ) : null}
                     </div>
                 </div>
 

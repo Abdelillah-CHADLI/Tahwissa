@@ -13,7 +13,6 @@ interface TourCardProps {
 const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
   // Use backend field names with fallbacks
   const tourTitle = tour.tour_title || tour.title;
-  const tourId = tour.tour_id || tour.id;
   const displayPrice = tour.price?.toLocaleString() || "0";
 
   // Determine if it's from agency or guide

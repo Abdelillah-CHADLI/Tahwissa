@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { tourService } from './api';
 import type { Tour, TourFilters } from '../types/explore';
+import tourFallbackImage from '../assets/imgs/tour1.jpeg';
 
 interface UseToursReturn {
   tours: Tour[];
@@ -36,7 +37,7 @@ export const useTours = (): UseToursReturn => {
       backendTour?.image_url ||
       backendTour?.cover_image ||
       backendTour?.picture ||
-      '/src/frontend/assets/imgs/tour1.jpeg';
+      tourFallbackImage;
 
     const providerInfo = backendTour.agency_id
       ? backendTour.agencies
@@ -122,8 +123,6 @@ export const useTours = (): UseToursReturn => {
         searchParams.provider = actualFilters.provider;
       }
 
-      console.log('🎯 Sending search params to backend:', searchParams);
-
       let backendTours: any[] = [];
 
       // Use the dedicated search endpoint if we have any search criteria
@@ -133,8 +132,6 @@ export const useTours = (): UseToursReturn => {
         // Otherwise, get all tours using the regular endpoint
         backendTours = await tourService.getTours(20);
       }
-
-      console.log('✅ Received tours from backend:', backendTours);
 
       const convertedTours = backendTours.map(convertBackendTourToFrontend);
       setTours(convertedTours);
@@ -146,7 +143,7 @@ export const useTours = (): UseToursReturn => {
       setCurrentPage(1);
 
     } catch (err: any) {
-      console.error('❌ Error fetching tours:', err);
+      console.error('Error fetching tours:', err);
       setError(err.response?.data?.error || err.message || 'Failed to fetch tours');
       setTours([]);
       setHasMore(false);
@@ -188,7 +185,7 @@ export const useTours = (): UseToursReturn => {
       }
 
     } catch (err: any) {
-      console.error('❌ Error loading more tours:', err);
+      console.error('Error loading more tours:', err);
       setError(err.response?.data?.error || err.message || 'Failed to load more tours');
     } finally {
       setLoading(false);

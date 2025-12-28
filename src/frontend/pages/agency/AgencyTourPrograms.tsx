@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Loader2, AlertCircle } from 'lucide-react';
 import { TourCard } from '../../types/tourcard';
 import { tourService } from '../../services/api';
+import { getCurrentAgencyId } from '../../utils/session';
 
 export function AgencyTourPrograms() {
     const navigate = useNavigate();
@@ -18,17 +19,7 @@ export function AgencyTourPrograms() {
     const fetchTours = async () => {
         try {
             setLoading(true);
-            let agencyId = localStorage.getItem('agencyId') || "550e8400-e29b-41d4-a716-446655440101";
-            const userStr = localStorage.getItem('user');
-
-            if (userStr && !agencyId) {
-                try {
-                    const user = JSON.parse(userStr);
-                    agencyId = user.agencyId || user.id;
-                } catch (e) {
-                    console.error("Error parsing user data", e);
-                }
-            }
+            const agencyId = getCurrentAgencyId();
 
             if (!agencyId) {
                 setError("Agency ID not found. Please log in.");

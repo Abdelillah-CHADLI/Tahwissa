@@ -6,6 +6,9 @@ import EmptyState from "../../components/traveler/requests/EmptyState";
 import PageHeader from "../../components/traveler/requests/PageHeader";
 import { profileService, bookingService } from "../../services/api";
 import { useAuth } from '../../contexts/AuthContext';
+import tourImage1 from '../../assets/imgs/tour1.jpeg';
+import tourImage2 from '../../assets/imgs/tour2.jpeg';
+import tourImage3 from '../../assets/imgs/tour3.jpeg';
 
 interface BackendBooking {
   booking_id: string;
@@ -55,13 +58,39 @@ function RequestsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const currentTravellerId = user?.id || "550e8400-e29b-41d4-a716-446655440001";
+
+  const getCurrentTravellerId = (): string | null => {
+    const id = user?.id || (user as any)?.userId || (user as any)?.profileId;
+    if (id) return String(id);
+
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    try {
+      const parsed = JSON.parse(userStr) as Record<string, unknown>;
+      const travellerId =
+        (parsed.traveller_id as string | undefined) ||
+        (parsed.userId as string | undefined) ||
+        (parsed.profileId as string | undefined) ||
+        (parsed.id as string | undefined);
+      return travellerId ? String(travellerId) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const currentTravellerId = getCurrentTravellerId();
 
   // --- API Calls ---
   const fetchUserBookings = async () => {
     try {
       setLoading(true);
       setError(null);
+
+      if (!currentTravellerId) {
+        setRequests([]);
+        setError('Please sign in to view your requests.');
+        return;
+      }
 
       const response = await bookingService.getUserBookings(currentTravellerId);
 
@@ -180,10 +209,10 @@ function RequestsPage() {
   };
 
   const getTourImage = (tour?: BackendBooking['tours']): string => {
-    const location = tour?.location?.toLowerCase() || "default";
-    if (location.includes("paris")) return "/api/placeholder/300/200?text=Paris";
-    if (location.includes("beach")) return "/api/placeholder/300/200?text=Beach";
-    return "/api/placeholder/300/200?text=Tour";
+    const location = tour?.location?.toLowerCase() || '';
+    if (location.includes('sahara') || location.includes('tamanrasset') || location.includes('djanet')) return tourImage1;
+    if (location.includes('coast') || location.includes('oran') || location.includes('annaba')) return tourImage2;
+    return tourImage3;
   };
 
   // --- Filter Logic ---

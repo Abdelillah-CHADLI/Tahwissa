@@ -19,28 +19,6 @@ interface BackendSignupResponse {
   };
 }
 
-interface BackendLoginResponse {
-  user: {
-    id: string;
-    email: string;
-    role?: string;
-    name?: string;
-    agencyId?: string;
-    guideName?: string;
-    isManager?: boolean;
-  };
-}
-
-const determineUserType = (backendUser: any): 'traveller' | 'guide' | 'agency' => {
-  if (backendUser.userType && ['traveller', 'guide', 'agency'].includes(backendUser.userType)) {
-    return backendUser.userType;
-  }
-  if (backendUser.role) {
-    return normalizeUserType(backendUser.role);
-  }
-  return 'traveller';
-};
-
 const normalizeUserType = (role: string): 'traveller' | 'guide' | 'agency' => {
   const normalized = role.toLowerCase();
   if (normalized.includes('agency') || normalized.includes('employee')) {
@@ -74,14 +52,30 @@ export const authService = {
 
       const loginResponse = await api.post('/auth/login', credentials);
 
-      const data = loginResponse.data; 
-      // data = { id, email, role }
+      const data = loginResponse.data;
+
+      const normalizedUserType = data?.role ? normalizeUserType(data.role) : 'traveller';
+      const userId = String(data.id);
+      const agencyId = data?.agencyId ? String(data.agencyId) : undefined;
+      const agencyName = data?.agencyName ? String(data.agencyName) : undefined;
+      const isManager = typeof data?.isManager === 'boolean' ? data.isManager : undefined;
+
+      const profileId = normalizedUserType === 'agency'
+        ? (agencyId || userId)
+        : userId;
 
       const user: User = {
-        id: data.id,
+        id: userId,
         email: data.email,
-        userType: data.role,   // use backend role
-        name: data.email.split("@")[0], // temporary name if you want
+        userType: normalizedUserType,
+        profileId,
+        profileType: normalizedUserType,
+        userId: userId,
+        role: data.role,
+        name: data.email?.split("@")[0],
+        agencyId,
+        agencyName,
+        isManager,
       };
 
       return {
@@ -91,14 +85,7 @@ export const authService = {
       };
 
     } catch (error) {
-      console.error('LOGIN ERROR:', error);
       const axiosError = error as AxiosError<{ message: string }>;
-      console.error('AXIOS ERROR DETAILS:', {
-        message: axiosError.message,
-        code: axiosError.code,
-        status: axiosError.response?.status,
-        responseData: axiosError.response?.data
-      });
       return {
         success: false,
         message: axiosError.response?.data?.message || 'Login failed'
