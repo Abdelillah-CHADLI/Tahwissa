@@ -197,7 +197,9 @@ export function BookingPage() {
                 navigate('/traveler/explore');
                 break;
             case 'details':
-                navigate('/traveler/details');
+                navigate(`/traveler/details/${tourId}`, {
+                    state: tour ? { tour } : undefined,
+                });
                 break;
             default:
                 navigate('/traveler');

@@ -28,8 +28,6 @@ export async function addTour(tourData, images = []) {
   }
   let dbr = JSON.stringify(on)
 
-  JSON.parse()
-
 
 
   // Validate required fields

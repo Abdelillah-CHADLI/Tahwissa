@@ -6,7 +6,7 @@ import { NotificationSettings } from "../../components/agency/settings/Notificat
 import { PaymentSettings } from "../../components/agency/settings/PaymentSettings";
 import { PrivacySettings } from "../../components/agency/settings/PrivacySettings";
 import { settingsService } from "../../services/api";
-import { getCurrentAgencyId } from "../../utils/session";
+import { getCurrentAgencyUuid } from "../../utils/session";
 
 interface Settings {
     agencyName: string;
@@ -56,7 +56,7 @@ export function AgencySettings() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    const getAgencyId = () => getCurrentAgencyId();
+    const getAgencyId = () => getCurrentAgencyUuid();
 
     // --- API Calls ---
     const fetchAllSettings = async () => {

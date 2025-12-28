@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getCurrentAgencyId } from '../utils/session';
+import { getCurrentAgencyUuid } from '../utils/session';
 
 // Base axios instance
 const api = axios.create({
@@ -35,6 +35,17 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export function getApiErrorMessage(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const data: any = err.response?.data;
+    if (typeof data?.error === 'string' && data.error.trim()) return data.error;
+    if (typeof data?.message === 'string' && data.message.trim()) return data.message;
+    if (typeof err.message === 'string' && err.message.trim()) return err.message;
+    return `Request failed${err.response?.status ? ` (${err.response.status})` : ''}`;
+  }
+  return err instanceof Error ? err.message : 'Request failed';
+}
 
 export default api;
 
@@ -161,23 +172,88 @@ export const tourService = {
   },
 
   createTour: async (tourData: Record<string, unknown>) => {
-    const agencyId = getCurrentAgencyId();
+    const agencyId = getCurrentAgencyUuid();
     if (!agencyId) {
-      throw new Error('Agency ID not found. Please log in.');
+      throw new Error('Agency account not detected. Please sign out and sign back in.');
     }
-    const backendData = {
-      tour_title: tourData.title,
-      location: tourData.location,
-      price: Number(tourData.price) || 0,
-      group_size: tourData.groupSize,
-      duration: tourData.duration,
-      agency_id: agencyId,
-      tour_details: tourData.days || tourData.description,
-      tour_included: tourData.included,
-      start_date: new Date().toISOString().split('T')[0],
-      category: tourData.category
+
+    const asNonEmptyStringArray = (v: unknown): string[] | null => {
+      if (!Array.isArray(v)) return null;
+      const cleaned = v
+        .map((x) => (typeof x === 'string' ? x.trim() : ''))
+        .filter((x) => x.length > 0);
+      return cleaned.length ? cleaned : null;
     };
-    const response = await api.post('/api/tours', backendData);
+
+    const safeJson = (v: unknown): string | null => {
+      if (v == null) return null;
+      if (typeof v === 'string') {
+        const s = v.trim();
+        if (!s || s === 'undefined' || s === 'null') return null;
+        try {
+          JSON.parse(s);
+          return s;
+        } catch {
+          return JSON.stringify(s);
+        }
+      }
+      try {
+        return JSON.stringify(v);
+      } catch {
+        return null;
+      }
+    };
+
+    const backendData: Record<string, unknown> = {
+      tour_title: String(tourData.title ?? ''),
+      location: String(tourData.location ?? ''),
+      price: Number(tourData.price),
+      start_date: String(tourData.startDate ?? new Date().toISOString().split('T')[0]),
+
+      agency_id: agencyId,
+      guide_id: null,
+
+      group_size: tourData.groupSize ?? null,
+      duration: tourData.duration ?? null,
+      category: tourData.category ?? null,
+      tour_details: safeJson((tourData as any).days ?? tourData.description ?? null),
+      tour_included: safeJson(asNonEmptyStringArray((tourData as any).included)),
+      requirements: safeJson(asNonEmptyStringArray((tourData as any).requirements)),
+      tour_not_included: safeJson(
+        asNonEmptyStringArray((tourData as any).notIncluded ?? (tourData as any).tour_not_included)
+      ),
+    };
+
+    const deepSanitize = (value: any): any => {
+      if (value == null) return undefined;
+      if (typeof value === 'string') {
+        const s = value.trim();
+        if (!s || s === 'undefined' || s === 'null') return undefined;
+        return s;
+      }
+      if (Array.isArray(value)) {
+        const arr = value.map(deepSanitize).filter((v) => v !== undefined);
+        return arr.length ? arr : undefined;
+      }
+      if (typeof value === 'object') {
+        const out: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(value)) {
+          const sv = deepSanitize(v);
+          if (sv !== undefined) out[k] = sv;
+        }
+        return Object.keys(out).length ? out : undefined;
+      }
+      // numbers/booleans
+      return value;
+    };
+
+    const payload = (deepSanitize(backendData) as Record<string, unknown>) || {};
+
+    if (!payload.tour_title) throw new Error('Title is required');
+    if (!payload.location) throw new Error('Location is required');
+    if (!Number.isFinite(payload.price as number)) throw new Error('Price must be a valid number');
+
+    const response = await api.post('/api/tours', payload);
     return response.data;
   },
 

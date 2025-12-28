@@ -1,5 +1,12 @@
 import type { User } from '../types/auth';
 
+export function isUuid(value: unknown): value is string {
+  if (typeof value !== 'string') return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value.trim()
+  );
+}
+
 export function getStoredUser(): User | null {
   const userStr = localStorage.getItem('user');
   if (!userStr) return null;
@@ -11,7 +18,6 @@ export function getStoredUser(): User | null {
 }
 
 export function getCurrentAgencyId(): string | null {
-  // Backward-compat: some pages store agencyId/profileId separately.
   const direct = localStorage.getItem('agencyId') || localStorage.getItem('profileId');
   if (direct) return direct;
 
@@ -27,17 +33,22 @@ export function getCurrentAgencyId(): string | null {
   );
 }
 
+export function getCurrentAgencyUuid(): string | null {
+  const candidate = getCurrentAgencyId();
+  return isUuid(candidate) ? candidate : null;
+}
+
 export function syncLegacyIdsFromUser(user: User | null) {
   if (!user) return;
 
-  // Always maintain profileId for older code paths.
-  if (user.profileId) {
+  if (user.profileId && isUuid(user.profileId)) {
     localStorage.setItem('profileId', String(user.profileId));
   }
 
-  // Agency convenience key used throughout agency pages.
   if (user.userType === 'agency') {
     const agencyId = user.agencyId || user.profileId || user.id;
-    if (agencyId) localStorage.setItem('agencyId', String(agencyId));
+    if (agencyId && isUuid(agencyId)) {
+      localStorage.setItem('agencyId', String(agencyId));
+    }
   }
 }

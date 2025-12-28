@@ -2,10 +2,10 @@ import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent } from 'react';
 import { profileService } from '../../services/api';
-import { getCurrentAgencyId } from '../../utils/session';
+import { getCurrentAgencyUuid } from '../../utils/session';
 
 export function AgencyEditProfile() {
-    const agencyId = getCurrentAgencyId();
+    const agencyId = getCurrentAgencyUuid();
     
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);

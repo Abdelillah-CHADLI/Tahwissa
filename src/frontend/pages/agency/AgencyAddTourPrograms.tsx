@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Save, ArrowLeft, Clock, Users, DollarSign, MapPin, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle, XCircle, Shield, Upload, Loader2 } from 'lucide-react';
-import { tourService } from '../../services/api';
+import { getApiErrorMessage, tourService } from '../../services/api';
 
 interface TourFormData {
     title: string;
@@ -580,10 +580,10 @@ export function AgencyAddTourProgram() {
         try {
             setLoading(true);
             await tourService.createTour(formData as unknown as Record<string, unknown>);
-            navigate('/agency/tour-programs');
-        } catch {
             alert('Tour created successfully!');
             navigate('/agency/tour-programs');
+        } catch (err) {
+            alert(getApiErrorMessage(err));
         } finally {
             setLoading(false);
         }

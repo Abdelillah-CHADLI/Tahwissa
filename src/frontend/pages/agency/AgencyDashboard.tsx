@@ -4,7 +4,7 @@ import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, Lo
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/api';
 import { ROUTES } from '../../utils/routes';
-import { getCurrentAgencyId } from '../../utils/session';
+import { getCurrentAgencyUuid } from '../../utils/session';
 
 export function AgencyDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -26,7 +26,7 @@ export function AgencyDashboard() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const agencyId = getCurrentAgencyId();
+                const agencyId = getCurrentAgencyUuid();
 
                 if (!agencyId) return;
 
