@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import  "../services/userService.js";
 import  {getUser} from "../services/userService.js";
-
 import { supabase } from "../config/supabasedb.js";
 import { insertUser } from "../services/userService.js";
 
@@ -246,7 +245,7 @@ export async function login(req, res) {
 
     // we will generate a token for security
     const token = jwt.sign(
-      { id: user.id, email: user.email},
+      { id: user.id, email: user.email , role: user.role},
       process.env.JWT_SECRET, 
       { expiresIn: "10d" }
     );
@@ -345,4 +344,115 @@ export async function googleAuth(req, res) {
     });
   }
 }
+
+
+
+export const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (newPassword.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+   
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("password")
+      .eq("user_id", userId)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+  
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+ 
+    const samePassword = await bcrypt.compare(newPassword, user.password);
+    if (samePassword) {
+      return res.status(400).json({
+        message: "New password must be different from old password"
+      });
+    }
+
+    
+    const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+    
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        password: hashedPassword,
+        password_changed_at: new Date()
+      })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id; 
+
+    const { currentPassword } = req.body;
+    if (!currentPassword) {
+      return res.status(400).json({ message: "Current password is required" });
+    }
+
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("password")
+      .eq("user_id", userId)
+      .single();
+
+    if (fetchError || !user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      return res.status(401).json({ message: "Password is incorrect" });
+    }
+
+    const { error: deleteError } = await supabase
+      .from("users")
+      .delete()
+      .eq("user_id", userId);
+
+    if (deleteError) {
+      throw deleteError;
+    }
+
+    res.json({ message: "Account deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 
