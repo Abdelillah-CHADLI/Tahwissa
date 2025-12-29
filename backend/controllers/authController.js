@@ -244,18 +244,19 @@ export async function login(req, res) {
     }
 
     // we will generate a token for security
+    const tokenUserId = user.user_id ?? user.id;
     const token = jwt.sign(
-      { id: user.id, email: user.email , role: user.role},
-      process.env.JWT_SECRET, 
+      { id: tokenUserId, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
       { expiresIn: "10d" }
     );
 
-    //  creating a new cookie called token
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie("token", token, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-  });
+      secure: isProduction,
+      sameSite: isProduction ? "none" : "lax",
+    });
     // sending the response to the fronend
     const responsePayload = { id: user.user_id, email: user.email, role: user.role };
 
@@ -396,16 +397,29 @@ export const changePassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 12);
 
     
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({
-        password: hashedPassword,
-        password_changed_at: new Date()
-      })
-      .eq("user_id", userId);
+    let updateError = null;
+    {
+      const { error } = await supabase
+        .from("users")
+        .update({
+          password: hashedPassword,
+          password_changed_at: new Date()
+        })
+        .eq("user_id", userId);
+      updateError = error;
+    }
 
     if (updateError) {
-      throw updateError;
+      const msg = String(updateError?.message || updateError);
+      if (msg.toLowerCase().includes('password_changed_at') && msg.toLowerCase().includes('column')) {
+        const { error: retryError } = await supabase
+          .from("users")
+          .update({ password: hashedPassword })
+          .eq("user_id", userId);
+        if (retryError) throw retryError;
+      } else {
+        throw updateError;
+      }
     }
 
     res.json({ message: "Password changed successfully" });

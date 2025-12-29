@@ -84,6 +84,8 @@ const ProfilePage = () => {
   const [uploadError, setUploadError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'}>({text: '', type: 'success'});
   
   const [profileData, setProfileData] = useState<TravelerProfileData>({
@@ -101,6 +103,8 @@ const ProfilePage = () => {
     newPassword: '',
     confirmPassword: ''
   });
+
+  const [deleteAccountPassword, setDeleteAccountPassword] = useState<string>('');
 
   useEffect(() => {
     const fetchTravelerProfile = async () => {
@@ -296,9 +300,6 @@ const ProfilePage = () => {
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    setMessage({ text: 'Password update is not available right now.', type: 'error' });
-    return;
     
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setMessage({text: 'New passwords do not match', type: 'error'});
@@ -311,8 +312,22 @@ const ProfilePage = () => {
     }
 
     try {
+      setPasswordLoading(true);
       const userStr = localStorage.getItem('user');
-      if (!userStr) return;
+      if (!userStr) {
+        navigate('/signin');
+        return;
+      }
+
+      await api.post(
+        '/auth/changePass',
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+          confirmPassword: passwordData.confirmPassword,
+        },
+        { withCredentials: true }
+      );
 
       setMessage({text: 'Password updated successfully!', type: 'success'});
       setPasswordData({
@@ -323,26 +338,44 @@ const ProfilePage = () => {
 
       setTimeout(() => setMessage({text: '', type: 'success'}), 3000);
       
-    } catch {
-      setMessage({text: 'Failed to change password. Please try again.', type: 'error'});
+    } catch (error: any) {
+      const backendError = toUserFriendlyBackendError(extractBackendErrorMessage(error));
+      setMessage({text: backendError || 'Failed to change password. Please try again.', type: 'error'});
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
   const handleDeleteAccount = async () => {
-    setMessage({ text: 'Account deletion is not available right now.', type: 'error' });
-    return;
+    if (!deleteAccountPassword.trim()) {
+      setMessage({ text: 'Please enter your current password to delete your account.', type: 'error' });
+      return;
+    }
 
     try {
+      setDeleteLoading(true);
       const userStr = localStorage.getItem('user');
-      if (!userStr) return;
+      if (!userStr) {
+        navigate('/signin');
+        return;
+      }
+
+      await api.post(
+        '/auth/deleteAcc',
+        { currentPassword: deleteAccountPassword },
+        { withCredentials: true }
+      );
       
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       navigate('/');
       alert('Account deleted successfully');
       
-    } catch {
-      setMessage({text: 'Failed to delete account. Please try again.', type: 'error'});
+    } catch (error: any) {
+      const backendError = toUserFriendlyBackendError(extractBackendErrorMessage(error));
+      setMessage({text: backendError || 'Failed to delete account. Please try again.', type: 'error'});
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -498,6 +531,7 @@ const ProfilePage = () => {
                   data={passwordData}
                   onChange={handlePasswordChange}
                   onSubmit={handlePasswordSubmit}
+                  isLoading={passwordLoading}
                 />
               </motion.div>
             )}
@@ -512,6 +546,9 @@ const ProfilePage = () => {
               >
                 <AccountTab 
                   onDeleteAccount={handleDeleteAccount}
+                  currentPassword={deleteAccountPassword}
+                  onCurrentPasswordChange={setDeleteAccountPassword}
+                  isLoading={deleteLoading}
                 />
               </motion.div>
             )}
@@ -663,9 +700,10 @@ interface SecurityTabProps {
   data: PasswordData;
   onChange: (field: keyof PasswordData, value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
+  isLoading: boolean;
 }
 
-const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
+const SecurityTab = ({ data, onChange, onSubmit, isLoading }: SecurityTabProps) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -673,10 +711,6 @@ const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
     className="space-y-6"
   >
     <h2 className="text-xl font-semibold text-gray-900 mb-4">Change Password</h2>
-
-    <p className="text-sm text-gray-600">
-      Password update is not available right now.
-    </p>
     
     <form onSubmit={onSubmit} className="space-y-6">
       <FormField
@@ -684,6 +718,7 @@ const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
         value={data.currentPassword}
         onChange={(value) => onChange('currentPassword', value)}
         type="password"
+        required
       />
       
       <FormField
@@ -691,6 +726,8 @@ const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
         value={data.newPassword}
         onChange={(value) => onChange('newPassword', value)}
         type="password"
+        required
+        minLength={8}
       />
       
       <FormField
@@ -698,6 +735,8 @@ const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
         value={data.confirmPassword}
         onChange={(value) => onChange('confirmPassword', value)}
         type="password"
+        required
+        minLength={8}
       />
 
       <div className="pt-2">
@@ -705,9 +744,10 @@ const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+          disabled={isLoading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
         >
-          Update Password
+          {isLoading ? 'Updating...' : 'Update Password'}
         </motion.button>
       </div>
     </form>
@@ -716,9 +756,12 @@ const SecurityTab = ({ data, onChange, onSubmit }: SecurityTabProps) => (
 
 interface AccountTabProps {
   onDeleteAccount: () => void;
+  currentPassword: string;
+  onCurrentPasswordChange: (value: string) => void;
+  isLoading: boolean;
 }
 
-const AccountTab = ({ onDeleteAccount }: AccountTabProps) => (
+const AccountTab = ({ onDeleteAccount, currentPassword, onCurrentPasswordChange, isLoading }: AccountTabProps) => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
@@ -729,18 +772,22 @@ const AccountTab = ({ onDeleteAccount }: AccountTabProps) => (
       Permanently delete your account and all associated data. This action cannot be undone.
     </p>
 
-    <p className="text-sm text-gray-600 mb-6">
-      Account deletion is not available right now.
-    </p>
+    <FormField
+      label="Current Password"
+      value={currentPassword}
+      onChange={onCurrentPasswordChange}
+      type="password"
+      required
+    />
     
     <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
       onClick={onDeleteAccount}
-      className="px-6 py-2 bg-red-600 text-white rounded-md opacity-50 cursor-not-allowed"
-      disabled
+      disabled={isLoading || !currentPassword.trim()}
+      className="px-6 py-2 bg-red-600 text-white rounded-md disabled:opacity-50"
     >
-      Delete My Account
+      {isLoading ? 'Deleting...' : 'Delete My Account'}
     </motion.button>
   </motion.div>
 );

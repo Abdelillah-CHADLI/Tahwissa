@@ -50,7 +50,7 @@ export const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
 
-      const loginResponse = await api.post('/auth/login', credentials);
+      const loginResponse = await api.post('/auth/login', credentials, { withCredentials: true });
 
       const data = loginResponse.data;
 
@@ -136,7 +136,7 @@ export const authService = {
 
   logout(): void {
     localStorage.removeItem('user');
-    api.post('/auth/logout').catch(error => {
+    api.post('/auth/logout', undefined, { withCredentials: true }).catch(error => {
       console.warn('Backend logout failed:', error.message);
     });
   },
