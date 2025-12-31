@@ -1,5 +1,6 @@
 //yacine
 const express = require('express');
+const multer = require('multer');
 const {
   addPost,
   browsePosts,
@@ -12,6 +13,7 @@ const {
   reportPost
 } = require('../controllers/postController');
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 router.use(express.json());
 router.use(express.json({ limit: '50mb' }))
 router.post('/travellers/:travellerId/update', async (req, res) => {
@@ -34,7 +36,7 @@ router.post('/posts/:postId/report', async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 });
-router.post('/posts', async (req, res) => {
+router.post('/posts', upload.array('images', 1), async (req, res) => {
   try {
     const postData = req.body;
     const images = req.files ? req.files.map(file => ({
