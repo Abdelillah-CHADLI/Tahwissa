@@ -443,3 +443,95 @@ export async function getUserBookings(userId) {
   if (error) throw new Error(`Failed to fetch user bookings: ${error.message}`);
   return data;
 }
+
+
+// 1. Booking Cancellation
+// Updates booking status to 'CANCELLED' via Supabase update.
+export async function cancelBooking(bookingId) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update({ status: 'CANCELLED' })
+    .eq('booking_id', bookingId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Failed to cancel booking');
+  }
+
+  if (!data) {
+    throw new Error('Booking not found');
+  }
+
+  return data;
+}
+
+// 2. Booking Confirmation
+// Updates booking status to 'CONFIRMED' via Supabase update.
+export async function confirmBooking(bookingId) {
+  const { data, error } = await supabase
+    .from('bookings')
+    .update({ status: 'CONFIRMED' })
+    .eq('booking_id', bookingId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Failed to confirm booking');
+  }
+
+  if (!data) {
+    throw new Error('Booking not found');
+  }
+
+  return data;
+}
+
+// 3. Edit Tour
+// Updates an existing tour via Supabase update with partial or full data.
+// Note: Images not handled here (add separate upload if needed via supabase.storage).
+export async function editTour(tourId, tourData) {
+  // Validate required fields (optional; adjust as needed)
+  if (!tourData || Object.keys(tourData).length === 0) {
+    throw new Error('No update data provided');
+  }
+
+  const { data, error } = await supabase
+    .from('tours')
+    .update(tourData)
+    .eq('tour_id', tourId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Failed to edit tour');
+  }
+
+  if (!data) {
+    throw new Error('Tour not found');
+  }
+
+  return data;
+}
+
+// 4. Delete Tour
+// Deletes a tour via Supabase delete.
+// Assumes FK constraints handle related data (e.g., bookings, images); otherwise, delete manually first.
+export async function deleteTour(tourId) {
+  const { data, error } = await supabase
+    .from('tours')
+    .delete()
+    .eq('tour_id', tourId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(error.message || 'Failed to delete tour');
+  }
+
+  if (!data) {
+    throw new Error('Tour not found');
+  }
+
+  return { success: true, message: 'Tour deleted successfully' };
+}

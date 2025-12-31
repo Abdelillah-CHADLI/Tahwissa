@@ -11,14 +11,20 @@ const {
   browseTours,
   addBooking,
   getUserBookings,
-  addTour
+  addTour,
+  
+  cancelBooking,
+  confirmBooking,
+  editTour,
+  deleteTour
 } = require('../controllers/bookingController');
 
+
+console.log(cancelBooking)
+
+
 const router = express.Router();
-
 router.use(express.json());
-
-
 // Add this route
 router.post('/tours', async (req, res) => {
   try {
@@ -27,19 +33,13 @@ router.post('/tours', async (req, res) => {
       name: file.originalname,
       content: file.buffer,
       mimeType: file.mimetype
-    })) : [];
+    })) : []; // Placeholder; adjust based on your upload setup
     const newTour = await addTour(tourData, images);
     res.status(201).json({ success: true, data: newTour });
   } catch (error) {
-    const isDev = process.env.NODE_ENV !== 'production';
-    res.status(500).json({
-      success: false,
-      error: error?.message || String(error),
-      ...(isDev ? { stack: error?.stack } : {})
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/bookings', async (req, res) => {
   try {
     const { agencyId, guideId, travellerName, status } = req.query;
@@ -53,7 +53,6 @@ router.get('/bookings', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.post('/bookings', async (req, res) => {
   try {
     const bookingData = req.body;
@@ -69,7 +68,6 @@ router.post('/bookings', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/bookings/explore', async (req, res) => {
   try {
     const { userId } = req.query;
@@ -82,7 +80,6 @@ router.get('/bookings/explore', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/profile/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -96,7 +93,6 @@ router.get('/profile/:id', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.post('/reviews', async (req, res) => {
   try {
     const reviewData = req.body;
@@ -109,7 +105,6 @@ router.post('/reviews', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/reviews/:tourId', async (req, res) => {
   try {
     const { tourId } = req.params;
@@ -119,7 +114,6 @@ router.get('/reviews/:tourId', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/agencies', async (req, res) => {
   try {
     const { search, limit = 10 } = req.query;
@@ -132,16 +126,13 @@ router.get('/agencies', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/guides', async (req, res) => {
   try {
     let { search , page = 1, limit = 10 } = req.query;
     // if (!search) {
     //   return res.status(400).json({ success: false, error: 'Search term required' });
     // }
-
     //
-
         if (!search) {
      search = null
     }
@@ -151,7 +142,6 @@ router.get('/guides', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/agencies/browse', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -165,7 +155,6 @@ router.get('/agencies/browse', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-
 router.get('/tours/browse', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -173,42 +162,107 @@ router.get('/tours/browse', async (req, res) => {
     if (page < 1 || size < 1 || size > 100) {
       return res.status(400).json({ success: false, error: 'Page >=1, size 1-100' });
     }
-
     // Parse optional filters
     let cat = null;
     if (req.query.cat) {
       cat = Array.isArray(req.query.cat) ? req.query.cat : req.query.cat.split(',').map(c => c.trim()).filter(Boolean);
       if (cat.length === 0) cat = null;
     }
-
     let regions = null;
     if (req.query.regions) {
       regions = Array.isArray(req.query.regions) ? req.query.regions : req.query.regions.split(',').map(r => r.trim()).filter(Boolean);
       if (regions.length === 0) regions = null;
     }
-
     const priceMin = req.query.priceMin ? parseFloat(req.query.priceMin) : null;
     if (priceMin !== null && (isNaN(priceMin) || priceMin < 0)) {
       return res.status(400).json({ success: false, error: 'priceMin must be a non-negative number' });
     }
-
     const priceMax = req.query.priceMax ? parseFloat(req.query.priceMax) : null;
     if (priceMax !== null && (isNaN(priceMax) || priceMax < 0)) {
       return res.status(400).json({ success: false, error: 'priceMax must be a non-negative number' });
     }
-
     if (priceMin !== null && priceMax !== null && priceMin > priceMax) {
       return res.status(400).json({ success: false, error: 'priceMin must be less than or equal to priceMax' });
     }
-
     const provider = req.query.provider ? req.query.provider.trim().toLowerCase() : null;
     if (provider && !['agency', 'guide'].includes(provider)) {
       return res.status(400).json({ success: false, error: 'provider must be "agency" or "guide"' });
     }
-
     const result = await browseTours(page, size, cat, regions, priceMin, priceMax, provider);
     res.json({ success: true, data: result });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// New routes for booking cancellation and confirmation
+router.patch('/bookings/:bookingId/cancel', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    if (!bookingId) {
+      return res.status(400).json({ success: false, error: 'Missing required field: bookingId' });
+    }
+    const updatedBooking = await cancelBooking(bookingId);
+    res.json({ success: true, data: updatedBooking });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('cannot cancel')) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.patch('/bookings/:bookingId/confirm', async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    if (!bookingId) {
+      return res.status(400).json({ success: false, error: 'Missing required field: bookingId' });
+    }
+    const updatedBooking = await confirmBooking(bookingId);
+    res.json({ success: true, data: updatedBooking });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('cannot confirm')) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// New routes for editing and deleting tours
+router.put('/tours/:tourId', async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    const tourData = req.body;
+    const images = req.files ? req.files.map(file => ({
+      name: file.originalname,
+      content: file.buffer,
+      mimeType: file.mimetype
+    })) : []; // Optional new images for update
+    if (!tourId || Object.keys(tourData).length === 0) {
+      return res.status(400).json({ success: false, error: 'Missing required fields: tourId and update data' });
+    }
+    const updatedTour = await editTour(tourId, tourData, images);
+    res.json({ success: true, data: updatedTour });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('cannot update')) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+router.delete('/tours/:tourId', async (req, res) => {
+  try {
+    const { tourId } = req.params;
+    if (!tourId) {
+      return res.status(400).json({ success: false, error: 'Missing required field: tourId' });
+    }
+    await deleteTour(tourId);
+    res.json({ success: true, message: 'Tour deleted successfully' });
+  } catch (error) {
+    if (error.message.includes('not found') || error.message.includes('cannot delete')) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
     res.status(500).json({ success: false, error: error.message });
   }
 });
