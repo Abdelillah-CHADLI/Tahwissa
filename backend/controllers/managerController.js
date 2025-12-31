@@ -3,35 +3,57 @@ import { supabase } from '../config/supabasedb.js';
 import bcrypt from 'bcryptjs';
 
 export async function addAgencyEmployee(req, res) {
-  const { email, password, agency_id } = req.body;
+  const {
+    email,
+    password,
+    agency_id,
+    full_name,
+    phone,
+    location,
+    experience,
+    languages,
+    role,
+    specialization
+  } = req.body;
 
   if (!email || !password || !agency_id) {
-    return res.status(400).json({ error: "email, password, and agency_id are required" });
+    return res.status(400).json({
+      error: "email, password, and agency_id are required"
+    });
   }
 
   try {
     const saltRounds = 10;
     const hashedpass = await bcrypt.hash(password, saltRounds);
+
+    // Insert into users table
     const { data: newUser, error: userError } = await supabase
-      .from('users')
+      .from("users")
       .insert({
         email,
-        password:hashedpass,
-        role: 'AgencyEmployee'
+        password: hashedpass,
+        role: "AgencyEmployee"
       })
       .select()
       .single();
 
     if (userError) throw userError;
 
-    const employee_id = newUser.user_id; 
+    const employee_id = newUser.user_id;
 
     
     const { data: employeeData, error: employeeError } = await supabase
-      .from('agency_employees')
+      .from("agency_employees")
       .insert({
         employee_id,
-        agency_id
+        agency_id,
+        full_name,
+        phone,
+        location,
+        experience,
+        languages,
+        role,
+        specialization
       })
       .select()
       .single();
@@ -48,7 +70,6 @@ export async function addAgencyEmployee(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
-
 
 // Remove an agency employee by employee_id
 export async function removeAgencyEmployee(req, res) {
@@ -112,19 +133,80 @@ export async function getAgencyEmployees(req, res) {
 
   try {
     const { data: employees, error } = await supabase
-      .from('agency_employees')
+      .from("agency_employees")
       .select(`
         employee_id,
+        full_name,
+        phone,
+        location,
+        experience,
+        languages,
+        role,
+        specialization,
         users:employee_id (
           email,
           role
         )
       `)
-      .eq('agency_id', agency_id);
+      .eq("agency_id", agency_id);
 
     if (error) throw error;
 
     res.status(200).json({ employees });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
+
+export async function editAgencyEmployee(req, res) {
+  const { employee_id } = req.params;
+
+  const {
+    full_name,
+    phone,
+    location,
+    experience,
+    languages,
+    role,
+    specialization
+  } = req.body;
+
+  if (!employee_id) {
+    return res.status(400).json({ error: "employee_id is required" });
+  }
+
+  try {
+    
+    const employeeUpdates = {};
+
+    if (full_name !== undefined) employeeUpdates.full_name = full_name;
+    if (phone !== undefined) employeeUpdates.phone = phone;
+    if (location !== undefined) employeeUpdates.location = location;
+    if (experience !== undefined) employeeUpdates.experience = experience;
+    if (languages !== undefined) employeeUpdates.languages = languages;
+    if (role !== undefined) employeeUpdates.role = role;
+    if (specialization !== undefined) employeeUpdates.specialization = specialization;
+
+
+    if (Object.keys(employeeUpdates).length === 0) {
+      return res.status(400).json({ error: "No fields to update" });
+    }
+
+    const { data: employeeData, error: employeeError } = await supabase
+      .from("agency_employees")
+      .update(employeeUpdates)
+      .eq("employee_id", employee_id)
+      .select()
+      .single();
+
+    if (employeeError) throw employeeError;
+
+    res.status(200).json({
+      message: "Agency employee updated successfully",
+      employee: employeeData
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
