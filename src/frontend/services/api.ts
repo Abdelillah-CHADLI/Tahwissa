@@ -537,29 +537,13 @@ export const employeeService = {
 export const advancedBookingService = {
   // Confirm a booking
   confirmBooking: async (bookingId: string) => {
-    const response = await api.put(`/api/bookings/${bookingId}/confirm`);
+    const response = await api.patch(`/api/bookings/${bookingId}/confirm`);
     return response.data;
   },
 
-  // Cancel/Decline a booking
-  cancelBooking: async (bookingId: string, reason?: string) => {
-    const response = await api.put(`/api/bookings/${bookingId}/cancel`, {
-      reason
-    });
-    return response.data;
-  },
-
-  // Update booking status
-  updateBookingStatus: async (bookingId: string, status: string) => {
-    const response = await api.put(`/api/bookings/${bookingId}/status`, {
-      status
-    });
-    return response.data;
-  },
-
-  // Get booking details
-  getBookingDetails: async (bookingId: string) => {
-    const response = await api.get(`/api/bookings/${bookingId}`);
+  // Cancel a booking
+  cancelBooking: async (bookingId: string) => {
+    const response = await api.patch(`/api/bookings/${bookingId}/cancel`);
     return response.data;
   },
 
