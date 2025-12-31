@@ -29,14 +29,29 @@ export const useTours = (): UseToursReturn => {
   const [currentSearch, setCurrentSearch] = useState('');
 
   const convertBackendTourToFrontend = (backendTour: any): Tour => {
+    const firstImageFromUnknown = (value: any): string | null => {
+      if (!value) return null;
+      if (typeof value === 'string') return value;
+      if (Array.isArray(value)) {
+        const first = value[0];
+        if (!first) return null;
+        if (typeof first === 'string') return first;
+        if (typeof first === 'object') {
+          const url = (first as any).image_url || (first as any).url || (first as any).publicUrl;
+          return typeof url === 'string' && url ? url : null;
+        }
+      }
+      return null;
+    };
+
     const imageUrl =
-      backendTour?.images?.[0] ||
-      backendTour?.tour_images?.[0] ||
-      backendTour?.photos?.[0] ||
-      backendTour?.image ||
-      backendTour?.image_url ||
-      backendTour?.cover_image ||
-      backendTour?.picture ||
+      firstImageFromUnknown(backendTour?.images) ||
+      firstImageFromUnknown(backendTour?.tour_images) ||
+      firstImageFromUnknown(backendTour?.photos) ||
+      (typeof backendTour?.image === 'string' ? backendTour.image : null) ||
+      (typeof backendTour?.image_url === 'string' ? backendTour.image_url : null) ||
+      (typeof backendTour?.cover_image === 'string' ? backendTour.cover_image : null) ||
+      (typeof backendTour?.picture === 'string' ? backendTour.picture : null) ||
       tourFallbackImage;
 
     const providerInfo = backendTour.agency_id

@@ -157,3 +157,61 @@ export async function updateTravellerInfo(req, res) {
     res.status(500).json({ error: err.message });
   }
 }
+
+// Upload agency logo
+export async function uploadAgencyLogo(req, res) {
+  const { id } = req.params;
+
+  if (!id) {
+    return res.status(400).json({ error: "Agency ID is required" });
+  }
+
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: "No image file provided" });
+    }
+
+    const bucket = 'agency-images';
+    const fileName = `${id}-logo-${Date.now()}.${file.originalname.split('.').pop()}`;
+
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(fileName, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true
+      });
+
+    if (uploadError) {
+      throw new Error(`Failed to upload image: ${uploadError.message}`);
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(fileName);
+
+    // Update the agency record with the logo URL
+    const { data, error: updateError } = await supabase
+      .from('agencies')
+      .update({ agency_logo: publicUrl })
+      .eq('agency_id', id)
+      .select()
+      .single();
+
+    if (updateError) {
+      throw new Error(`Failed to update agency: ${updateError.message}`);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Agency logo uploaded successfully",
+      data: { agency_logo: publicUrl }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}

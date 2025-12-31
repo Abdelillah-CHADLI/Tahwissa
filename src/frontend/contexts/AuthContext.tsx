@@ -7,6 +7,7 @@ import { syncLegacyIdsFromUser } from "../utils/session";
 interface AuthContextType {
   user: User | null;
   login: (userData: User) => void;
+  updateUser: (updates: Partial<User>) => void;
   logout: () => void;
   isLoading: boolean;
 }
@@ -28,6 +29,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (savedUser) {
         try {
           const userData: User = JSON.parse(savedUser);
+
+
+          const isTraveller = userData?.profileType === 'traveller' || userData?.userType === 'traveller';
+          if (isTraveller) {
+            const travellerId = userData.profileId || userData.userId || userData.id;
+            if (travellerId) {
+              const stored = localStorage.getItem(`traveler_profile_picture:${travellerId}`);
+              if (stored && stored !== userData.profile_picture) {
+                userData.profile_picture = stored;
+                // Persist the updated user object back to localStorage
+                localStorage.setItem("user", JSON.stringify(userData));
+              }
+            }
+          }
           setUser(userData);
           syncLegacyIdsFromUser(userData);
         } catch (error) {
@@ -46,9 +61,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error("AuthContext: incomplete user data during login", userData);
     }
 
+    // For travellers, check if there's a stored profile picture from previous session
+    const isTraveller = userData?.profileType === 'traveller' || userData?.userType === 'traveller';
+    if (isTraveller && !userData.profile_picture) {
+      const travellerId = userData.profileId || userData.userId || userData.id;
+      if (travellerId) {
+        const stored = localStorage.getItem(`traveler_profile_picture:${travellerId}`);
+        if (stored) {
+          userData.profile_picture = stored;
+        }
+      }
+    }
+
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
     syncLegacyIdsFromUser(userData);
+  };
+
+  const updateUser = (updates: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const merged: User = { ...prev, ...updates };
+      localStorage.setItem("user", JSON.stringify(merged));
+      syncLegacyIdsFromUser(merged);
+      return merged;
+    });
   };
 
   const logout = () => {
@@ -61,6 +98,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const value: AuthContextType = {
     user,
     login,
+    updateUser,
     logout,
     isLoading,
   };

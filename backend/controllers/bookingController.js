@@ -331,6 +331,9 @@ export async function browseTours(
 
   const selectStr = `
     *,
+    tour_images (
+      image_url
+    ),
     agencies!agency_id (
       agency_id,
       agency_name,
@@ -384,6 +387,44 @@ export async function browseTours(
     .order('created_at', { ascending: false });
   const { data: tours, error: tourError } = await dataQuery;
   if (tourError) throw new Error(`Failed to fetch tours: ${tourError.message}`);
+
+  if (Array.isArray(tours) && tours.length > 0) {
+    const tourIds = tours
+      .map(t => t?.tour_id)
+      .filter(Boolean);
+
+    if (tourIds.length > 0) {
+      const { data: imageRows, error: imageError } = await supabase
+        .from('tour_images')
+        .select('tour_id, image_url')
+        .in('tour_id', tourIds);
+
+      if (!imageError && Array.isArray(imageRows)) {
+        const byTourId = new Map();
+        for (const row of imageRows) {
+          if (!row?.tour_id || !row?.image_url) continue;
+          const existing = byTourId.get(row.tour_id) ?? [];
+          existing.push(row.image_url);
+          byTourId.set(row.tour_id, existing);
+        }
+
+        for (const tour of tours) {
+          const urls = byTourId.get(tour.tour_id) ?? [];
+
+          // Keep embedded `tour_images` if it exists; otherwise hydrate it.
+          if (!Array.isArray(tour.tour_images) || tour.tour_images.length === 0) {
+            tour.tour_images = urls.map(image_url => ({ image_url }));
+          }
+
+          // Always provide a flat array for the frontend.
+          const embeddedUrls = Array.isArray(tour.tour_images)
+            ? tour.tour_images.map(x => x?.image_url).filter(Boolean)
+            : [];
+          tour.images = embeddedUrls.length > 0 ? embeddedUrls : urls;
+        }
+      }
+    }
+  }
 
   return {
     tours,

@@ -1,5 +1,6 @@
 //yacine
 const express = require('express');
+const multer = require('multer');
 const {
   getBookingsByFilter,
   getProfile,
@@ -24,9 +25,10 @@ console.log(cancelBooking)
 
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 router.use(express.json());
 // Add this route
-router.post('/tours', async (req, res) => {
+router.post('/tours', upload.array('images', 10), async (req, res) => {
   try {
     const tourData = req.body;
     const images = req.files ? req.files.map(file => ({
@@ -229,7 +231,7 @@ router.patch('/bookings/:bookingId/confirm', async (req, res) => {
 });
 
 // New routes for editing and deleting tours
-router.put('/tours/:tourId', async (req, res) => {
+router.put('/tours/:tourId', upload.array('images', 10), async (req, res) => {
   try {
     const { tourId } = req.params;
     const tourData = req.body;
