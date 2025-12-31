@@ -140,7 +140,7 @@ export function AgencyTourPrograms() {
                     {filteredTours.map(t => (
                         <TourCard
                             key={t.tour_id || t.id}
-                            image={t.images?.[0] || t.image || "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80"}
+                            image={t.images?.[0] || t.tour_images?.[0]?.image_url || t.image || "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=800&q=80"}
                             status={t.status || "Active"}
                             category={t.category || "General"}
                             title={t.tour_title || t.title}
