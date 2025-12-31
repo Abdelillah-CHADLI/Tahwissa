@@ -225,6 +225,54 @@ function WhatsIncludedTab({ tourIncluded }: { tourIncluded: string | TourInclusi
     );
 }
 
+const parseStringArray = (value: unknown): string[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.map((x) => (typeof x === 'string' ? x : String(x))).filter(Boolean);
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return [];
+        if (trimmed.startsWith('[') || trimmed.startsWith('{')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) return parsed.map((x) => (typeof x === 'string' ? x : String(x))).filter(Boolean);
+            } catch {
+                // fallthrough
+            }
+        }
+        return trimmed.split(/[\n,•-]+/g).map(s => s.trim()).filter(Boolean);
+    }
+    return [];
+};
+
+const getTourImageUrls = (tour: Record<string, unknown>): string[] => {
+    const urls: string[] = [];
+    const add = (u: unknown) => {
+        if (typeof u === 'string' && u.trim()) urls.push(u);
+    };
+
+    const images = (tour as any).images;
+    if (Array.isArray(images)) {
+        for (const item of images) {
+            if (typeof item === 'string') add(item);
+            else if (item && typeof item === 'object') add((item as any).image_url || (item as any).url);
+        }
+    }
+
+    const tourImages = (tour as any).tour_images;
+    if (Array.isArray(tourImages)) {
+        for (const item of tourImages) {
+            if (typeof item === 'string') add(item);
+            else if (item && typeof item === 'object') add((item as any).image_url);
+        }
+    }
+
+    add((tour as any).image);
+    add((tour as any).image_url);
+    add((tour as any).cover_image);
+
+    return urls;
+};
+
 const DetailsPage = () => {
     const navigate = useNavigate();
     const { tourId } = useParams<{ tourId: string }>();
@@ -335,6 +383,15 @@ const DetailsPage = () => {
 
     const provider = providerData;
 
+    const imageUrls = getTourImageUrls(tourData);
+    const coverImage = imageUrls[0] || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470';
+
+    const inclusionsMerged: TourInclusions = {
+        included: parseStringArray((tourData as any).tour_included),
+        notIncluded: parseStringArray((tourData as any).tour_not_included),
+        requirements: parseStringArray((tourData as any).requirements),
+    };
+
     return (
         <div className="w-full overflow-x-hidden min-w-0">
             <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
@@ -349,28 +406,23 @@ const DetailsPage = () => {
 
                     <div className="border border-gray-200 rounded-xl bg-white shadow-md overflow-hidden">
                         <img
-                            src={String(tourData.image || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470')}
+                            src={String(coverImage)}
                             alt={String(tourData.tour_title || tourData.title || 'Tour')}
                             className="w-full h-48 sm:h-64 md:h-80 object-cover"
                         />
 
-                        <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4">
-                            <img
-                                src={String(tourData.image || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470')}
-                                alt="Tour gallery 1"
-                                className="w-full max-w-full h-auto object-cover rounded-xl"
-                            />
-                            <img
-                                src={String(tourData.image || 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1')}
-                                alt="Tour gallery 2"
-                                className="w-full max-w-full h-auto object-cover rounded-xl"
-                            />
-                            <img
-                                src={String(tourData.image || 'https://images.unsplash.com/photo-1469474968028-56623f02e42e')}
-                                alt="Tour gallery 3"
-                                className="w-full max-w-full h-auto object-cover rounded-xl"
-                            />
-                        </div>
+                        {imageUrls.length > 1 && (
+                            <div className="grid grid-cols-3 gap-2 sm:gap-4 p-3 sm:p-4">
+                                {imageUrls.slice(1, 4).map((url, idx) => (
+                                    <img
+                                        key={idx}
+                                        src={String(url)}
+                                        alt={`Tour gallery ${idx + 1}`}
+                                        className="w-full max-w-full h-auto object-cover rounded-xl"
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     <div className="border border-gray-200 rounded-xl bg-white shadow-md p-4 sm:p-6 space-y-4">
@@ -428,7 +480,7 @@ const DetailsPage = () => {
                             >
                                 {activeTab === 'schedule'
                                     ? <DayByDayScheduleTab tourDetails={tourData.tour_details as string | DaySchedule[] | null} />
-                                    : <WhatsIncludedTab tourIncluded={tourData.tour_included as string | TourInclusions | null} />
+                                    : <WhatsIncludedTab tourIncluded={inclusionsMerged} />
                                 }
                             </div>
                         </div>
