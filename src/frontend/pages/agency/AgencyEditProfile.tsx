@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent } from 'react';
-import { profileService } from '../../services/api';
+import api, { profileService } from '../../services/api';
 import { getCurrentAgencyUuid } from '../../utils/session';
 
 export function AgencyEditProfile() {
@@ -25,6 +25,7 @@ export function AgencyEditProfile() {
     });
 
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
     const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
     
     // Load profile data
@@ -61,6 +62,11 @@ export function AgencyEditProfile() {
                             setSelectedLocations(profile.service_locations);
                         }
                     }
+                    
+                    // Load existing agency logo
+                    if (profile.agency_logo) {
+                        setLogoPreview(profile.agency_logo);
+                    }
                 } else {
                     throw new Error("Profile not found");
                 }
@@ -86,6 +92,7 @@ export function AgencyEditProfile() {
     const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            setLogoFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 if (typeof reader.result === 'string') {
@@ -115,15 +122,33 @@ export function AgencyEditProfile() {
                 return;
             }
             
+            // Upload logo if a new file was selected
+            if (logoFile) {
+                const formData = new FormData();
+                formData.append('logo', logoFile);
+                
+                try {
+                    const logoResponse = await api.post(`/profile1/agency/${agencyId}/logo`, formData);
+                    if (logoResponse.data?.data?.agency_logo) {
+                        setLogoPreview(logoResponse.data.data.agency_logo);
+                        setLogoFile(null);
+                    }
+                } catch (logoErr) {
+                    console.error('Logo upload failed:', logoErr);
+                    // Continue with profile save even if logo upload fails
+                }
+            }
+            
             const dataToSend = {
                 agency_name: formData.agency_name,
+                phone_number: formData.agency_phone,
                 emergency_contact: formData.emergency_phone,
                 support_email: formData.support_email,
                 working_hours: formData.working_hours,
                 service_locations: selectedLocations.join(', '),
                 main_office_location: formData.location,
                 website: formData.agency_website,
-                description: formData.description,
+                agency_description: formData.description,
             };
             
             await profileService.updateProfile(agencyId, dataToSend, 'agency');
