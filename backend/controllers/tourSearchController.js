@@ -18,7 +18,7 @@ export async function searchTours(req, res) {
       provider   //"Guide or "Agency"
     } = req.body;
 
-    let query = supabase.from('tours').select('*');
+    let query = supabase.from('tours').select('*, tour_images(image_url)');
 
     // 1. Name search (partial match)
     if (name) {
@@ -53,6 +53,36 @@ export async function searchTours(req, res) {
     // 6. Execute query
     const { data, error } = await query;
     if (error) throw new Error(error.message);
+
+
+    if (Array.isArray(data) && data.length > 0) {
+      const tourIds = data.map(t => t?.tour_id).filter(Boolean);
+      const { data: imageRows, error: imageError } = await supabase
+        .from('tour_images')
+        .select('tour_id, image_url')
+        .in('tour_id', tourIds);
+
+      if (!imageError && Array.isArray(imageRows)) {
+        const byTourId = new Map();
+        for (const row of imageRows) {
+          if (!row?.tour_id || !row?.image_url) continue;
+          const existing = byTourId.get(row.tour_id) ?? [];
+          existing.push(row.image_url);
+          byTourId.set(row.tour_id, existing);
+        }
+
+        for (const tour of data) {
+          const urls = byTourId.get(tour.tour_id) ?? [];
+          if (!Array.isArray(tour.tour_images) || tour.tour_images.length === 0) {
+            tour.tour_images = urls.map(image_url => ({ image_url }));
+          }
+          const embeddedUrls = Array.isArray(tour.tour_images)
+            ? tour.tour_images.map(x => x?.image_url).filter(Boolean)
+            : [];
+          tour.images = embeddedUrls.length > 0 ? embeddedUrls : urls;
+        }
+      }
+    }
 
     return res.json(data);
   } catch (err) {
