@@ -31,6 +31,8 @@ interface Comment {
 const CommunityFeedPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState({ title: '', text: '', location: '' });
+  const [newPostImageFile, setNewPostImageFile] = useState<File | null>(null);
+  const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,6 +64,14 @@ const CommunityFeedPage = () => {
   useEffect(() => {
     fetchPosts();
   }, [currentPage]);
+
+  useEffect(() => {
+    return () => {
+      if (newPostImagePreview) {
+        URL.revokeObjectURL(newPostImagePreview);
+      }
+    };
+  }, [newPostImagePreview]);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -95,22 +105,46 @@ const CommunityFeedPage = () => {
       const travellerId = getCurrentTravellerId();
       if (!travellerId) return;
 
-      const response = await api.post('/pst/posts', {
-        title: newPost.title,
-        text: newPost.text,
-        location: newPost.location,
-        traveller_id: travellerId,
-        stars: 5
-      });
+      const formData = new FormData();
+      formData.append('title', newPost.title);
+      formData.append('text', newPost.text);
+      formData.append('location', newPost.location);
+      formData.append('traveller_id', travellerId);
+      formData.append('stars', '5');
+
+      if (newPostImageFile) {
+        formData.append('images', newPostImageFile);
+      }
+
+      const response = await api.post('/pst/posts', formData);
       
       if (response.data.success) {
         setNewPost({ title: '', text: '', location: '' });
+        setNewPostImageFile(null);
+        setNewPostImagePreview(null);
         setShowNewPostForm(false);
         fetchPosts();
       }
     } catch (error) {
       console.error('Error creating post:', error);
     }
+  };
+
+  const handleNewPostImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+
+    if (newPostImagePreview) {
+      URL.revokeObjectURL(newPostImagePreview);
+    }
+
+    if (!file) {
+      setNewPostImageFile(null);
+      setNewPostImagePreview(null);
+      return;
+    }
+
+    setNewPostImageFile(file);
+    setNewPostImagePreview(URL.createObjectURL(file));
   };
 
   const handleLike = async (postId: number) => {
@@ -336,6 +370,38 @@ const CommunityFeedPage = () => {
                     rows={4}
                     required
                   />
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Add an image (optional)</label>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={handleNewPostImageChange}
+                      className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                    />
+
+                    {newPostImagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={newPostImagePreview}
+                          alt="Selected"
+                          className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newPostImagePreview) URL.revokeObjectURL(newPostImagePreview);
+                            setNewPostImageFile(null);
+                            setNewPostImagePreview(null);
+                          }}
+                          className="absolute top-2 right-2 px-3 py-1.5 rounded-md bg-white/90 border border-gray-200 text-gray-700 hover:bg-white"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+
                   <div className="flex space-x-3">
                     <button
                       type="submit"
@@ -345,7 +411,12 @@ const CommunityFeedPage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowNewPostForm(false)}
+                      onClick={() => {
+                        setShowNewPostForm(false);
+                        if (newPostImagePreview) URL.revokeObjectURL(newPostImagePreview);
+                        setNewPostImageFile(null);
+                        setNewPostImagePreview(null);
+                      }}
                       className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                     >
                       Cancel
