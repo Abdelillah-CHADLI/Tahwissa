@@ -88,8 +88,11 @@ export function AgencyBookingPage() {
             setSelectedBooking(null);
         } catch (err) {
             const msg = getApiErrorMessage(err);
+
             if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
-                setError('Booking confirmation isn\'t available on the backend API yet.');
+                setError('Booking confirmation endpoint not found');
+            } else if (msg.includes('405')) {
+                setError('Method not allowed - check if using correct HTTP method (PATCH)');
             } else {
                 setError(msg || 'Failed to confirm booking');
             }
@@ -97,16 +100,18 @@ export function AgencyBookingPage() {
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        const reason = prompt("Please provide a reason for cancellation (optional):");
+
         try {
             setError(null);
-            await advancedBookingService.cancelBooking(bookingId, reason || undefined);
+            await advancedBookingService.cancelBooking(bookingId);
             await fetchAgencyBookings();
             setSelectedBooking(null);
         } catch (err) {
             const msg = getApiErrorMessage(err);
             if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
-                setError('Booking cancellation isn\'t available on the backend API yet.');
+                setError('Booking cancellation endpoint not found');
+            } else if (msg.includes('405')) {
+                setError('Method not allowed - check if using correct HTTP method (PATCH)');
             } else {
                 setError(msg || 'Failed to cancel booking');
             }

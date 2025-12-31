@@ -419,4 +419,218 @@ export async function deletePost(req, res) {
   }
 }
 
+export async function deleteAccount(req, res) {
+  try {
+    const { report_id } = req.body;
+
+    if (!report_id) {
+      return res.status(400).json({
+        error: "report_id is required"
+      });
+    }
+
+    const { data: report, error: reportError } = await supabase
+      .from("accreports")
+      .select("reported_traveller, reported_guide, reported_agency")
+      .eq("report_id", report_id)
+      .single();
+
+    if (reportError || !report) {
+      console.error("Error fetching report:", reportError);
+      return res.status(404).json({
+        error: "Report not found"
+      });
+    }
+
+    let deletedAccountId = null;
+    let accountType = null;
+
+    if (report.reported_traveller) {
+      accountType = "traveller";
+      deletedAccountId = report.reported_traveller;
+
+      const { error: deleteTravellerError } = await supabase
+        .from("travellers")
+        .delete()
+        .eq("traveller_id", deletedAccountId);
+
+      if (deleteTravellerError) {
+        console.error("Error deleting traveller:", deleteTravellerError);
+        return res.status(500).json({
+          error: "Failed to delete traveller account"
+        });
+      }
+
+      const { error: deleteUserError } = await supabase
+        .from("users")
+        .delete()
+        .eq("user_id", deletedAccountId);
+
+      if (deleteUserError) {
+        console.error("Error deleting user:", deleteUserError);
+        return res.status(500).json({
+          error: "Failed to delete user account"
+        });
+      }
+
+    } else if (report.reported_guide) {
+      accountType = "guide";
+      deletedAccountId = report.reported_guide;
+
+      const { error: deleteGuideError } = await supabase
+        .from("guides")
+        .delete()
+        .eq("guide_id", deletedAccountId);
+
+      if (deleteGuideError) {
+        console.error("Error deleting guide:", deleteGuideError);
+        return res.status(500).json({
+          error: "Failed to delete guide account"
+        });
+      }
+
+      const { error: deleteUserError } = await supabase
+        .from("users")
+        .delete()
+        .eq("user_id", deletedAccountId);
+
+      if (deleteUserError) {
+        console.error("Error deleting user:", deleteUserError);
+        return res.status(500).json({
+          error: "Failed to delete user account"
+        });
+      }
+
+    } else if (report.reported_agency) {
+      accountType = "agency";
+      deletedAccountId = report.reported_agency;
+
+      const { data: employees, error: employeesError } = await supabase
+        .from("agency_employees")
+        .select("employee_id")
+        .eq("agency_id", deletedAccountId);
+
+      if (!employeesError && employees) {
+        const { error: deleteEmployeesError } = await supabase
+          .from("agency_employees")
+          .delete()
+          .eq("agency_id", deletedAccountId);
+
+        if (deleteEmployeesError) {
+          console.warn("Warning: Failed to delete agency employees:", deleteEmployeesError);
+        }
+
+        for (const emp of employees) {
+          const { error: deleteEmpUserError } = await supabase
+            .from("users")
+            .delete()
+            .eq("user_id", emp.employee_id);
+
+          if (deleteEmpUserError) {
+            console.warn(`Warning: Failed to delete employee ${emp.employee_id}:`, deleteEmpUserError);
+          }
+        }
+      }
+
+      const { error: deleteAgencyError } = await supabase
+        .from("agencies")
+        .delete()
+        .eq("agency_id", deletedAccountId);
+
+      if (deleteAgencyError) {
+        console.error("Error deleting agency:", deleteAgencyError);
+        return res.status(500).json({
+          error: "Failed to delete agency account"
+        });
+      }
+
+    } else {
+      return res.status(400).json({
+        error: "No valid reported account found in the report"
+      });
+    }
+
+    const { error: updateError } = await supabase
+      .from("accreports")
+      .update({ status: "Resolved" })
+      .eq("report_id", report_id);
+
+    if (updateError) {
+      console.error("Error updating report status:", updateError);
+      return res.status(500).json({
+        error: "Failed to update report status"
+      });
+    }
+
+    return res.status(200).json({
+      message: `${accountType} account deleted and report marked as resolved`,
+      accountType,
+      deletedAccountId,
+      report_id
+    });
+
+  } catch (err) {
+    console.error("Server error:", err);
+    return res.status(500).json({
+      error: "Internal server error"
+    });
+  }
+}
+
+export async function dismissReport(req, res) {
+  try {
+    const { report_id, report_type } = req.body;
+
+    if (!report_id || !report_type) {
+      return res.status(400).json({
+        error: "report_id and report_type are required"
+      });
+    }
+
+    if (!["post", "account"].includes(report_type.toLowerCase())) {
+      return res.status(400).json({
+        error: "report_type must be either 'post' or 'account'"
+      });
+    }
+
+    let tableName = "";
+
+    if (report_type.toLowerCase() === "post") {
+      tableName = "postreports";
+    } else {
+      tableName = "accreports";
+    }
+
+    const { data, error } = await supabase
+      .from(tableName)
+      .update({ status: "Dismissed" })
+      .eq("report_id", report_id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase error dismissing report:", error);
+      return res.status(500).json({
+        error: "Failed to dismiss report"
+      });
+    }
+
+    if (!data) {
+      return res.status(404).json({
+        error: "Report not found"
+      });
+    }
+
+    return res.status(200).json({
+      message: `${report_type} report dismissed successfully`,
+      dismissedReport: data
+    });
+
+  } catch (err) {
+    console.error("Server error:", err);
+    return res.status(500).json({
+      error: "Internal server error"
+    });
+  }
+}
 

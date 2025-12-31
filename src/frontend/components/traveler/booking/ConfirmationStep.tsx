@@ -1,13 +1,10 @@
-import { User, Mail, Phone, Calendar, Users, MessageCircle, CheckCircle } from "lucide-react";
+import { User, Mail, Phone, CheckCircle } from "lucide-react";
 
 interface FormData {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
-    numberOfPeople: string;
-    date: string;
-    specialRequests: string;
 }
 
 interface ConfirmationStepProps {
@@ -39,25 +36,7 @@ export function ConfirmationStep({ formData, onBack, onConfirm }: ConfirmationSt
                 </div>
             </div>
 
-            <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Booking Information</h3>
-                <div className="space-y-2 text-gray-700">
-                    <p className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-500" />
-                        Date: {formData.date}
-                    </p>
-                    <p className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-500" />
-                        People: {formData.numberOfPeople}
-                    </p>
-                    {formData.specialRequests && (
-                        <p className="flex items-center gap-2">
-                            <MessageCircle className="w-4 h-4 text-gray-500" />
-                            Requests: {formData.specialRequests}
-                        </p>
-                    )}
-                </div>
-            </div>
+
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center gap-2">

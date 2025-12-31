@@ -9,17 +9,18 @@ import {
     Trash2,
     XCircle,
     AlertTriangle,
+    Loader2
 } from "lucide-react";
-import { deletePost } from '../../services/adminService';
+import { deletePost, deleteAccount, dismissReport } from '../../services/adminService';
 
 export function ReportDetails() {
     const { type } = useParams<{ type: string }>();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const [actionType, setActionType] = useState<'delete' | 'dismiss' | null>(null);
     const [report, setReport] = useState<any>(null);
 
     useEffect(() => {
-
         const storedData = sessionStorage.getItem('reportDetail');
         if (storedData) {
             setReport(JSON.parse(storedData));
@@ -34,35 +35,91 @@ export function ReportDetails() {
         }
 
         setLoading(true);
+        setActionType('delete');
+
         try {
+            console.log(' Deleting post for report:', report.reportId);
+
             await deletePost(report.reportId);
             alert('Post deleted successfully!');
-            navigate('/admin/reports');
+
+            sessionStorage.removeItem('reportDetail');
+
+            navigate('/admin/reports', { replace: true });
+
         } catch (error) {
-            console.error('Error deleting post:', error);
-            alert('Failed to delete post');
+            console.error(' Error deleting post:', error);
+            alert('Failed to delete post. Please try again.');
         } finally {
             setLoading(false);
+            setActionType(null);
         }
     };
 
     const handleDeleteAccount = async () => {
-        //  delete account functionality to be implemented
-        alert('Delete account functionality not yet implemented');
-        navigate('/admin/reports');
+        if (!report || type !== 'account') return;
+
+        if (!confirm('Are you sure you want to delete this account? This action cannot be undone and will permanently remove all associated data.')) {
+            return;
+        }
+
+        setLoading(true);
+        setActionType('delete');
+
+        try {
+            console.log('Deleting account for report:', report.reportId);
+
+            await deleteAccount(report.reportId);
+            alert('Account deleted successfully!');
+
+            sessionStorage.removeItem('reportDetail');
+
+            navigate('/admin/reports', { replace: true });
+
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            alert('Failed to delete account. Please try again.');
+        } finally {
+            setLoading(false);
+            setActionType(null);
+        }
     };
 
+    const handleDismiss = async () => {
+        if (!report || !type) return;
 
-    const handleIgnore = () => {
-        // ignore functionality to be implemented
-        alert('Ignore report functionality not yet implemented');
-        navigate('/admin/reports');
+        if (!confirm('Are you sure you want to dismiss this report?')) {
+            return;
+        }
+
+        setLoading(true);
+        setActionType('dismiss');
+
+        try {
+            console.log(' Dismissing report:', report.reportId, 'Type:', type);
+
+            await dismissReport(report.reportId, type as 'post' | 'account');
+            alert('Report dismissed successfully!');
+
+            sessionStorage.removeItem('reportDetail');
+            navigate('/admin/reports', { replace: true });
+
+        } catch (error) {
+            console.error('Error dismissing report:', error);
+            alert('Failed to dismiss report. Please try again.');
+        } finally {
+            setLoading(false);
+            setActionType(null);
+        }
     };
 
     if (!report) {
         return (
-            <div className="p-6">
-                <p className="text-gray-600">Loading...</p>
+            <div className="p-6 flex items-center justify-center min-h-screen">
+                <div className="flex items-center gap-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
+                    <p className="text-gray-600">Loading report details...</p>
+                </div>
             </div>
         );
     }
@@ -88,6 +145,7 @@ export function ReportDetails() {
                     <button
                         onClick={() => navigate('/admin/reports')}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        disabled={loading}
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </button>
@@ -98,37 +156,49 @@ export function ReportDetails() {
                 </div>
                 <div className="flex gap-3">
                     <button
-                        onClick={handleIgnore}
+                        onClick={handleDismiss}
                         disabled={loading}
-                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium disabled:opacity-50"
+                        className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <XCircle className="w-5 h-5" />
-                        Ignore Report
+                        {loading && actionType === 'dismiss' ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <XCircle className="w-5 h-5" />
+                        )}
+                        {loading && actionType === 'dismiss' ? 'Dismissing...' : 'Dismiss Report'}
                     </button>
                     {type === 'post' && (
                         <button
                             onClick={handleDeletePost}
                             disabled={loading}
-                            className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50"
+                            className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Trash2 className="w-5 h-5" />
-                            Delete Post
+                            {loading && actionType === 'delete' ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <Trash2 className="w-5 h-5" />
+                            )}
+                            {loading && actionType === 'delete' ? 'Deleting...' : 'Delete Post'}
                         </button>
                     )}
                     {type === 'account' && (
                         <button
                             onClick={handleDeleteAccount}
                             disabled={loading}
-                            className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50"
+                            className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Trash2 className="w-5 h-5" />
-                            Delete Account
+                            {loading && actionType === 'delete' ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                            ) : (
+                                <Trash2 className="w-5 h-5" />
+                            )}
+                            {loading && actionType === 'delete' ? 'Deleting...' : 'Delete Account'}
                         </button>
                     )}
                 </div>
             </div>
 
-            {/* Report Informations */}
+            {/* Report Information */}
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-6 mb-6">
                 <div className="flex items-center gap-2 mb-4">
                     <AlertTriangle className="w-5 h-5 text-orange-600" />
@@ -229,7 +299,7 @@ export function ReportDetails() {
                         <h3 className="font-semibold text-gray-900 mb-2">{report.postTitle}</h3>
                         <p className="text-sm text-gray-600 mb-4">Posted by {report.reportedName}</p>
                         <p className="text-gray-900 leading-relaxed">
-                            {report.text || ''}
+                            {report.text || 'No content available'}
                         </p>
                     </div>
                 </div>

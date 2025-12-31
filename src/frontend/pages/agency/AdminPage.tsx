@@ -50,14 +50,22 @@ export function AdminPage() {
             const response = await api.get(`/manager/employeesOp/${agencyId}`);
             const result = response.data;
 
-            // Transform backend data to frontend format
+            // Transform backend data to frontend format, providing defaults for all fields
             const transformedEmployees: Employee[] = result.employees.map((emp: BackendEmployee) => ({
                 id: emp.employee_id,
                 name: emp.users.email.split('@')[0],
                 email: emp.users.email,
                 role: emp.users.role,
                 phone: "Not available",
-                status: "active"
+                status: "active",
+                specialization: [],
+                languages: [],
+                location: "Not available",
+                joinDate: new Date().toISOString(),
+                rating: 0,
+                toursCompleted: 0,
+                avatar: "",
+                experience: "Not available"
             }));
 
             setEmployees(transformedEmployees);

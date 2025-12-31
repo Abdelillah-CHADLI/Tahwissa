@@ -250,18 +250,32 @@ export async function approveVerification(req, res) {
     }
 
     let tableName = "";
-    let ida = ""
+    let ida = "";
+    let verificationTable = "";
+
 
     if (acc_type.toLowerCase() === "agency") {
       tableName = "agencies";
       ida = "agency_id";
+      verificationTable = "agencyverification";
     } else if (acc_type.toLowerCase() === "guide") {
       tableName = "guides";
       ida = "guide_id";
+      verificationTable = "guideverification";
     } else {
       return res.status(400).json({ error: "acc_type must be either 'agency' or 'guide'" });
     }
 
+
+    const { error: verificationError } = await supabase
+      .from(verificationTable)
+      .update({ status: "Approved" })
+      .eq(ida, id);
+
+    if (verificationError) {
+      console.error("Supabase error updating verification status:", verificationError);
+      return res.status(500).json({ error: "Failed to update verification status" });
+    }
 
     const { data, error } = await supabase
       .from(tableName)
@@ -282,5 +296,70 @@ export async function approveVerification(req, res) {
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+export async function rejectVerification(req, res) {
+  try {
+    const { acc_type, id } = req.body;
+
+    if (!acc_type || !id) {
+      return res.status(400).json({
+        error: "acc_type and id are required"
+      });
+    }
+
+    let tableName = "";
+    let ida = "";
+    let verificationTable = "";
+
+    if (acc_type.toLowerCase() === "agency") {
+      tableName = "agencies";
+      ida = "agency_id";
+      verificationTable = "agencyverification";
+    } else if (acc_type.toLowerCase() === "guide") {
+      tableName = "guides";
+      ida = "guide_id";
+      verificationTable = "guideverification";
+    } else {
+      return res.status(400).json({
+        error: "acc_type must be either 'agency' or 'guide'"
+      });
+    }
+
+    const { data: verificationData, error: verificationError } = await supabase
+      .from(verificationTable)
+      .update({ status: "Rejected" })
+      .eq(ida, id)
+      .select()
+      .single();
+
+    if (verificationError) {
+      console.error("Supabase error rejecting verification:", verificationError);
+      return res.status(500).json({
+        error: "Failed to reject verification"
+      });
+    }
+
+    const { error: accountError } = await supabase
+      .from(tableName)
+      .update({ verified: false })
+      .eq(ida, id);
+
+    if (accountError) {
+      console.error("Supabase error updating account verification:", accountError);
+    }
+
+    return res.status(200).json({
+      message: `${acc_type} verification rejected successfully`,
+      rejectedVerification: verificationData
+    });
+
+  } catch (err) {
+    console.error("Server error:", err);
+    return res.status(500).json({
+      error: "Internal server error"
+    });
   }
 }

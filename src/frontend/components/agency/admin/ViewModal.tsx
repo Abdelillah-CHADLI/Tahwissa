@@ -8,7 +8,7 @@ interface ViewModalProps {
 
 export function ViewModal({ employee, onClose }: ViewModalProps) {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full">
                 <div className="p-6">
                     <div className="flex justify-between items-start mb-6">
