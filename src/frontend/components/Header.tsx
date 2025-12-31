@@ -152,9 +152,17 @@ const Header = () => {
                             <Link
                                 to={user ? ROUTES.PROFILE : ROUTES.SIGN_IN}
                                 onClick={handleProfileClick}
-                                className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] text-white rounded-full font-semibold text-xs sm:text-sm hover:bg-[#2a6970] transition-colors"
+                                className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-[#348086] text-white rounded-full font-semibold text-xs sm:text-sm hover:bg-[#2a6970] transition-colors overflow-hidden"
                             >
-                                {user ? (user.firstName?.charAt(0) || user.name?.charAt(0) || 'U') : 'TR'}
+                                {user?.profile_picture ? (
+                                    <img
+                                        src={user.profile_picture}
+                                        alt="Profile"
+                                        className="w-full h-full object-cover"
+                                    />
+                                ) : (
+                                    user ? (user.firstName?.charAt(0) || user.name?.charAt(0) || 'U') : 'TR'
+                                )}
                             </Link>
                         </motion.div>
                     </div>
@@ -238,8 +246,16 @@ const Header = () => {
                                     }}
                                     className="flex items-center space-x-3 w-full"
                                 >
-                                    <div className="flex items-center justify-center w-10 h-10 bg-[#348086] text-white rounded-full font-semibold text-sm">
-                                        {user ? (user.firstName?.charAt(0) || user.name?.charAt(0) || 'U') : 'TR'}
+                                    <div className="flex items-center justify-center w-10 h-10 bg-[#348086] text-white rounded-full font-semibold text-sm overflow-hidden">
+                                        {user?.profile_picture ? (
+                                            <img
+                                                src={user.profile_picture}
+                                                alt="Profile"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            user ? (user.firstName?.charAt(0) || user.name?.charAt(0) || 'U') : 'TR'
+                                        )}
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="font-medium text-gray-900">
