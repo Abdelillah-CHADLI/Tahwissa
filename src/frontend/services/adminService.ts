@@ -50,3 +50,26 @@ export const deletePost = async (report_id: number) => {
     const response = await api.post(`/report/deletePost`, { report_id });
     return response.data;
 };
+
+export const rejectVerification = async (acc_type: string, id: string) => {
+    const response = await api.post(`/verification/rejectVerification`, {
+        acc_type,
+        id
+    });
+    return response.data;
+};
+
+export const deleteAccount = async (report_id: number) => {
+    const response = await api.post(`/report/deleteAccount`, {
+        report_id
+    });
+    return response.data;
+};
+
+export const dismissReport = async (report_id: number, report_type: 'post' | 'account') => {
+    const response = await api.post(`/report/dismissReport`, {
+        report_id,
+        report_type
+    });
+    return response.data;
+};

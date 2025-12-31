@@ -15,9 +15,6 @@ interface FormData {
     lastName: string;
     email: string;
     phone: string;
-    numberOfPeople: string;
-    date: string;
-    specialRequests: string;
 }
 
 interface Tour {
@@ -44,9 +41,6 @@ export function BookingPage() {
         lastName: "",
         email: "",
         phone: "",
-        numberOfPeople: "1",
-        date: "",
-        specialRequests: "",
     });
 
     useEffect(() => {
@@ -61,7 +55,6 @@ export function BookingPage() {
                 setLoading(true);
                 setError(null);
 
-                // First, try to use tour data from location state
                 const stateData = location.state?.tourData;
                 if (stateData) {
                     setTour({
@@ -76,7 +69,6 @@ export function BookingPage() {
                     return;
                 }
 
-                // If no state data, fetch from API
                 const tourData = await tourService.getTourById(tourId);
                 if (tourData) {
                     setTour({
@@ -230,7 +222,6 @@ export function BookingPage() {
         );
     }
 
-    const totalPrice = tour.price * parseInt(formData.numberOfPeople || "1");
 
     if (showSuccess) {
         return (
@@ -283,11 +274,16 @@ export function BookingPage() {
                     </div>
 
                     <div className="lg:col-span-1">
-                        <BookingSummary
-                            tour={tour}
-                            formData={formData}
-                            totalPrice={totalPrice}
-                        />
+                        {tour && (
+                            <BookingSummary
+                                id={tour.id}
+                                title={tour.title}
+                                location={tour.location}
+                                duration={tour.duration}
+                                price={tour.price}
+                                image={tour.image}
+                            />
+                        )}
                     </div>
                 </div>
             </div>

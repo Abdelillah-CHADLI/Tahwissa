@@ -1,14 +1,5 @@
 import { MapPin, Clock, CheckCircle } from "lucide-react";
 
-interface FormData {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    numberOfPeople: string;
-    date: string;
-    specialRequests: string;
-}
 
 interface Tour {
     id: number;
@@ -19,13 +10,8 @@ interface Tour {
     image: string;
 }
 
-interface BookingSummaryProps {
-    tour: Tour;
-    formData: FormData;
-    totalPrice: number;
-}
 
-export function BookingSummary({ tour, formData, totalPrice }: BookingSummaryProps) {
+export function BookingSummary(tour: Tour) {
     return (
         <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Booking Summary</h2>
@@ -52,16 +38,6 @@ export function BookingSummary({ tour, formData, totalPrice }: BookingSummaryPro
                 <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Price per person</span>
                     <span>{tour.price.toLocaleString()} DZD</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Number of people</span>
-                    <span>{formData.numberOfPeople}</span>
-                </div>
-                <div className="border-t border-gray-200 pt-3">
-                    <div className="flex justify-between font-semibold">
-                        <span>Total</span>
-                        <span className="text-blue-600">{totalPrice.toLocaleString()} DZD</span>
-                    </div>
                 </div>
             </div>
 
