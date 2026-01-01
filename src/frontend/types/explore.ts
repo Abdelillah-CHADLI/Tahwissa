@@ -26,6 +26,8 @@ export interface Tour {
   groupSize: string;
   guide_id?: string;
   agency_id?: string;
+  start_date?: string;
+  isEnded?: boolean;
   guide?: {
     name: string;
     rating: number;
