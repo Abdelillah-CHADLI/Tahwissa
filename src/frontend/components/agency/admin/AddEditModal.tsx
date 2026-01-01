@@ -10,25 +10,36 @@ interface AddEditModalProps {
 
 export function AddEditModal({ employee, isOpen, onClose, onSave }: AddEditModalProps) {
     const [formData, setFormData] = useState({
-        name: employee?.name || "",
-        email: employee?.email || "",
+        full_name: employee?.full_name || "",
+        email: employee?.users.email || "",
         phone: employee?.phone || "",
-        role: employee?.role || "",
+        role: employee?.role || employee?.users.role || "",
         location: employee?.location || "",
         experience: employee?.experience || "",
         status: employee?.status || "active",
-        specialization: employee?.specialization?.join(", ") || "",
-        languages: employee?.languages?.join(", ") || "",
+        specialization: employee?.specialization ? (Array.isArray(employee.specialization) ? employee.specialization.join(", ") : employee.specialization) : "",
+        languages: employee?.languages ? (Array.isArray(employee.languages) ? employee.languages.join(", ") : employee.languages) : "",
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         onSave({
-            ...formData,
-            specialization: formData.specialization.split(",").map((s: string) => s.trim()),
+            employee_id: employee?.employee_id || '',
+            full_name: formData.full_name,
+            phone: formData.phone,
+            location: formData.location,
+            experience: formData.experience,
             languages: formData.languages.split(",").map((l: string) => l.trim()),
+            role: formData.role,
+            specialization: formData.specialization.split(",").map((s: string) => s.trim()),
+            users: {
+                role: formData.role,
+                email: formData.email,
+            },
+            status: formData.status,
             rating: employee?.rating || 4.5,
             toursCompleted: employee?.toursCompleted || 0,
+            avatar: employee?.avatar || '',
             joinDate: employee?.joinDate || new Date().toISOString().split("T")[0],
         });
     };
@@ -49,8 +60,8 @@ export function AddEditModal({ employee, isOpen, onClose, onSave }: AddEditModal
                                 label="Full Name"
                                 type="text"
                                 required
-                                value={formData.name}
-                                onChange={(value: string) => setFormData({ ...formData, name: value })}
+                                value={formData.full_name}
+                                onChange={(value: string) => setFormData({ ...formData, full_name: value })}
                             />
 
                             <FormField
@@ -69,17 +80,12 @@ export function AddEditModal({ employee, isOpen, onClose, onSave }: AddEditModal
                                 onChange={(value: string) => setFormData({ ...formData, phone: value })}
                             />
 
-                            <SelectField
+                            <FormField
                                 label="Role"
+                                type="text"
+                                placeholder="e.g., Tour Guide, Driver, Coordinator"
                                 value={formData.role}
                                 onChange={(value: string) => setFormData({ ...formData, role: value })}
-                                options={[
-                                    { value: "", label: "Select Role" },
-                                    { value: "Tour Guide", label: "Tour Guide" },
-                                    { value: "Senior Tour Guide", label: "Senior Tour Guide" },
-                                    { value: "Adventure Guide", label: "Adventure Guide" },
-                                    { value: "Cultural Guide", label: "Cultural Guide" },
-                                ]}
                             />
 
                             <FormField

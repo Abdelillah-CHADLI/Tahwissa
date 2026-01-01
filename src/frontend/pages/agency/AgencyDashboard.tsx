@@ -5,11 +5,13 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/api';
 import { ROUTES } from '../../utils/routes';
 import { getCurrentAgencyUuid } from '../../utils/session';
+import { isGuide, getContextText } from '../../utils/userContext';
 
 export function AgencyDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
     const [agencyProfile, setAgencyProfile] = useState<any>({});
+    const [isManager, setIsManager] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -37,6 +39,18 @@ export function AgencyDashboard() {
                         verified: response.data.verified || false,
                         ...response.data
                     });
+
+                    // Check if current user is the manager
+                    const userStr = localStorage.getItem('user');
+                    if (userStr) {
+                        try {
+                            const user = JSON.parse(userStr);
+                            const userId = user.id || user.userId;
+                            setIsManager(response.data.manager_id === userId);
+                        } catch {
+                            setIsManager(false);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load agency profile:', error);
@@ -47,12 +61,12 @@ export function AgencyDashboard() {
 
     const menuItems = [
         { path: "/agency", label: "Dashboard", icon: LayoutDashboard, end: true },
-        { path: "/agency/profile", label: "Agency Profile", icon: Building2 },
+        { path: "/agency/profile", label: getContextText('Agency Profile', 'Guide Profile'), icon: Building2 },
         { path: "/agency/tour-programs", label: "Tour Programs", icon: Package },
         { path: "/agency/bookings", label: "Bookings", icon: Calendar },
         { path: "/agency/reviews", label: "Reviews & Ratings", icon: Star },
         { path: "/agency/settings", label: "Settings", icon: Settings },
-        { path: "/agency/admin", label: "Admin Panel", icon: Shield },
+        ...(isManager && !isGuide() ? [{ path: "/agency/admin", label: "Admin Panel", icon: Shield }] : []),
     ];
 
     const currentMenuItem = [...menuItems, { path: "/agency/premium", label: "Premium Offers", icon: Crown }].find(item => item.path === location.pathname) || menuItems[0];
@@ -77,7 +91,7 @@ export function AgencyDashboard() {
                     <button className='hover:bg-gray-100 p-1 rounded-md' onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
                         {isSidebarOpen ? <X className='w-5 h-5 text-gray-600' /> : <Menu className='w-5 h-5 text-gray-600' />}
                     </button>
-                    <h2 className="font-semibold text-gray-800">Agency Dashboard</h2>
+                    <h2 className="font-semibold text-gray-800">{getContextText('Agency Dashboard', 'Guide Dashboard')}</h2>
                 </div>
                 <div className="flex items-center gap-2">
                     <button className='hover:bg-green-50 p-2 rounded-full relative transition-colors'>
@@ -112,8 +126,8 @@ export function AgencyDashboard() {
                                 </div>
                             )}
                             <div>
-                                <h1 className="font-bold text-gray-900 leading-tight">{agencyProfile.name || "Explore Algeria Tours"}</h1>
-                                <p className="text-xs text-gray-500 mt-0.5">Travel Agency</p>
+                                <h1 className="font-bold text-gray-900 leading-tight">{agencyProfile.name || getContextText('Explore Algeria Tours', 'Tour Guide')}</h1>
+                                <p className="text-xs text-gray-500 mt-0.5">{getContextText('Travel Agency', 'Tour Guide')}</p>
                                 <div className="flex items-center gap-2 mt-2">
                                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-medium border border-green-100">
                                         <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>

@@ -1,4 +1,4 @@
-import { Users, MapPin, Star, MoreVertical, Edit, Trash2, Eye } from "lucide-react";
+import { Users, MoreVertical, Edit, Trash2, Eye } from "lucide-react";
 import type { Employee } from "../../../types/employee";
 import { useState } from "react";
 
@@ -15,7 +15,7 @@ export function EmployeeList({ employees, onView, onEdit, onToggleStatus, onDele
         <div className="space-y-4">
             {employees.map((employee) => (
                 <EmployeeCard
-                    key={employee.id}
+                    key={employee.employee_id}
                     employee={employee}
                     onView={onView}
                     onEdit={onEdit}
@@ -42,21 +42,25 @@ function EmployeeCard({ employee, onView, onEdit, onToggleStatus, onDelete }: an
             <div className="flex justify-between items-start">
                 <div className="flex gap-3">
                     <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                        {employee.name.split(" ").map((n: string) => n[0]).join("")}
+                        {(employee.full_name || employee.users.email.split("@")[0] || "?")
+                            .split(" ")
+                            .map((n: string) => n[0])
+                            .join("")}
                     </div>
                     <div>
-                        <h3 className="font-semibold">{employee.name}</h3>
-                        <p className="text-gray-600 text-sm">{employee.role}</p>
-                        <p className="text-gray-500 text-sm">{employee.email}</p>
+                        <h3 className="font-semibold">{employee.full_name || employee.users.email.split("@")[0]}</h3>
+                        <p className="text-gray-600 text-sm">{employee.role || employee.users.role}</p>
+                        <p className="text-gray-500 text-sm">{employee.users.email}</p>
+
                     </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-sm ${employee.status === "active"
+                    <span className={`px-2 py-1 rounded-full text-sm ${(employee.status || "active") === "active"
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-800"
                         }`}>
-                        {employee.status}
+                        {employee.status || "active"}
                     </span>
 
                     <div className="relative">
@@ -91,16 +95,16 @@ function EmployeeCard({ employee, onView, onEdit, onToggleStatus, onDelete }: an
                                 </button>
                                 <button
                                     onClick={() => {
-                                        onToggleStatus(employee.id);
+                                        onToggleStatus(employee.employee_id);
                                         setShowMenu(false);
                                     }}
                                     className="w-full text-left px-4 py-2 hover:bg-gray-100"
                                 >
-                                    {employee.status === "active" ? "Deactivate" : "Activate"}
+                                    {(employee.status || "active") === "active" ? "Deactivate" : "Activate"}
                                 </button>
                                 <button
                                     onClick={() => {
-                                        onDelete(employee.id);
+                                        onDelete(employee.employee_id);
                                         setShowMenu(false);
                                     }}
                                     className="w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600 flex items-center gap-2"
@@ -114,17 +118,7 @@ function EmployeeCard({ employee, onView, onEdit, onToggleStatus, onDelete }: an
                 </div>
             </div>
 
-            <div className="mt-3 flex gap-4 text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {employee.location}
-                </div>
-                <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-500" />
-                    {employee.rating}
-                </div>
-                <div>{employee.toursCompleted} tours</div>
-            </div>
+
         </div>
     );
 }
