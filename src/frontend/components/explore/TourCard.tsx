@@ -11,9 +11,11 @@ interface TourCardProps {
 }
 
 const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
-  // Use backend field names with fallbacks
   const tourTitle = tour.tour_title || tour.title;
   const displayPrice = tour.price?.toLocaleString() || "0";
+
+  // Check if tour has ended (start_date in the past)
+  const isEnded = tour.isEnded || (tour.start_date ? new Date(tour.start_date) < new Date(new Date().toDateString()) : false);
 
   // Determine if it's from agency or guide
   const providerType = tour.agency_id
@@ -33,26 +35,34 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.1 }}
       whileHover={{ y: -4, scale: 1.01 }}
-      className="bg-white rounded-lg xs:rounded-xl shadow-sm hover:shadow-md overflow-hidden cursor-pointer border border-gray-100"
+      className={`bg-white rounded-lg xs:rounded-xl shadow-sm hover:shadow-md overflow-hidden cursor-pointer border border-gray-100 ${isEnded ? 'opacity-75' : ''}`}
     >
       <div className="relative h-40 xs:h-48 overflow-hidden">
         <motion.img
           src={tour.image}
           alt={tourTitle}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover ${isEnded ? 'grayscale-[30%]' : ''}`}
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.6 }}
         />
 
-        {/* Provider Type Badge - Top Left */}
-        <div className="absolute top-2 xs:top-3 left-2 xs:left-3 flex gap-1">
-          <span className="px-2 xs:px-3 py-1 bg-[#348086] text-white text-xs font-medium rounded-full flex items-center gap-1">
-            {providerIcon}
-            {providerType}
-          </span>
-        </div>
+        
+        {isEnded ? (
+          <div className="absolute top-2 xs:top-3 left-2 xs:left-3 flex gap-1">
+            <span className="px-2 xs:px-3 py-1 bg-red-600 text-white text-xs font-medium rounded-full flex items-center gap-1">
+              <Calendar className="w-3 h-3" />
+              Ended
+            </span>
+          </div>
+        ) : (
+          <div className="absolute top-2 xs:top-3 left-2 xs:left-3 flex gap-1">
+            <span className="px-2 xs:px-3 py-1 bg-[#348086] text-white text-xs font-medium rounded-full flex items-center gap-1">
+              {providerIcon}
+              {providerType}
+            </span>
+          </div>
+        )}
 
-        {/* Category Badge - Top Right */}
         <div className="absolute top-2 xs:top-3 right-2 xs:right-3">
           <span className="px-2 xs:px-3 py-1 bg-[#cbf492] text-gray-900 text-xs font-medium rounded-full">
             {tour.category}

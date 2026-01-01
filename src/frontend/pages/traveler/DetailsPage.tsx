@@ -386,6 +386,10 @@ const DetailsPage = () => {
     const imageUrls = getTourImageUrls(tourData);
     const coverImage = imageUrls[0] || 'https://images.unsplash.com/photo-1501785888041-af3ef285b470';
 
+    // Check if tour has ended (start_date in the past)
+    const startDate = tourData.start_date as string | undefined;
+    const isEnded = startDate ? new Date(startDate) < new Date(new Date().toDateString()) : false;
+
     const inclusionsMerged: TourInclusions = {
         included: parseStringArray((tourData as any).tour_included),
         notIncluded: parseStringArray((tourData as any).tour_not_included),
@@ -489,6 +493,17 @@ const DetailsPage = () => {
                 <div className="space-y-4 h-fit sticky top-20">
                     <div className="bg-white border border-gray-200 rounded-xl shadow-md p-4 sm:p-6">
                         <h2 className="text-sm font-semibold mb-4">Book This Tour</h2>
+                        
+                        {isEnded && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+                                <div>
+                                    <p className="text-red-800 font-medium text-sm">This tour has ended</p>
+                                    <p className="text-red-600 text-xs">The start date for this tour has passed. Bookings are no longer available.</p>
+                                </div>
+                            </div>
+                        )}
+                        
                         <div className="space-y-4">
                             <div className="flex flex-row gap-2">
                                 <div className="text-3xl font-bold text-[#4d8b8b]">{Number(tourData.price || 0)} DZD</div>
@@ -508,17 +523,37 @@ const DetailsPage = () => {
                                 <div className="text-sm font-semibold text-gray-900">{String(tourData.group_size || tourData.groupSize || 'N/A')}</div>
                             </div>
                         </div>
+                        {startDate && (
+                            <div className="space-y-4 py-2">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-sm text-gray-600">Start Date</div>
+                                    <div className={`text-sm font-semibold ${isEnded ? 'text-red-600' : 'text-gray-900'}`}>
+                                        {new Date(startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                        {isEnded && ' (Ended)'}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                         <div className="bg-gray-300 h-px my-4"></div>
 
                         <button
                             onClick={handleBookNow}
-                            disabled={bookingLoading}
-                            className="w-full bg-[#4d8b8b] text-white px-4 py-3 rounded-lg font-semibold hover:bg-[#274345] transition-colors flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={bookingLoading || isEnded}
+                            className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                                isEnded 
+                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                                    : 'bg-[#4d8b8b] text-white hover:bg-[#274345]'
+                            }`}
                         >
                             {bookingLoading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                     Booking...
+                                </>
+                            ) : isEnded ? (
+                                <>
+                                    <XCircle className="w-5 h-5 mr-2" />
+                                    Tour Ended
                                 </>
                             ) : (
                                 <>
