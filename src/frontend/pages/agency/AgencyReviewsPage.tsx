@@ -177,23 +177,28 @@ export function AgencyReviewsPage() {
                 description="Manage customer feedback and tour ratings"
             />
 
-            {error && (
-                <div className={`${reviews.length > 0 ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'} border rounded-lg p-4 flex items-start gap-3`}>
-                    <AlertCircle className={`w-5 h-5 ${reviews.length > 0 ? 'text-yellow-600' : 'text-red-600'} shrink-0 mt-0.5`} />
+            {error && reviews.length > 0 ? (
+                <div className="bg-yellow-50 border-yellow-200 border rounded-lg p-4 flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
                     <div className="flex-1">
-                        <div className={`${reviews.length > 0 ? 'text-yellow-800' : 'text-red-800'} font-semibold`}>
-                            {reviews.length > 0 ? 'Notice' : 'No Reviews Found'}
+                        <div className="text-yellow-800 font-semibold">
+                            Notice
                         </div>
-                        <div className={`${reviews.length > 0 ? 'text-yellow-700' : 'text-red-700'} mt-1`}>{error}</div>
+                        <div className="text-yellow-700 mt-1">{error}</div>
                     </div>
                     <button
                         onClick={fetchReviews}
-                        className={`px-4 py-2 ${reviews.length > 0 ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded text-sm transition-colors`}
+                        className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm transition-colors"
                     >
                         Try Again
                     </button>
                 </div>
-            )}
+            ) : reviews.length === 0 && !error ? (
+                <div className="bg-gray-50 border-gray-200 border rounded-lg p-4 text-center">
+                    <div className="text-gray-600">No reviews yet for this tour.</div>
+                    <div className="text-gray-500 text-sm mt-1">Be the first to leave a review!</div>
+                </div>
+            ) : null}
 
             {reviews.length > 0 && (
                 <div className="bg-white rounded-lg shadow p-6">
