@@ -70,6 +70,9 @@ export const useTours = (): UseToursReturn => {
       ) / 10;
     }
 
+    const startDate = backendTour.start_date;
+    const isEnded = startDate ? new Date(startDate) < new Date(new Date().toDateString()) : false;
+
     return {
       id: backendTour.tour_id,
       tour_id: backendTour.tour_id,
@@ -92,6 +95,8 @@ export const useTours = (): UseToursReturn => {
         : "Flexible",
       guide_id: backendTour.guide_id,
       agency_id: backendTour.agency_id,
+      start_date: backendTour.start_date,
+      isEnded,
       guide: backendTour.guides
         ? {
             name: backendTour.guides.guide_name,
@@ -149,10 +154,10 @@ export const useTours = (): UseToursReturn => {
       }
 
       const convertedTours = backendTours.map(convertBackendTourToFrontend);
+      
+  
       setTours(convertedTours);
       
-      // For search results, we typically don't have pagination
-      // For initial load without filters, we can load more
       const shouldHaveMore = Object.keys(searchParams).length === 0 && backendTours.length >= 20;
       setHasMore(shouldHaveMore);
       setCurrentPage(1);
