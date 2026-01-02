@@ -56,16 +56,20 @@ export default function SignInPage() {
         const user = response.user;
 
         // ROUTING LOGIC
-          if (user.userType === "agency" || user.userType === "guide") {
+        if (user.userType === "agency" || user.userType === "guide") {
           window.location.href = "/agency";
         } else {
-          navigate(ROUTES.HOME, {
-            state: {
-              profileId: user.profileId,
-              profileType: "traveller",
-              userId: user.userId,
-            },
-          });
+          if (user.userType == "admin") {
+            window.location.href = "/admin";
+          } else {
+            navigate(ROUTES.HOME, {
+              state: {
+                profileId: user.profileId,
+                profileType: "traveller",
+                userId: user.userId,
+              },
+            });
+          }
         }
       } else {
         setError(response.message || "Login failed");
@@ -83,36 +87,44 @@ export default function SignInPage() {
     try {
       const decoded = jwtDecode(credentialResponse.credential);
       const googleEmail = (decoded as any)?.email;
-      if (!googleEmail) throw new Error('Google login did not return an email.');
+      if (!googleEmail)
+        throw new Error("Google login did not return an email.");
 
       const response = await api.get("/auth/google", {
         params: { email: googleEmail },
       });
 
       const { user_id, role } = response.data;
-      if (!user_id || !role) throw new Error('Invalid Google auth response.');
+      if (!user_id || !role) throw new Error("Invalid Google auth response.");
 
       // Store minimal user shape expected by the app
       const googleUser = {
         id: user_id,
         email: googleEmail,
-        userType: String(role).toLowerCase().includes('agency') || String(role).toLowerCase().includes('employee')
-          ? 'agency'
-          : String(role).toLowerCase().includes('guide')
-            ? 'guide'
-            : 'traveller',
+        userType:
+          String(role).toLowerCase().includes("agency") ||
+          String(role).toLowerCase().includes("employee")
+            ? "agency"
+            : String(role).toLowerCase().includes("guide")
+            ? "guide"
+            : "traveller",
         profileId: user_id,
-        profileType: String(role).toLowerCase().includes('agency') || String(role).toLowerCase().includes('employee')
-          ? 'agency'
-          : String(role).toLowerCase().includes('guide')
-            ? 'guide'
-            : 'traveller',
+        profileType:
+          String(role).toLowerCase().includes("agency") ||
+          String(role).toLowerCase().includes("employee")
+            ? "agency"
+            : String(role).toLowerCase().includes("guide")
+            ? "guide"
+            : "traveller",
         userId: user_id,
       } as any;
 
       login(googleUser);
 
-      if (googleUser.userType === "AgencyEmployee" || googleUser.userType === "Guide") {
+      if (
+        googleUser.userType === "AgencyEmployee" ||
+        googleUser.userType === "Guide"
+      ) {
         window.location.href = "/agency";
       } else {
         navigate(ROUTES.HOME, {
@@ -125,7 +137,10 @@ export default function SignInPage() {
       }
     } catch (error) {
       const err = error as any;
-      console.error("Google login error:", err?.response?.data || err?.message || err);
+      console.error(
+        "Google login error:",
+        err?.response?.data || err?.message || err
+      );
       setError("Google login failed. Please try again.");
     }
   };

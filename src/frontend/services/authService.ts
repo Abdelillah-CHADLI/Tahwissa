@@ -54,7 +54,12 @@ export const authService = {
 
       const data = loginResponse.data;
 
-      const normalizedUserType = data?.role ? normalizeUserType(data.role) : 'traveller';
+      const normalizedUserType =
+      data?.role?.toLowerCase() === 'admin'
+        ? 'admin'
+        : data?.role
+          ? normalizeUserType(data.role)
+          : 'traveller';
       const userId = String(data.id);
       const agencyId = data?.agencyId ? String(data.agencyId) : undefined;
       const agencyName = data?.agencyName ? String(data.agencyName) : undefined;
