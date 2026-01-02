@@ -6,7 +6,7 @@ import { TabsNavigation } from "../../components/agency/bookings/TabsNavigation"
 import { EmptyState } from "../../components/agency/bookings/EmptyState";
 import { BookingDetails } from "../../components/agency/bookings/BookingDetails";
 import { bookingService, advancedBookingService } from "../../services/api";
-import { getCurrentAgencyUuid } from "../../utils/session";
+import { getCurrentAgencyUuid, getCurrentProfileType } from "../../utils/session";
 import { getApiErrorMessage } from "../../services/api";
 
 interface Booking {
@@ -39,13 +39,17 @@ export function AgencyBookingPage() {
             setLoading(true);
             setError(null);
 
-            const agencyId = getAgencyId();
-            if (!agencyId) {
-                setError("Agency ID not found. Please log in.");
+            const profileId = getAgencyId();
+            const profileType = getCurrentProfileType();
+
+            if (!profileId || !profileType) {
+                setError("Profile ID not found. Please log in.");
                 setBookings([]);
                 return;
             }
-            const response = await bookingService.getBookings({ agencyId });
+
+            const filterKey = profileType === 'agency' ? 'agencyId' : 'guideId';
+            const response = await bookingService.getBookings({ [filterKey]: profileId });
             const bookingsData = response.success && response.data ? response.data : response;
 
             if (Array.isArray(bookingsData)) {

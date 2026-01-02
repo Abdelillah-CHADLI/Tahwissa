@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from 'lucide-react';
 import { useState, useEffect, type ChangeEvent } from 'react';
 import api, { profileService } from '../../services/api';
-import { getCurrentAgencyUuid } from '../../utils/session';
+import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
 import { getContextText } from '../../utils/userContext';
 
 export function AgencyEditProfile() {
@@ -37,20 +37,28 @@ export function AgencyEditProfile() {
                 setError(null);
 
                 if (!agencyId) {
-                    throw new Error('No agency account found. Please sign in again.');
+                    throw new Error('No account found. Please sign in again.');
                 }
 
-                const response = await profileService.getProfile(agencyId, 'agency');
-                const profile = response.data;
+                const profileType = getCurrentProfileType();
+                if (!profileType) {
+                    throw new Error('Unable to determine profile type.');
+                }
+
+                const response = await profileService.getProfile(agencyId, profileType);
+                const profile = response.data || response.profile;
 
                 if (profile) {
+                    // Handle both agency and guide profile fields
+                    const isGuide = profileType === 'guide';
+
                     setFormData({
-                        agency_name: profile.agency_name || '',
+                        agency_name: profile.agency_name || profile.guide_name || '',
                         agency_email: profile.agency_email || profile.email || '',
                         agency_phone: profile.phone_number || '',
                         agency_website: profile.website || '',
-                        description: profile.agency_description || profile.description || '',
-                        location: profile.main_office_location || '',
+                        description: profile.agency_description || profile.description || profile.bio || '',
+                        location: profile.main_office_location || profile.location || '',
                         emergency_phone: profile.emergency_contact || '',
                         support_email: profile.support_email || '',
                         working_hours: profile.working_hours || ''
@@ -64,9 +72,9 @@ export function AgencyEditProfile() {
                         }
                     }
 
-                    // Load existing agency logo
-                    if (profile.agency_logo) {
-                        setLogoPreview(profile.agency_logo);
+                    // Load existing logo (agency_logo for agencies, guide_photo for guides)
+                    if (profile.agency_logo || profile.guide_photo) {
+                        setLogoPreview(profile.agency_logo || profile.guide_photo);
                     }
                 } else {
                     throw new Error("Profile not found");
@@ -119,7 +127,13 @@ export function AgencyEditProfile() {
             setSuccess(false);
 
             if (!agencyId) {
-                setError('No agency account found. Please sign in again.');
+                setError('No account found. Please sign in again.');
+                return;
+            }
+
+            const profileType = getCurrentProfileType();
+            if (!profileType) {
+                setError('Unable to determine profile type.');
                 return;
             }
 
@@ -130,17 +144,17 @@ export function AgencyEditProfile() {
 
                 try {
                     const logoResponse = await api.post(`/profile1/agency/${agencyId}/logo`, formData);
-                    if (logoResponse.data?.data?.agency_logo) {
-                        setLogoPreview(logoResponse.data.data.agency_logo);
+                    if (logoResponse.data?.data?.agency_logo || logoResponse.data?.data?.guide_photo) {
+                        setLogoPreview(logoResponse.data.data.agency_logo || logoResponse.data.data.guide_photo);
                         setLogoFile(null);
                     }
                 } catch (logoErr) {
                     console.error('Logo upload failed:', logoErr);
-                    // Continue with profile save even if logo upload fails
                 }
             }
 
-            const dataToSend = {
+            // Map form data based on profile type
+            const dataToSend = profileType === 'agency' ? {
                 agency_name: formData.agency_name,
                 phone_number: formData.agency_phone,
                 emergency_contact: formData.emergency_phone,
@@ -150,9 +164,19 @@ export function AgencyEditProfile() {
                 main_office_location: formData.location,
                 website: formData.agency_website,
                 agency_description: formData.description,
+            } : {
+                guide_name: formData.agency_name,
+                phone_number: formData.agency_phone,
+                emergency_contact: formData.emergency_phone,
+                support_email: formData.support_email,
+                working_hours: formData.working_hours,
+                service_locations: selectedLocations.join(', '),
+                location: formData.location,
+                website: formData.agency_website,
+                bio: formData.description,
             };
 
-            await profileService.updateProfile(agencyId, dataToSend, 'agency');
+            await profileService.updateProfile(agencyId, dataToSend, profileType);
             setSuccess(true);
 
             setTimeout(() => setSuccess(false), 3000);
@@ -239,9 +263,9 @@ export function AgencyEditProfile() {
                                     </button>
                                 </div>
                                 <div className="flex-1">
-                                    <h4 className="mb-1 font-medium text-gray-900">Agency Logo</h4>
+                                    <h4 className="mb-1 font-medium text-gray-900">{getContextText('Agency Logo', 'Profile Photo')}</h4>
                                     <p className="text-sm text-gray-500 mb-2">
-                                        Upload your agency logo (recommended size: 200x200px)
+                                        {getContextText('Upload your agency logo (recommended size: 200x200px)', 'Upload your profile photo (recommended size: 200x200px)')}
                                     </p>
                                     <button
                                         onClick={() => document.getElementById('logoUpload')?.click()}
@@ -256,11 +280,11 @@ export function AgencyEditProfile() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label htmlFor="agency_name" className="block text-sm font-medium text-gray-900">
-                                        Agency Name *
+                                        {getContextText('Agency Name', 'Guide Name')} *
                                     </label>
                                     <input
                                         id="agency_name"
-                                        placeholder="Enter agency name"
+                                        placeholder={getContextText('Enter agency name', 'Enter your name')}
                                         value={formData.agency_name}
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
@@ -322,11 +346,11 @@ export function AgencyEditProfile() {
                             {/* Description */}
                             <div className="space-y-2">
                                 <label htmlFor="description" className="block text-sm font-medium text-gray-900">
-                                    Agency Description *
+                                    {getContextText('Agency Description', 'About You')} *
                                 </label>
                                 <textarea
                                     id="description"
-                                    placeholder="Tell travelers about your agency, your experience, and what makes you special..."
+                                    placeholder={getContextText('Tell travelers about your agency, your experience, and what makes you special...', 'Tell travelers about yourself, your experience, and what makes you special...')}
                                     rows={6}
                                     value={formData.description}
                                     onChange={handleInputChange}
@@ -374,8 +398,8 @@ export function AgencyEditProfile() {
                                     key={location}
                                     onClick={() => toggleLocation(location)}
                                     className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedLocations.includes(location)
-                                            ? 'bg-teal-600 text-white hover:bg-teal-700'
-                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                        ? 'bg-teal-600 text-white hover:bg-teal-700'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                                         }`}
                                 >
                                     {location}

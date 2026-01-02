@@ -1,10 +1,11 @@
 import { TrendingUp } from 'lucide-react';
+import { getContextText } from '../../../utils/userContext';
 
 export function BenefitsSection() {
     const benefits = [
         {
             title: "3x More Visibility",
-            description: "Premium agencies get featured placement and appear at the top of search results",
+            description: getContextText('Premium agencies get featured placement and appear at the top of search results', 'Premium guides get featured placement and appear at the top of search results'),
             stat: "300%",
         },
         {

@@ -17,24 +17,34 @@ export function getStoredUser(): User | null {
   }
 }
 
-export function getCurrentAgencyId(): string | null {
-  const direct = localStorage.getItem('agencyId') || localStorage.getItem('profileId');
+export function getCurrentProfileType(): 'agency' | 'guide' | null {
+  const user = getStoredUser();
+  if (!user) return null;
+  return (user.profileType as 'agency' | 'guide') || (user.userType as 'agency' | 'guide') || null;
+}
+
+export function getCurrentProfileId(): string | null {
+  const direct = localStorage.getItem('profileId') || localStorage.getItem('agencyId');
   if (direct) return direct;
 
   const user = getStoredUser();
   if (!user) return null;
 
   return (
-    (user.agencyId as string | undefined) ||
     (user.profileId as string | undefined) ||
+    (user.agencyId as string | undefined) ||
     (user.userId as string | undefined) ||
     (user.id as string | undefined) ||
     null
   );
 }
 
+export function getCurrentAgencyId(): string | null {
+  return getCurrentProfileId();
+}
+
 export function getCurrentAgencyUuid(): string | null {
-  const candidate = getCurrentAgencyId();
+  const candidate = getCurrentProfileId();
   return isUuid(candidate) ? candidate : null;
 }
 

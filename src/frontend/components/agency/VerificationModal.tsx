@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { X, Upload, FileText, AlertCircle } from "lucide-react";
 import api from "../../services/api";
+import { getCurrentProfileType } from "../../utils/session";
+import { getContextText } from "../../utils/userContext";
 
 interface VerificationModalProps {
     isOpen: boolean;
     onClose: () => void;
     agencyId: string;
     onSuccess: () => void;
+    profileType?: 'agency' | 'guide';
 }
 
-export function VerificationModal({ isOpen, onClose, agencyId, onSuccess }: VerificationModalProps) {
+export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profileType }: VerificationModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -44,9 +47,10 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess }: Veri
         setError(null);
 
         try {
+            const accountType = profileType || getCurrentProfileType() || 'agency';
             const formData = new FormData();
             formData.append('file', file);
-            formData.append('acc_type', 'agency');
+            formData.append('acc_type', accountType);
             formData.append('id', agencyId);
 
             await api.post('/verification/verify', formData, {
@@ -75,7 +79,7 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess }: Veri
                         <div>
                             <h2 className="text-xl font-bold">Apply for Verification</h2>
                             <p className="text-gray-600 text-sm mt-1">
-                                Upload official documents to verify your agency
+                                {getContextText('Upload official documents to verify your agency', 'Upload official documents to verify your profile')}
                             </p>
                         </div>
                         <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -140,7 +144,7 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess }: Veri
 
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                             <p className="text-sm text-blue-800">
-                                <strong>Note:</strong> Verification typically takes 1-3 business days.
+                                <strong>Note:</strong> Verification typically takes 1-3 days.
                                 You'll be notified once your application is reviewed.
                             </p>
                         </div>

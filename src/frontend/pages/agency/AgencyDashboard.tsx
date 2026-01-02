@@ -4,7 +4,7 @@ import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, Lo
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/api';
 import { ROUTES } from '../../utils/routes';
-import { getCurrentAgencyUuid } from '../../utils/session';
+import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
 import { isGuide, getContextText } from '../../utils/userContext';
 
 export function AgencyDashboard() {
@@ -29,31 +29,38 @@ export function AgencyDashboard() {
         const fetchProfile = async () => {
             try {
                 const agencyId = getCurrentAgencyUuid();
+                const profileType = getCurrentProfileType();
 
-                if (!agencyId) return;
+                if (!agencyId || !profileType) return;
 
-                const response = await profileService.getProfile(agencyId, 'agency');
-                if (response.data) {
+                const response = await profileService.getProfile(agencyId, profileType);
+                if (response.data || response.profile) {
+                    const profile = response.data || response.profile;
                     setAgencyProfile({
-                        name: response.data.agency_name,
-                        verified: response.data.verified || false,
-                        ...response.data
+                        name: profile.agency_name || profile.guide_name,
+                        verified: profile.verified || false,
+                        ...profile
                     });
 
-                    // Check if current user is the manager
-                    const userStr = localStorage.getItem('user');
-                    if (userStr) {
-                        try {
-                            const user = JSON.parse(userStr);
-                            const userId = user.id || user.userId;
-                            setIsManager(response.data.manager_id === userId);
-                        } catch {
-                            setIsManager(false);
+                    // Check if current user is the manager (only for agencies)
+                    if (profileType === 'agency') {
+                        const userStr = localStorage.getItem('user');
+                        if (userStr) {
+                            try {
+                                const user = JSON.parse(userStr);
+                                const userId = user.id || user.userId;
+                                setIsManager(profile.manager_id === userId);
+                            } catch {
+                                setIsManager(false);
+                            }
                         }
+                    } else {
+                        // Guides don't have manager functionality
+                        setIsManager(false);
                     }
                 }
             } catch (error) {
-                console.error('Failed to load agency profile:', error);
+                console.error('Failed to load profile:', error);
             }
         };
         fetchProfile();
@@ -206,7 +213,7 @@ export function AgencyDashboard() {
                                     {currentMenuItem.label}
                                 </h2>
                                 <p className="text-sm text-gray-500 mt-1">
-                                    Manage your agency and tour programs
+                                    {getContextText('Manage your agency and tour programs', 'Manage your profile and tour programs')}
                                 </p>
                             </div>
                             <div className="flex items-center gap-4">

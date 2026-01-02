@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search, Filter, Loader2, AlertCircle } from 'lucide-react';
 import { TourCard } from '../../types/tourcard';
 import { bookingService, tourService } from '../../services/api';
-import { getCurrentAgencyUuid } from '../../utils/session';
+import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
 
 export function AgencyTourPrograms() {
     const navigate = useNavigate();
@@ -19,17 +19,19 @@ export function AgencyTourPrograms() {
     const fetchTours = async () => {
         try {
             setLoading(true);
-            const agencyId = getCurrentAgencyUuid();
+            const profileId = getCurrentAgencyUuid();
+            const profileType = getCurrentProfileType();
 
-            if (!agencyId) {
-                setError("Agency ID not found. Please log in.");
+            if (!profileId || !profileType) {
+                setError("Profile ID not found. Please log in.");
                 setLoading(false);
                 return;
             }
 
+            const filterKey = profileType === 'agency' ? 'agencyId' : 'guideId';
             const [toursData, bookingsResponse] = await Promise.all([
-                tourService.getAgencyTours(agencyId),
-                bookingService.getBookings({ agencyId })
+                tourService.getAgencyTours(profileId, profileType),
+                bookingService.getBookings({ [filterKey]: profileId })
             ]);
 
             const bookingsData = bookingsResponse?.success && Array.isArray(bookingsResponse?.data)

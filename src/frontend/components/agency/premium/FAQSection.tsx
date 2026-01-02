@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Mail, HelpCircle, ChevronUp, ChevronDown } from 'lucide-react';
+import { getContextText } from '../../../utils/userContext';
 
 export function FAQSection() {
     const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -7,7 +8,7 @@ export function FAQSection() {
     const faqs = [
         {
             question: "How does payment work?",
-            answer: "Payments are processed monthly. You can cancel anytime. We accept credit cards and bank transfers for Algerian agencies."
+            answer: getContextText('Payments are processed monthly. You can cancel anytime. We accept credit cards and bank transfers for Algerian agencies.', 'Payments are processed monthly. You can cancel anytime. We accept credit cards and bank transfers for Algerian tour guides.')
         },
         {
             question: "Can I change my plan later?",
@@ -65,7 +66,7 @@ export function FAQSection() {
                     </div>
 
                     <p className="text-gray-600 mb-4">
-                        Our team is here to help you choose the right plan for your business
+                        {getContextText('Our team is here to help you choose the right plan for your business', 'Our team is here to help you choose the right plan for you')}
                     </p>
 
                     <div className="flex flex-wrap gap-3 justify-center">

@@ -1,4 +1,5 @@
 import { OfferCard } from './OfferCard';
+import { getContextText } from '../../../utils/userContext';
 
 interface OffersGridProps {
     onSelectPlan: (planId: number) => void;
@@ -11,7 +12,7 @@ export function OffersGrid({ onSelectPlan, selectedPlan, onGetStarted }: OffersG
         {
             id: 1,
             name: "Starter Boost",
-            tagline: "Perfect for new agencies",
+            tagline: getContextText('Perfect for new agencies', 'Perfect for new guides'),
             price: "4,900 DZD",
             period: "/month",
             popular: false,
@@ -48,7 +49,7 @@ export function OffersGrid({ onSelectPlan, selectedPlan, onGetStarted }: OffersG
         {
             id: 3,
             name: "Enterprise",
-            tagline: "For established agencies",
+            tagline: getContextText('For established agencies', 'For established guides'),
             price: "19,900 DZD",
             period: "/month",
             popular: false,
