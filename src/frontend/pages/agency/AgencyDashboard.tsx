@@ -100,9 +100,17 @@ export function AgencyDashboard() {
                 >
                     <div className="p-6">
                         <div className="flex items-start gap-3 mb-8">
-                            <div className="bg-[#375E5E] p-2 rounded-lg shrink-0">
-                                <Building2 className="w-6 h-6 text-white" />
-                            </div>
+                            {agencyProfile.agency_logo ? (
+                                <img
+                                    src={agencyProfile.agency_logo}
+                                    alt="Agency"
+                                    className="w-10 h-10 rounded-lg object-cover shrink-0"
+                                />
+                            ) : (
+                                <div className="bg-[#375E5E] p-2 rounded-lg shrink-0">
+                                    <Building2 className="w-6 h-6 text-white" />
+                                </div>
+                            )}
                             <div>
                                 <h1 className="font-bold text-gray-900 leading-tight">{agencyProfile.name || "Explore Algeria Tours"}</h1>
                                 <p className="text-xs text-gray-500 mt-0.5">Travel Agency</p>
@@ -192,9 +200,17 @@ export function AgencyDashboard() {
                                     <Bell className="w-5 h-5 text-gray-600" />
                                     <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
                                 </button>
-                                <div className="w-8 h-8 rounded-full bg-[#375E5E] flex items-center justify-center text-white font-medium text-sm">
-                                    {agencyProfile.name ? agencyProfile.name.substring(0, 2).toUpperCase() : "AM"}
-                                </div>
+                                {agencyProfile.agency_logo ? (
+                                    <img
+                                        src={agencyProfile.agency_logo}
+                                        alt="Agency"
+                                        className="w-8 h-8 rounded-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="w-8 h-8 rounded-full bg-[#375E5E] flex items-center justify-center text-white font-medium text-sm">
+                                        {agencyProfile.name ? agencyProfile.name.substring(0, 2).toUpperCase() : "AM"}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>

@@ -35,6 +35,9 @@ export interface User {
   guideName?: string;
   agencyName?: string;
 
+  // Optional profile picture URL (traveller/guide/agency)
+  profile_picture?: string;
+
   // Profile information for routing (added)
   profileId: string;       // agencyId, guideId, or userId
   profileType: 'traveller' | 'guide' | 'agency';

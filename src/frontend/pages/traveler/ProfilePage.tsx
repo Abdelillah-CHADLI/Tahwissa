@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api, { profileService } from '../../services/api';
 import type { User } from '../../types/auth';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface TravelerProfileData {
   firstName: string;
@@ -79,6 +80,7 @@ const toUserFriendlyBackendError = (rawMessage: string): string => {
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'account'>('profile');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string>('');
@@ -257,6 +259,7 @@ const ProfilePage = () => {
               const newUrl = String(uploadResponse.data.data.profile_picture);
               setProfileData(prev => ({ ...prev, profile_picture: newUrl }));
               localStorage.setItem(`${PROFILE_PIC_STORAGE_KEY_PREFIX}${travellerId}`, newUrl);
+              updateUser({ profile_picture: newUrl });
               setProfileImage(null);
             } else {
               photoUploadError = 'Photo upload failed. Please try again.';
@@ -284,6 +287,7 @@ const ProfilePage = () => {
         lastName,
       };
       localStorage.setItem('user', JSON.stringify(updatedUser));
+      updateUser({ email, firstName, lastName });
       
       setTimeout(() => setMessage({text: '', type: 'success'}), 3000);
       

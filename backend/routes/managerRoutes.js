@@ -5,10 +5,13 @@ const router = express.Router();
 const { 
   addAgencyEmployee, 
   getAgencyEmployees , 
-  removeAgencyEmployee 
+  removeAgencyEmployee, 
+  editAgencyEmployee
 } = require("../controllers/managerController");
 
 router.post('/employees', addAgencyEmployee);
+router.put('/editEmployee/:employee_id', editAgencyEmployee);
+
 
 router.get('/employeesOp/:agency_id', getAgencyEmployees);
 

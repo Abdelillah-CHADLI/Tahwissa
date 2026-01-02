@@ -4,9 +4,6 @@ import { getCurrentAgencyUuid } from '../utils/session';
 // Base axios instance
 const api = axios.create({
   baseURL: 'http://localhost:5000',
-  headers: {
-    'Content-Type': 'application/json',
-  },
   timeout: 10000,
   //withCredentials: true, // ENABLED for cookie-based auth
 });
@@ -216,7 +213,7 @@ export const tourService = {
       group_size: tourData.groupSize ?? null,
       duration: tourData.duration ?? null,
       category: tourData.category ?? null,
-      tour_details: safeJson((tourData as any).days ?? tourData.description ?? null),
+      tour_details: safeJson((tourData as any).days ?? tourData.agency_description ?? null),
       tour_included: safeJson(asNonEmptyStringArray((tourData as any).included)),
       requirements: safeJson(asNonEmptyStringArray((tourData as any).requirements)),
       tour_not_included: safeJson(
@@ -253,7 +250,22 @@ export const tourService = {
     if (!payload.location) throw new Error('Location is required');
     if (!Number.isFinite(payload.price as number)) throw new Error('Price must be a valid number');
 
-    const response = await api.post('/api/tours', payload);
+    const formData = new FormData();
+    for (const [key, value] of Object.entries(payload)) {
+      if (value === undefined || value === null) continue;
+      formData.append(key, typeof value === 'string' ? value : String(value));
+    }
+
+    const imageFiles = (tourData as any).imageFiles as File[] | undefined;
+    if (Array.isArray(imageFiles)) {
+      for (const file of imageFiles) {
+        if (file instanceof File) {
+          formData.append('images', file);
+        }
+      }
+    }
+
+    const response = await api.post('/api/tours', formData);
     return response.data;
   },
 

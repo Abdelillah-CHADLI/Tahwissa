@@ -129,7 +129,8 @@ const { userType, email, password, confirmPassword } = req.body;
         .from('agency_employees')
         .insert({
           employee_id: managerUser.user_id,
-          agency_id: agency.agency_id
+          agency_id: agency.agency_id,
+          role: "manager"
         });
 
       if (employeeError) throw employeeError;
