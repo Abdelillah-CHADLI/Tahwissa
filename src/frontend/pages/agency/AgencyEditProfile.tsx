@@ -3,15 +3,16 @@ import { Mail, Phone, MapPin, Globe, Upload, Save, Loader2, AlertCircle } from '
 import { useState, useEffect, type ChangeEvent } from 'react';
 import api, { profileService } from '../../services/api';
 import { getCurrentAgencyUuid } from '../../utils/session';
+import { getContextText } from '../../utils/userContext';
 
 export function AgencyEditProfile() {
     const agencyId = getCurrentAgencyUuid();
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
-    
+
     const [formData, setFormData] = useState({
         agency_name: '',
         agency_email: '',
@@ -27,7 +28,7 @@ export function AgencyEditProfile() {
     const [logoPreview, setLogoPreview] = useState<string | null>(null);
     const [logoFile, setLogoFile] = useState<File | null>(null);
     const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-    
+
     // Load profile data
     useEffect(() => {
         const fetchProfile = async () => {
@@ -41,11 +42,11 @@ export function AgencyEditProfile() {
 
                 const response = await profileService.getProfile(agencyId, 'agency');
                 const profile = response.data;
-                
+
                 if (profile) {
                     setFormData({
                         agency_name: profile.agency_name || '',
-                        agency_email: profile.agency_email || profile.email || '', 
+                        agency_email: profile.agency_email || profile.email || '',
                         agency_phone: profile.phone_number || '',
                         agency_website: profile.website || '',
                         description: profile.agency_description || profile.description || '',
@@ -54,7 +55,7 @@ export function AgencyEditProfile() {
                         support_email: profile.support_email || '',
                         working_hours: profile.working_hours || ''
                     });
-                    
+
                     if (profile.service_locations) {
                         if (typeof profile.service_locations === 'string') {
                             setSelectedLocations(profile.service_locations.split(',').map((s: string) => s.trim()));
@@ -62,7 +63,7 @@ export function AgencyEditProfile() {
                             setSelectedLocations(profile.service_locations);
                         }
                     }
-                    
+
                     // Load existing agency logo
                     if (profile.agency_logo) {
                         setLogoPreview(profile.agency_logo);
@@ -76,7 +77,7 @@ export function AgencyEditProfile() {
                 setLoading(false);
             }
         };
-        
+
         fetchProfile();
     }, [agencyId]);
 
@@ -121,12 +122,12 @@ export function AgencyEditProfile() {
                 setError('No agency account found. Please sign in again.');
                 return;
             }
-            
+
             // Upload logo if a new file was selected
             if (logoFile) {
                 const formData = new FormData();
                 formData.append('logo', logoFile);
-                
+
                 try {
                     const logoResponse = await api.post(`/profile1/agency/${agencyId}/logo`, formData);
                     if (logoResponse.data?.data?.agency_logo) {
@@ -138,7 +139,7 @@ export function AgencyEditProfile() {
                     // Continue with profile save even if logo upload fails
                 }
             }
-            
+
             const dataToSend = {
                 agency_name: formData.agency_name,
                 phone_number: formData.agency_phone,
@@ -150,10 +151,10 @@ export function AgencyEditProfile() {
                 website: formData.agency_website,
                 agency_description: formData.description,
             };
-            
+
             await profileService.updateProfile(agencyId, dataToSend, 'agency');
             setSuccess(true);
-            
+
             setTimeout(() => setSuccess(false), 3000);
         } catch {
             setError('Failed to update profile. Please try again.');
@@ -178,7 +179,7 @@ export function AgencyEditProfile() {
             </div>
         );
     }
-    
+
     return (
         <div className="min-h-screen bg-gray-50 p-6">
             {/* Error Alert */}
@@ -191,7 +192,7 @@ export function AgencyEditProfile() {
                     </div>
                 </div>
             )}
-            
+
             {/* Success Alert */}
             {success && (
                 <div className="max-w-5xl mx-auto mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
@@ -210,8 +211,8 @@ export function AgencyEditProfile() {
                     transition={{ duration: 0.5 }}
                 >
                     <div className="bg-white p-6 rounded-lg shadow">
-                        <h2 className="text-xl font-semibold text-gray-900 mb-6">Agency Information</h2>
-                        
+                        <h2 className="text-xl font-semibold text-gray-900 mb-6">{getContextText('Agency Information', 'Guide Information')}</h2>
+
                         <div className="space-y-6">
                             {/* Logo Upload */}
                             <div className="flex items-start gap-6">
@@ -234,7 +235,7 @@ export function AgencyEditProfile() {
                                         onClick={() => document.getElementById('logoUpload')?.click()}
                                         className="flex items-center justify-center bg-lime-300 text-gray-900 hover:bg-lime-400 w-8 h-8 absolute bottom-0 right-0 rounded-full transition-colors"
                                     >
-                                        <Upload className="w-4 h-4"/>
+                                        <Upload className="w-4 h-4" />
                                     </button>
                                 </div>
                                 <div className="flex-1">
@@ -246,8 +247,8 @@ export function AgencyEditProfile() {
                                         onClick={() => document.getElementById('logoUpload')?.click()}
                                         className="px-3 py-1.5 border rounded-md bg-white text-gray-900 border-gray-300 hover:bg-gray-50 text-sm inline-flex items-center transition-colors"
                                     >
-                                        <Upload className="w-4 h-4 mr-2"/> Upload Logo
-                                    </button>                            
+                                        <Upload className="w-4 h-4 mr-2" /> Upload Logo
+                                    </button>
                                 </div>
                             </div>
 
@@ -372,11 +373,10 @@ export function AgencyEditProfile() {
                                 <button
                                     key={location}
                                     onClick={() => toggleLocation(location)}
-                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                                        selectedLocations.includes(location)
+                                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedLocations.includes(location)
                                             ? 'bg-teal-600 text-white hover:bg-teal-700'
                                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                    }`}
+                                        }`}
                                 >
                                     {location}
                                 </button>
@@ -393,7 +393,7 @@ export function AgencyEditProfile() {
                 >
                     <div className="bg-white p-6 rounded-lg shadow">
                         <h2 className="text-xl font-semibold text-gray-900 mb-6">Contact & Support Information</h2>
-                        
+
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">

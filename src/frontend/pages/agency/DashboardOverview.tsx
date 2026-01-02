@@ -12,10 +12,36 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useDashboardData } from "../../hooks/useDashboardData";
+import { VerificationBanner } from "../../components/agency/VerificationBanner";
+import { VerificationModal } from "../../components/agency/VerificationModal";
+import { useState, useEffect } from "react";
+import { getCurrentAgencyUuid } from "../../utils/session";
+import { profileService } from "../../services/api";
 
 export function DashboardOverview() {
   const navigate = useNavigate();
   const { data, loading, error } = useDashboardData();
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [agencyId, setAgencyId] = useState<string>('');
+
+  useEffect(() => {
+    const fetchVerificationStatus = async () => {
+      try {
+        const id = getCurrentAgencyUuid();
+        if (!id) return;
+        setAgencyId(id);
+
+        const response = await profileService.getProfile(id, 'agency');
+        if (response.data) {
+          setVerified(response.data.verified || false);
+        }
+      } catch (error) {
+        console.error('Failed to load verification status:', error);
+      }
+    };
+    fetchVerificationStatus();
+  }, []);
 
   // Loading state
   if (loading) {
@@ -79,6 +105,12 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-8">
+      {/* Verification Banner */}
+      <VerificationBanner
+        verified={verified}
+        onApplyVerification={() => setIsVerificationModalOpen(true)}
+      />
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map((stat, index) => (
@@ -119,7 +151,7 @@ export function DashboardOverview() {
             <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-medium text-gray-900">Recent Bookings</h2>
-                <button 
+                <button
                   onClick={() => navigate('/agency/bookings')}
                   className="text-sm font-medium text-gray-900 hover:text-gray-700 transition-colors"
                 >
@@ -153,11 +185,10 @@ export function DashboardOverview() {
                       <div className="text-right">
                         <p className="font-bold text-gray-900">{booking.amount}</p>
                         <span
-                          className={`inline-block mt-1 px-3 py-1 text-xs font-medium rounded-full text-white ${
-                            booking.status === "confirmed"
+                          className={`inline-block mt-1 px-3 py-1 text-xs font-medium rounded-full text-white ${booking.status === "confirmed"
                               ? "bg-[#375E5E]"
                               : "bg-[#5D8E8E]"
-                          }`}
+                            }`}
                         >
                           {booking.status}
                         </span>
@@ -237,7 +268,7 @@ export function DashboardOverview() {
                 <p className="text-white/90 mb-6 text-sm">
                   Create new tour programs and reach more travelers
                 </p>
-                <button 
+                <button
                   onClick={() => navigate('/agency/add-tour')}
                   className="px-6 py-2.5 bg-[#D4F58D] text-[#375E5E] rounded-lg hover:bg-[#c3e87b] transition-colors font-bold text-sm"
                 >
@@ -249,6 +280,17 @@ export function DashboardOverview() {
           </div>
         </div>
       </motion.div>
+
+      {/* Verification Modal */}
+      <VerificationModal
+        isOpen={isVerificationModalOpen}
+        onClose={() => setIsVerificationModalOpen(false)}
+        agencyId={agencyId}
+        onSuccess={() => {
+          setVerified(false); // Will show pending status
+          alert('Verification request submitted successfully!');
+        }}
+      />
     </div>
   );
 }

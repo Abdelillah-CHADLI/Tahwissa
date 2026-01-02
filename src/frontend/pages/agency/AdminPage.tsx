@@ -6,13 +6,6 @@ import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
 import api from "../../services/api";
 
-interface BackendEmployee {
-    employee_id: string;
-    users: {
-        role: string;
-        email: string;
-    };
-}
 
 export function AdminPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -50,25 +43,8 @@ export function AdminPage() {
             const response = await api.get(`/manager/employeesOp/${agencyId}`);
             const result = response.data;
 
-            // Transform backend data to frontend format, providing defaults for all fields
-            const transformedEmployees: Employee[] = result.employees.map((emp: BackendEmployee) => ({
-                id: emp.employee_id,
-                name: emp.users.email.split('@')[0],
-                email: emp.users.email,
-                role: emp.users.role,
-                phone: "Not available",
-                status: "active",
-                specialization: [],
-                languages: [],
-                location: "Not available",
-                joinDate: new Date().toISOString(),
-                rating: 0,
-                toursCompleted: 0,
-                avatar: "",
-                experience: "Not available"
-            }));
-
-            setEmployees(transformedEmployees);
+            // Use backend structure directly
+            setEmployees(result.employees);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to fetch employees";
             setError(errorMessage);
@@ -94,7 +70,7 @@ export function AdminPage() {
         }
     };
 
-    const handleAddEmployee = async (employeeData: Omit<Employee, "id">) => {
+    const handleAddEmployee = async (employeeData: Omit<Employee, "employee_id">) => {
         setLoading(true);
         setError(null);
 
@@ -104,9 +80,17 @@ export function AdminPage() {
 
             const generatedPassword = `Emp-${Math.random().toString(36).slice(2, 10)}!`;
             await api.post(`/manager/employees`, {
-                email: employeeData.email,
+                email: employeeData.users.email,
                 password: generatedPassword,
                 agency_id: agencyId,
+                full_name: employeeData.full_name,
+                phone: employeeData.phone,
+                location: employeeData.location,
+                experience: employeeData.experience,
+                languages: employeeData.languages,
+                role: employeeData.role,
+                specialization: employeeData.specialization,
+                status: employeeData.status,
             });
 
             await fetchEmployees();
@@ -120,17 +104,57 @@ export function AdminPage() {
         }
     };
 
-    // Remove toggle status and edit since backend doesn't support them
     const handleToggleStatus = async (id: string) => {
-        void id;
-        alert("Status toggle not supported by backend API");
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.patch(`/manager/employeesOp/${id}/status`);
+
+            // Update the employee list with the new status
+            setEmployees(prevEmployees =>
+                prevEmployees.map(emp =>
+                    emp.employee_id === id
+                        ? { ...emp, status: response.data.employee.status }
+                        : emp
+                )
+            );
+
+            alert(`${response.data.message}`);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to toggle status";
+            setError(errorMessage);
+            alert(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleEditEmployee = async (employeeData: Omit<Employee, "id">) => {
-        void employeeData;
-        alert("Edit employee functionality not implemented in backend");
-        setIsEditModalOpen(false);
-        setSelectedEmployee(null);
+    const handleEditEmployee = async (employeeData: Omit<Employee, "employee_id">) => {
+        setLoading(true);
+        setError(null);
+        try {
+            if (!selectedEmployee) throw new Error('No employee selected');
+
+            await api.put(`/manager/editEmployee/${selectedEmployee.employee_id}`, {
+                full_name: employeeData.full_name,
+                phone: employeeData.phone,
+                location: employeeData.location,
+                experience: employeeData.experience,
+                languages: employeeData.languages,
+                role: employeeData.role,
+                specialization: employeeData.specialization,
+                status: employeeData.status,
+            });
+
+            await fetchEmployees();
+            setIsEditModalOpen(false);
+            setSelectedEmployee(null);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Failed to update employee";
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     // --- Effects ---
@@ -140,9 +164,12 @@ export function AdminPage() {
 
     // --- Filter Logic ---
     const filteredEmployees = employees.filter((employee) => {
-        const matchesSearch = employee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            employee.email.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesFilter = filterStatus === "all" || employee.status === filterStatus;
+        const name = employee.full_name || employee.users.email.split('@')[0];
+        const email = employee.users.email;
+        const matchesSearch = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            email.toLowerCase().includes(searchQuery.toLowerCase());
+        // status fallback for compatibility
+        const matchesFilter = filterStatus === "all" || (employee.status || "active") === filterStatus;
         return matchesSearch && matchesFilter;
     });
 
