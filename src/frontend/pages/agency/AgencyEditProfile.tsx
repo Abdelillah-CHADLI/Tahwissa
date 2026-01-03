@@ -57,8 +57,8 @@ export function AgencyEditProfile() {
                         agency_email: profile.agency_email || profile.email || '',
                         agency_phone: profile.phone_number || '',
                         agency_website: profile.website || '',
-                        description: profile.agency_description || profile.description || profile.bio || '',
-                        location: profile.main_office_location || profile.location || '',
+                        description: profile.agency_description || profile.guide_description || '',
+                        location: profile.main_office_location || profile.main_location || '',
                         emergency_phone: profile.emergency_contact || '',
                         support_email: profile.support_email || '',
                         working_hours: profile.working_hours || ''
@@ -171,9 +171,9 @@ export function AgencyEditProfile() {
                 support_email: formData.support_email,
                 working_hours: formData.working_hours,
                 service_locations: selectedLocations.join(', '),
-                location: formData.location,
+                main_location: formData.location,
                 website: formData.agency_website,
-                bio: formData.description,
+                guide_description: formData.description,
             };
 
             await profileService.updateProfile(agencyId, dataToSend, profileType);
