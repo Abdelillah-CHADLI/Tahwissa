@@ -1,4 +1,5 @@
 import { Shield, CheckCircle } from "lucide-react";
+import { getContextText } from "../../utils/userContext";
 
 interface VerificationBannerProps {
     verified: boolean;
@@ -11,8 +12,8 @@ export function VerificationBanner({ verified, onApplyVerification }: Verificati
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
                 <CheckCircle className="w-6 h-6 text-green-600" />
                 <div className="flex-1">
-                    <h3 className="font-semibold text-green-900">Verified Agency</h3>
-                    <p className="text-sm text-green-700">Your agency has been verified</p>
+                    <h3 className="font-semibold text-green-900">{getContextText('Verified Agency', 'Verified Guide')}</h3>
+                    <p className="text-sm text-green-700">{getContextText('Your agency has been verified', 'Your profile has been verified')}</p>
                 </div>
             </div>
         );
@@ -23,7 +24,7 @@ export function VerificationBanner({ verified, onApplyVerification }: Verificati
             <Shield className="w-6 h-6 text-blue-600" />
             <div className="flex-1">
                 <h3 className="font-semibold text-blue-900">Get Verified</h3>
-                <p className="text-sm text-blue-700">Increase trust with travelers by verifying your agency</p>
+                <p className="text-sm text-blue-700">{getContextText('Increase trust with travelers by verifying your agency', 'Increase trust with travelers by verifying your profile')}</p>
             </div>
             <button
                 onClick={onApplyVerification}

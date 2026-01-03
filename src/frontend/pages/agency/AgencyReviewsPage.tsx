@@ -4,6 +4,7 @@ import PageHeader from "../../components/traveler/requests/PageHeader";
 import { ReviewCard } from "../../components/agency/reviews/ReviewCard";
 import { reviewService, tourService } from "../../services/api";
 import { getCurrentAgencyUuid } from "../../utils/session";
+import { getContextText } from "../../utils/userContext";
 
 interface Review {
     id: string;
@@ -56,7 +57,7 @@ export function AgencyReviewsPage() {
                     ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
                 });
                 setLoading(false);
-                setError(`No tours found for your agency.`);
+                setError(getContextText('No tours found for your agency.', 'No tours found for your profile.'));
                 return;
             }
 

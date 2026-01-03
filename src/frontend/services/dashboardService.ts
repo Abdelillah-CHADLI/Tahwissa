@@ -1,6 +1,6 @@
 import type { DashboardData } from '../types/dashboard';
 import { bookingService, tourService, profileService } from './api';
-import { getCurrentAgencyUuid } from '../utils/session';
+import { getCurrentAgencyUuid, getCurrentProfileType } from '../utils/session';
 
 interface Traveller {
   traveller_fn?: string;
@@ -40,7 +40,9 @@ interface TourWithBookings extends Tour {
 export const dashboardService = {
   async getDashboardData(): Promise<DashboardData> {
     const agencyId = getCurrentAgencyUuid();
-    if (!agencyId) {
+    const profileType = getCurrentProfileType();
+
+    if (!agencyId || !profileType) {
       return {
         stats: {
           activeTours: 0,
@@ -58,26 +60,27 @@ export const dashboardService = {
     let tours: Tour[] = [];
     let agencyProfile: AgencyProfile | null = null;
 
-    // Fetch agency profile for rating data
+    // Fetch profile for rating data
     try {
-      const profileResponse = await profileService.getProfile(agencyId, 'agency');
+      const profileResponse = await profileService.getProfile(agencyId, profileType);
       agencyProfile = profileResponse?.data || profileResponse?.profile || null;
     } catch {
       agencyProfile = null;
     }
 
-    // Fetch bookings for this agency
+    // Fetch bookings for this agency/guide
     try {
-      const bookingsResponse = await bookingService.getBookings({ agencyId });
+      const filterKey = profileType === 'agency' ? 'agencyId' : 'guideId';
+      const bookingsResponse = await bookingService.getBookings({ [filterKey]: agencyId });
       const data = bookingsResponse?.data;
       bookings = Array.isArray(data) ? data : Array.isArray(bookingsResponse) ? bookingsResponse : [];
     } catch {
       bookings = [];
     }
 
-    // Fetch tours for this agency
+    // Fetch tours for this agency/guide
     try {
-      tours = await tourService.getAgencyTours(agencyId);
+      tours = await tourService.getAgencyTours(agencyId, profileType);
     } catch {
       tours = [];
     }

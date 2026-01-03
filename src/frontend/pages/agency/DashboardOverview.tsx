@@ -15,7 +15,7 @@ import { useDashboardData } from "../../hooks/useDashboardData";
 import { VerificationBanner } from "../../components/agency/VerificationBanner";
 import { VerificationModal } from "../../components/agency/VerificationModal";
 import { useState, useEffect } from "react";
-import { getCurrentAgencyUuid } from "../../utils/session";
+import { getCurrentAgencyUuid, getCurrentProfileType } from "../../utils/session";
 import { profileService } from "../../services/api";
 
 export function DashboardOverview() {
@@ -29,12 +29,14 @@ export function DashboardOverview() {
     const fetchVerificationStatus = async () => {
       try {
         const id = getCurrentAgencyUuid();
-        if (!id) return;
+        const profileType = getCurrentProfileType();
+        if (!id || !profileType) return;
         setAgencyId(id);
 
-        const response = await profileService.getProfile(id, 'agency');
-        if (response.data) {
-          setVerified(response.data.verified || false);
+        const response = await profileService.getProfile(id, profileType);
+        if (response.data || response.profile) {
+          const profile = response.data || response.profile;
+          setVerified(profile.verified || false);
         }
       } catch (error) {
         console.error('Failed to load verification status:', error);
@@ -186,8 +188,8 @@ export function DashboardOverview() {
                         <p className="font-bold text-gray-900">{booking.amount}</p>
                         <span
                           className={`inline-block mt-1 px-3 py-1 text-xs font-medium rounded-full text-white ${booking.status === "confirmed"
-                              ? "bg-[#375E5E]"
-                              : "bg-[#5D8E8E]"
+                            ? "bg-[#375E5E]"
+                            : "bg-[#5D8E8E]"
                             }`}
                         >
                           {booking.status}
@@ -286,8 +288,9 @@ export function DashboardOverview() {
         isOpen={isVerificationModalOpen}
         onClose={() => setIsVerificationModalOpen(false)}
         agencyId={agencyId}
+        profileType={getCurrentProfileType() || 'agency'}
         onSuccess={() => {
-          setVerified(false); // Will show pending status
+          setVerified(false);
           alert('Verification request submitted successfully!');
         }}
       />

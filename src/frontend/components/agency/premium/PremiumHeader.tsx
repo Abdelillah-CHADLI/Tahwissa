@@ -1,4 +1,5 @@
 import { Sparkles } from 'lucide-react';
+import { getContextText } from '../../../utils/userContext';
 
 export function PremiumHeader() {
     return (
@@ -9,11 +10,11 @@ export function PremiumHeader() {
             </div>
 
             <h1 className="text-2xl font-bold text-gray-900 mb-3">
-                Grow Your Travel Business
+                {getContextText('Grow Your Travel Business', 'Grow Your Tour Guide Career')}
             </h1>
 
             <p className="text-gray-600 max-w-2xl mx-auto">
-                Choose the perfect plan to reach more travelers and boost your bookings across Algeria
+                {getContextText('Choose the perfect plan to reach more travelers and boost your bookings across Algeria', 'Choose the perfect plan to reach more travelers and boost your tour bookings across Algeria')}
             </p>
         </div>
     );

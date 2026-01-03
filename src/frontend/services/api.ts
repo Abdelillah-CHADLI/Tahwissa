@@ -1,5 +1,5 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
-import { getCurrentAgencyUuid } from '../utils/session';
+import { getCurrentAgencyUuid, getCurrentProfileType } from '../utils/session';
 
 // Base axios instance
 const api = axios.create({
@@ -48,8 +48,9 @@ export default api;
 
 export const profileService = {
   getProfile: async (id: string, type: 'agency' | 'guide') => {
-    const response = await api.get(`/api/profile/${id}`, {
-      params: { type }
+    const TypeOfProfile = type === 'agency' ? 'Agency' : 'Guide';
+    const response = await api.get(`/profile1/${id}`, {
+      params: { TypeOfProfile }
     });
     return response.data;
   },
@@ -169,9 +170,11 @@ export const tourService = {
   },
 
   createTour: async (tourData: Record<string, unknown>) => {
-    const agencyId = getCurrentAgencyUuid();
-    if (!agencyId) {
-      throw new Error('Agency account not detected. Please sign out and sign back in.');
+    const profileId = getCurrentAgencyUuid();
+    const profileType = getCurrentProfileType();
+
+    if (!profileId || !profileType) {
+      throw new Error('Account not detected. Please sign out and sign back in.');
     }
 
     const asNonEmptyStringArray = (v: unknown): string[] | null => {
@@ -207,8 +210,8 @@ export const tourService = {
       price: Number(tourData.price),
       start_date: String(tourData.startDate ?? new Date().toISOString().split('T')[0]),
 
-      agency_id: agencyId,
-      guide_id: null,
+      agency_id: profileType === 'agency' ? profileId : null,
+      guide_id: profileType === 'guide' ? profileId : null,
 
       group_size: tourData.groupSize ?? null,
       duration: tourData.duration ?? null,
@@ -288,13 +291,15 @@ export const tourService = {
     return response.data;
   },
 
-  getAgencyTours: async (agencyId: string) => {
+  getAgencyTours: async (profileId: string, profileType?: 'agency' | 'guide') => {
+    const type = profileType || getCurrentProfileType() || 'agency';
     const response = await api.get('/api/tours/browse', {
-      params: { provider: 'agency', size: 100 }
+      params: { provider: type, size: 100 }
     });
     const result = response.data?.data || response.data;
     const tours = result?.tours || [];
-    return tours.filter((tour: Record<string, unknown>) => String(tour.agency_id) === agencyId);
+    const idKey = type === 'agency' ? 'agency_id' : 'guide_id';
+    return tours.filter((tour: Record<string, unknown>) => String(tour[idKey]) === profileId);
   },
 
   getTourById: async (tourId: string) => {
