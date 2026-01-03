@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Clock, Users, DollarSign, MapPin, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle, XCircle, Shield, Upload, Loader2 } from 'lucide-react';
+import { Save, ArrowLeft, Clock, Users, DollarSign, MapPin, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle, XCircle, Shield, Upload, Loader2, Calendar } from 'lucide-react';
 import { getApiErrorMessage, tourService } from '../../services/api';
 
 interface TourFormData {
@@ -12,6 +12,7 @@ interface TourFormData {
     groupSize: string;
     price: string;
     category: string;
+    startDate: string;
     days: { id: number; title: string; description: string; activities: string[]; meals: string; accommodation: string }[];
     included: string[];
     notIncluded: string[];
@@ -28,6 +29,7 @@ const initialFormData: TourFormData = {
     groupSize: '',
     price: '',
     category: '',
+    startDate: '',
     days: [{ id: 1, title: '', description: '', activities: [''], meals: '', accommodation: '' }],
     included: [''],
     notIncluded: [''],
@@ -120,6 +122,20 @@ function BasicInfoTab({ data, updateData, onNext }: { data: TourFormData; update
                     placeholder="e.g: Adventure, Cultural" 
                     className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
                 />
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Start Date *</label>
+                <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></Calendar>
+                    <input 
+                        type="date" 
+                        value={data.startDate}
+                        onChange={(e) => updateData({ startDate: e.target.value })}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="mt-1 w-full px-3 pl-10 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
+                    />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Select the date when this tour will start</p>
             </div>
             <div className="flex justify-end pt-4">
                 <button 

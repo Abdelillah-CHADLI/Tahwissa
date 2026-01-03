@@ -62,6 +62,11 @@ interface SearchGuidesResponse {
   data: BackendGuide[];
 }
 
+interface BrowseGuidesResponse {
+  success: boolean;
+  data: BackendGuide[];
+}
+
 const mapAgencyData = (backendAgency: BackendAgency) => {
   const avgRating =
     backendAgency.num_raters && backendAgency.num_raters > 0 && backendAgency.rating
@@ -160,9 +165,15 @@ const TravelAgenciesPage = () => {
               throw new Error("Invalid guides response format");
             }
           } else {
-            setGuides([]);
-            setVisibleGuides([]);
-            setError("Enter a search term to find guides");
+            const response = await guideService.browseGuides(1, 50) as BrowseGuidesResponse;
+
+            if (response.success && Array.isArray(response.data)) {
+              const mappedGuides = response.data.map(mapGuideData);
+              setGuides(mappedGuides);
+              setVisibleGuides(mappedGuides.slice(0, ITEMS_PER_LOAD));
+            } else {
+              throw new Error("Invalid guides response format");
+            }
           }
         }
       } catch (err) {
@@ -253,14 +264,6 @@ const TravelAgenciesPage = () => {
           <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
       </div>
-
-      {error && activeTab === "guides" && !searchQuery && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-            <p className="text-sm text-blue-800 font-medium">Enter a search term to find guides.</p>
-          </div>
-        </div>
-      )}
 
       {/* content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

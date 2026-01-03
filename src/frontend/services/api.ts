@@ -381,6 +381,12 @@ export const guideService = {
     return response.data;
   },
 
+  browseGuides: async (page: number = 1, size: number = 10) => {
+    const response = await api.get('/api/guides', {
+      params: { page, limit: size }
+    });
+    return response.data;
+  },
 };
 
 export const reviewService = {
