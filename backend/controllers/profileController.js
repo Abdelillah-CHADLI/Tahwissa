@@ -4,36 +4,66 @@ import { supabase } from '../config/supabasedb.js';
 // Get profile
 export async function getProfile(req, res) {
   const { id } = req.params;
-  const { TypeOfProfile } = req.query; 
+  const readTypeOfProfile = () => {
+    const fromQuery = (req.query && (req.query.TypeOfProfile || req.query.typeOfProfile || req.query.type || req.query.profileType)) ?? null;
+    if (typeof fromQuery === 'string' && fromQuery.trim()) return fromQuery.trim();
+    if (Array.isArray(fromQuery) && typeof fromQuery[0] === 'string' && fromQuery[0].trim()) return fromQuery[0].trim();
+
+    try {
+      const base = `${req.protocol || 'http'}://${req.get('host') || 'localhost'}`;
+      const url = new URL(req.originalUrl || '', base);
+      return (
+        url.searchParams.get('TypeOfProfile') ||
+        url.searchParams.get('typeOfProfile') ||
+        url.searchParams.get('type') ||
+        url.searchParams.get('profileType') ||
+        ''
+      ).trim();
+    } catch {
+      return '';
+    }
+  };
+
+  const TypeOfProfile = readTypeOfProfile();
 
   try {
     if (!TypeOfProfile || !['Agency', 'Guide'].includes(TypeOfProfile)) {
-      return res.status(400).json({ error: "TypeOfProfile must be 'Agency' or 'Guide'" });
+      return res.status(400).json({ success: false, error: "TypeOfProfile must be 'Agency' or 'Guide'" });
     }
-    let tableName;
-    let ida;
+    let query;
     if (TypeOfProfile === 'Agency') {
-        tableName = 'agencies';
-        ida = 'agency_id';
-
+      query = supabase
+        .from('agencies')
+        .select(`
+          *,
+          manager:users!manager_id(email, role)
+        `)
+        .eq('agency_id', id)
+        .single();
     } else {
-        tableName = 'guides';
-        ida = 'guide_id';
+      query = supabase
+        .from('guides')
+        .select(`
+          *,
+          user:users!guide_id(email, role)
+        `)
+        .eq('guide_id', id)
+        .single();
     }
 
-    // Fetch profile from corresponding table
-    const { data: profile, error } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq(ida, id)
-      .single();
+    const { data: profile, error } = await query;
 
     if (error) throw error;
-    if (!profile) return res.status(404).json({ error: 'Profile not found' });
+    if (!profile) return res.status(404).json({ success: false, error: 'Profile not found' });
 
-    res.json({ userType: TypeOfProfile, profile });
+    res.json({
+      success: true,
+      userType: TypeOfProfile,
+      data: profile,
+      profile,
+    });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(400).json({ success: false, error: err.message });
   }
 }
 
