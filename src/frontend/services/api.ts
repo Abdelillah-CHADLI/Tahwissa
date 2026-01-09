@@ -521,7 +521,7 @@ export const settingsService = {
 export const employeeService = {
   // Get all employees for an agency
   getEmployees: async (agencyId: string) => {
-    const response = await api.get(`/manager/employees/${agencyId}`);
+    const response = await api.get(`/manager/employeesOp/${agencyId}`);
     return response.data;
   },
 
