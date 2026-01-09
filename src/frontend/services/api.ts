@@ -328,6 +328,11 @@ export const tourService = {
       console.error('Error fetching tour by ID:', error);
       return null;
     }
+  },
+
+  deleteTour: async (tourId: string) => {
+    const response = await api.delete(`/api/tours/${tourId}`);
+    return response.data;
   }
 };
 
