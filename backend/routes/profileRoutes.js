@@ -14,9 +14,10 @@ const {
 } = require("../controllers/profileController");
 
 // Get profile data
-router.get('/:id', getProfile);
 router.get('/traveller/:id' , getTravellerInfo);
 router.post('/traveller/:id' , updateTravellerInfo);
+
+router.get('/:id', getProfile);
 
 // Edit profile
 router.put('/:id', editProfile);
