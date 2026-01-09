@@ -268,7 +268,7 @@ export function AgencySettings() {
 
     return (
         <div className="p-6">
-            {/*error && (
+            {error && (
                 <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
                     <div className="flex-1">
@@ -282,7 +282,7 @@ export function AgencySettings() {
                         ×
                     </button>
                 </div>
-            )*/}
+            )}
 
             {success && (
                 <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">

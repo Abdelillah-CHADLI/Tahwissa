@@ -49,9 +49,6 @@ export function AgencyEditProfile() {
                 const profile = response.data || response.profile;
 
                 if (profile) {
-                    // Handle both agency and guide profile fields
-                    const isGuide = profileType === 'guide';
-
                     setFormData({
                         agency_name: profile.agency_name || profile.guide_name || '',
                         agency_email: profile.agency_email || profile.email || '',
@@ -158,7 +155,7 @@ export function AgencyEditProfile() {
                 agency_name: formData.agency_name,
                 phone_number: formData.agency_phone,
                 emergency_contact: formData.emergency_phone,
-                support_email: formData.support_email,
+                support_email: formData.support_email || formData.agency_email,
                 working_hours: formData.working_hours,
                 service_locations: selectedLocations.join(', '),
                 main_office_location: formData.location,
@@ -168,7 +165,7 @@ export function AgencyEditProfile() {
                 guide_name: formData.agency_name,
                 phone_number: formData.agency_phone,
                 emergency_contact: formData.emergency_phone,
-                support_email: formData.support_email,
+                support_email: formData.support_email || formData.agency_email,
                 working_hours: formData.working_hours,
                 service_locations: selectedLocations.join(', '),
                 main_location: formData.location,
