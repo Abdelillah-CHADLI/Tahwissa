@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AgencyApp from "./AgencyApp";
 import TravelerApp from "./TravelerApp";
 import AdminApp from "./AdminApp";
-import LandingPage from "./pages/LandingPage";
 
 function App() {
   return (
