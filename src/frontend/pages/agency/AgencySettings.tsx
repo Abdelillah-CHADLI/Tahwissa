@@ -70,28 +70,56 @@ export function AgencySettings() {
                 return;
             }
 
-            const accountResponse = await settingsService.getAccountSettings(agencyId);
-            const notificationResponse = await settingsService.getNotificationSettings(agencyId);
-            const paymentResponse = await settingsService.getPaymentSettings(agencyId);
-            const privacyResponse = await settingsService.getPrivacySettings(agencyId);
+            let accountData = {};
+            let notificationData = {};
+            let paymentData = {};
+            let privacyData = {};
+
+            try {
+                const accountResponse = await settingsService.getAccountSettings(agencyId);
+                accountData = accountResponse.data || {};
+            } catch {
+                // Settings endpoint not implemented yet
+            }
+
+            try {
+                const notificationResponse = await settingsService.getNotificationSettings(agencyId);
+                notificationData = notificationResponse.data || {};
+            } catch {
+                // Settings endpoint not implemented yet
+            }
+
+            try {
+                const paymentResponse = await settingsService.getPaymentSettings(agencyId);
+                paymentData = paymentResponse.data || {};
+            } catch {
+                // Settings endpoint not implemented yet
+            }
+
+            try {
+                const privacyResponse = await settingsService.getPrivacySettings(agencyId);
+                privacyData = privacyResponse.data || {};
+            } catch {
+                // Settings endpoint not implemented yet
+            }
 
             setSettings(prev => ({
                 ...prev,
-                agencyName: accountResponse.data?.agency_name || prev.agencyName,
-                email: accountResponse.data?.email || prev.email,
-                phone: accountResponse.data?.phone || prev.phone,
-                emailNotifications: notificationResponse.data?.email_notifications ?? prev.emailNotifications,
-                bookingAlerts: notificationResponse.data?.booking_alerts ?? prev.bookingAlerts,
-                reviewAlerts: notificationResponse.data?.review_alerts ?? prev.reviewAlerts,
-                promotionalEmails: notificationResponse.data?.promotional_emails ?? prev.promotionalEmails,
-                weeklyReport: notificationResponse.data?.weekly_report ?? prev.weeklyReport,
-                accountHolder: paymentResponse.data?.account_holder || prev.accountHolder,
-                bankName: paymentResponse.data?.bank_name || prev.bankName,
-                accountNumber: paymentResponse.data?.account_number || prev.accountNumber,
-                swiftCode: paymentResponse.data?.swift_code || prev.swiftCode,
-                profileVisibility: privacyResponse.data?.profile_visibility ?? prev.profileVisibility,
-                showContactInfo: privacyResponse.data?.show_contact_info ?? prev.showContactInfo,
-                allowReviews: privacyResponse.data?.allow_reviews ?? prev.allowReviews,
+                agencyName: (accountData as any)?.agency_name || prev.agencyName,
+                email: (accountData as any)?.email || prev.email,
+                phone: (accountData as any)?.phone || prev.phone,
+                emailNotifications: (notificationData as any)?.email_notifications ?? prev.emailNotifications,
+                bookingAlerts: (notificationData as any)?.booking_alerts ?? prev.bookingAlerts,
+                reviewAlerts: (notificationData as any)?.review_alerts ?? prev.reviewAlerts,
+                promotionalEmails: (notificationData as any)?.promotional_emails ?? prev.promotionalEmails,
+                weeklyReport: (notificationData as any)?.weekly_report ?? prev.weeklyReport,
+                accountHolder: (paymentData as any)?.account_holder || prev.accountHolder,
+                bankName: (paymentData as any)?.bank_name || prev.bankName,
+                accountNumber: (paymentData as any)?.account_number || prev.accountNumber,
+                swiftCode: (paymentData as any)?.swift_code || prev.swiftCode,
+                profileVisibility: (privacyData as any)?.profile_visibility ?? prev.profileVisibility,
+                showContactInfo: (privacyData as any)?.show_contact_info ?? prev.showContactInfo,
+                allowReviews: (privacyData as any)?.allow_reviews ?? prev.allowReviews,
             }));
 
         } catch (err) {
