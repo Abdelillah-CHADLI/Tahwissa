@@ -117,8 +117,33 @@ const GuideProfilePage = () => {
     const duration = String(tour.duration || "");
     const category = String(tour.category || "");
     const groupSize = String(tour.groupSize || tour.group_size || "");
-    const description = String(tour.description || tour.tour_details || title || "");
     const rating = typeof tour.rating === "number" ? tour.rating : 0;
+    
+    // Parse tour_details JSON to extract a readable description
+    let description = "";
+    if (typeof tour.description === "string" && tour.description.trim() && !tour.description.startsWith("[")) {
+      description = tour.description;
+    } else if (typeof tour.tour_details === "string" && tour.tour_details.trim()) {
+      try {
+        const parsed = JSON.parse(tour.tour_details);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Extract first day's description or title
+          const firstDay = parsed[0];
+          description = firstDay?.description || firstDay?.title || title;
+        } else if (typeof parsed === "object" && parsed !== null) {
+          description = parsed.description || parsed.title || title;
+        } else {
+          description = title;
+        }
+      } catch {
+        // Not valid JSON, use as-is only if it doesn't look like JSON
+        description = tour.tour_details.startsWith("[") || tour.tour_details.startsWith("{") 
+          ? title 
+          : tour.tour_details;
+      }
+    } else {
+      description = title;
+    }
   
     let image = defaultTourImage;
     if (Array.isArray(tour.images) && tour.images.length > 0 && typeof tour.images[0] === "string" && tour.images[0].trim()) {

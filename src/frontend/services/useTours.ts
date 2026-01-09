@@ -73,15 +73,28 @@ export const useTours = (): UseToursReturn => {
     const startDate = backendTour.start_date;
     const isEnded = startDate ? new Date(startDate) < new Date(new Date().toDateString()) : false;
 
+    let description = "No description available";
+    if (typeof backendTour.tour_details === "string" && backendTour.tour_details.trim()) {
+      try {
+        const parsed = JSON.parse(backendTour.tour_details);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          description = parsed[0]?.description || parsed[0]?.title || backendTour.tour_title || "No description available";
+        }
+      } catch {
+        if (!backendTour.tour_details.startsWith("[") && !backendTour.tour_details.startsWith("{")) {
+          description = backendTour.tour_details;
+        }
+      }
+    } else if (typeof backendTour.tour_included === "string" && !backendTour.tour_included.startsWith("[")) {
+      description = backendTour.tour_included;
+    }
+
     return {
       id: backendTour.tour_id,
       tour_id: backendTour.tour_id,
       title: backendTour.tour_title,
       tour_title: backendTour.tour_title,
-      description:
-        backendTour.tour_details ||
-        backendTour.tour_included ||
-        "No description available",
+      description,
       price: backendTour.price,
       rating,
       image: imageUrl,

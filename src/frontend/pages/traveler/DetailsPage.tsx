@@ -273,6 +273,27 @@ const getTourImageUrls = (tour: Record<string, unknown>): string[] => {
     return urls;
 };
 
+const parseTourDescription = (tourDetails: unknown, fallbackTitle?: string): string => {
+    if (typeof tourDetails !== 'string' || !tourDetails.trim()) {
+        return 'No description available';
+    }
+    if (!tourDetails.startsWith('[') && !tourDetails.startsWith('{')) {
+        return tourDetails;
+    }
+    try {
+        const parsed = JSON.parse(tourDetails);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed[0]?.description || parsed[0]?.title || fallbackTitle || 'No description available';
+        }
+        if (parsed && typeof parsed === 'object') {
+            return parsed.description || parsed.title || fallbackTitle || 'No description available';
+        }
+    } catch {
+        return 'No description available';
+    }
+    return 'No description available';
+};
+
 const DetailsPage = () => {
     const navigate = useNavigate();
     const { tourId } = useParams<{ tourId: string }>();
@@ -431,7 +452,7 @@ const DetailsPage = () => {
 
                     <div className="border border-gray-200 rounded-xl bg-white shadow-md p-4 sm:p-6 space-y-4">
                         <h1 className="text-xl sm:text-2xl font-semibold">{String(tourData.tour_title || tourData.title || 'Untitled Tour')}</h1>
-                        <p className="text-gray-600">{String(tourData.tour_details || tourData.description || 'No description available')}</p>
+                        <p className="text-gray-600">{parseTourDescription(tourData.tour_details, String(tourData.tour_title || tourData.title || ''))}</p>
 
                         <div className="flex items-center gap-3 flex-wrap">
                             <span className="bg-[#4d8b8b] text-white text-sm px-4 py-1 rounded-full flex items-center gap-2 hover:bg-[#274345] transition-colors">
