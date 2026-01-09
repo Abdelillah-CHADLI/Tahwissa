@@ -119,18 +119,17 @@ const GuideProfilePage = () => {
     const groupSize = String(tour.groupSize || tour.group_size || "");
     const description = String(tour.description || tour.tour_details || title || "");
     const rating = typeof tour.rating === "number" ? tour.rating : 0;
-    
-    // Extract image from tour_images array, images array, or direct image field
+  
     let image = defaultTourImage;
-    if (typeof tour.image === "string" && tour.image.trim()) {
-      image = tour.image;
-    } else if (Array.isArray(tour.images) && tour.images.length > 0 && typeof tour.images[0] === "string" && tour.images[0].trim()) {
+    if (Array.isArray(tour.images) && tour.images.length > 0 && typeof tour.images[0] === "string" && tour.images[0].trim()) {
       image = tour.images[0];
     } else if (Array.isArray(tour.tour_images) && tour.tour_images.length > 0) {
       const firstImage = tour.tour_images[0]?.image_url;
       if (typeof firstImage === "string" && firstImage.trim()) {
         image = firstImage;
       }
+    } else if (typeof tour.image === "string" && tour.image.trim()) {
+      image = tour.image;
     }
 
     return {
@@ -164,11 +163,6 @@ const GuideProfilePage = () => {
         setLoading(true);
         setError(null);
         
-        if (initialData && initialData.tours && initialData.tours.length > 0) {
-          const mappedTours = (initialData.tours as BackendTour[]).map(mapBackendTourToTour);
-          setTours(mappedTours);
-        }
-        
         const response = (await profileService.getProfile(
           profileId,
           profileType as 'agency' | 'guide'
@@ -192,9 +186,8 @@ const GuideProfilePage = () => {
             setEmployeesCount(null);
           }
           
-          if (!initialData?.tours || initialData.tours.length === 0) {
-            await fetchToursForProfile(profileId, profileType);
-          }
+          // Always fetch tours from the tours endpoint to get images
+          await fetchToursForProfile(profileId, profileType);
         } else {
           throw new Error(response?.error || 'Failed to fetch profile');
         }
@@ -202,9 +195,9 @@ const GuideProfilePage = () => {
         setError('Failed to load profile data');
         if (initialData) {
           setProfileData(initialData);
-          if (initialData.tours && initialData.tours.length > 0) {
-            const mappedTours = (initialData.tours as BackendTour[]).map(mapBackendTourToTour);
-            setTours(mappedTours);
+          try {
+            await fetchToursForProfile(profileId, profileType);
+          } catch {
           }
         }
       } finally {
@@ -214,17 +207,13 @@ const GuideProfilePage = () => {
 
     const fetchToursForProfile = async (id: string, type: string) => {
       try {
-        const provider = type === 'agency' ? 'Agency' : 'Guide';
-        const toursResponse = await tourService.searchTours({ provider });
-        const allTours = Array.isArray(toursResponse) ? (toursResponse as BackendTour[]) : [];
-
-        const filtered = allTours.filter((tour) => {
-          if (type === 'agency') return String(tour.agency_id || '') === id;
-          return String(tour.guide_id || '') === id;
-        });
-
-        setTours(filtered.map(mapBackendTourToTour));
+        // Use getAgencyTours which fetches from browse endpoint with images
+        const profileType = type === 'agency' ? 'agency' : 'guide';
+        const toursData = await tourService.getAgencyTours(id, profileType);
+        const allTours = Array.isArray(toursData) ? (toursData as BackendTour[]) : [];
+        setTours(allTours.map(mapBackendTourToTour));
       } catch (_err) {
+
       }
     };
 

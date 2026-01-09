@@ -294,7 +294,7 @@ export const tourService = {
   getAgencyTours: async (profileId: string, profileType?: 'agency' | 'guide') => {
     const type = profileType || getCurrentProfileType() || 'agency';
     const response = await api.get('/api/tours/browse', {
-      params: { provider: type, size: 100 }
+      params: { size: 100 }
     });
     const result = response.data?.data || response.data;
     const tours = result?.tours || [];
