@@ -29,7 +29,7 @@ export interface AuthResponse {
 export interface User {
   id: string;
   email: string;
-  userType: 'traveller' | 'guide' | 'agency'; // Now strictly typed
+  userType: 'traveller' | 'guide' | 'agency' | 'admin';
   firstName?: string;
   lastName?: string;
   guideName?: string;
@@ -40,7 +40,7 @@ export interface User {
 
   // Profile information for routing (added)
   profileId: string;       // agencyId, guideId, or userId
-  profileType: 'traveller' | 'guide' | 'agency';
+  profileType: 'traveller' | 'guide' | 'agency' | 'admin';
   userId: string;          // logged-in user ID
   isManager?: boolean;     // for agency employees
 

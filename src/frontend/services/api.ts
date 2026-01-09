@@ -294,7 +294,7 @@ export const tourService = {
   getAgencyTours: async (profileId: string, profileType?: 'agency' | 'guide') => {
     const type = profileType || getCurrentProfileType() || 'agency';
     const response = await api.get('/api/tours/browse', {
-      params: { provider: type, size: 100 }
+      params: { size: 100 }
     });
     const result = response.data?.data || response.data;
     const tours = result?.tours || [];
@@ -521,7 +521,7 @@ export const settingsService = {
 export const employeeService = {
   // Get all employees for an agency
   getEmployees: async (agencyId: string) => {
-    const response = await api.get(`/manager/employees/${agencyId}`);
+    const response = await api.get(`/manager/employeesOp/${agencyId}`);
     return response.data;
   },
 
