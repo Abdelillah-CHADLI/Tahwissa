@@ -5,42 +5,47 @@ import AboutSection from "../../components/guide_profile/AboutSection";
 import ToursSection from "../../components/guide_profile/ToursSection";
 import ContactSection from "../../components/guide_profile/ContactSection";
 import { colors } from "../../assets/colors";
-import { profileService, tourService } from "../../services/api";
+import { employeeService, profileService, tourService } from "../../services/api";
 import { ROUTES } from "../../utils/routes";
 import type { Tour } from "../../types/explore";
 import defaultGuideImage from "../../assets/imgs/guide.png";
 import defaultAgencyImage from "../../assets/imgs/agency.jpeg";
 import defaultTourImage from "../../assets/imgs/tour1.jpeg";
 
-interface ProfileApiResponse {
+type ProfileApiResponse = {
   success: boolean;
-  data: {
-    agency_id?: string;
-    agency_name?: string;
-    rating?: number;
-    num_raters?: number;
-    manager_id?: string;
-    manager?: {
-      email: string;
-      role: string;
-    };
-    guide_id?: string;
-    guide_name?: string;
-    ratings?: number;
-    user?: {
-      email: string;
-      role: string;
-    };
-    tours?: Array<{
-      tour_id: string;
-      tour_title: string;
-      location: string;
-      price: number;
-      start_date?: string;
-      guide_id?: string | null;
-    }>;
+  data?: Record<string, unknown>;
+  profile?: Record<string, unknown>;
+  error?: string;
+};
+
+type ProfileRecord = {
+  agency_id?: string;
+  agency_name?: string;
+  agency_description?: string;
+  main_office_location?: string;
+  support_email?: string;
+  phone_number?: string;
+  agency_logo?: string;
+  rating?: number;
+  num_raters?: number;
+  manager_id?: string;
+  manager?: {
+    email?: string;
+    role?: string;
   };
-}
+  guide_id?: string;
+  guide_name?: string;
+  guide_description?: string;
+  main_location?: string;
+  guide_photo?: string;
+  ratings?: number;
+  user?: {
+    email?: string;
+    role?: string;
+  };
+  [key: string]: unknown;
+};
 
 interface MappedProfile {
   name: string;
@@ -59,6 +64,15 @@ interface MappedProfile {
   employeesCount?: number;
   establishedYear?: number;
   num_raters?: number;
+
+  agency_email?: string;
+  agency_phone?: string;
+  guide_email?: string;
+  guide_phone?: string;
+  emergency_phone?: string;
+  support_email?: string;
+  website?: string;
+  agency_website?: string;
 }
 
 type BackendTour = {
@@ -71,6 +85,8 @@ type BackendTour = {
   price?: number;
   rating?: number;
   image?: string;
+  images?: string[];
+  tour_images?: Array<{ image_url?: string }>;
   duration?: string;
   location?: string;
   category?: string;
@@ -85,8 +101,9 @@ const GuideProfilePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState<"about" | "tours" | "contact">("about");
-  const [profileData, setProfileData] = useState<ProfileApiResponse['data'] | null>(null);
+  const [profileData, setProfileData] = useState<ProfileRecord | null>(null);
   const [tours, setTours] = useState<Tour[]>([]);
+  const [employeesCount, setEmployeesCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,7 +119,19 @@ const GuideProfilePage = () => {
     const groupSize = String(tour.groupSize || tour.group_size || "");
     const description = String(tour.description || tour.tour_details || title || "");
     const rating = typeof tour.rating === "number" ? tour.rating : 0;
-    const image = typeof tour.image === "string" && tour.image.trim() ? tour.image : defaultTourImage;
+    
+    // Extract image from tour_images array, images array, or direct image field
+    let image = defaultTourImage;
+    if (typeof tour.image === "string" && tour.image.trim()) {
+      image = tour.image;
+    } else if (Array.isArray(tour.images) && tour.images.length > 0 && typeof tour.images[0] === "string" && tour.images[0].trim()) {
+      image = tour.images[0];
+    } else if (Array.isArray(tour.tour_images) && tour.tour_images.length > 0) {
+      const firstImage = tour.tour_images[0]?.image_url;
+      if (typeof firstImage === "string" && firstImage.trim()) {
+        image = firstImage;
+      }
+    }
 
     return {
       id,
@@ -140,21 +169,34 @@ const GuideProfilePage = () => {
           setTours(mappedTours);
         }
         
-        const response = await profileService.getProfile(profileId, profileType as 'agency' | 'guide');
-        
-        if (response.success) {
-          setProfileData(response.data);
+        const response = (await profileService.getProfile(
+          profileId,
+          profileType as 'agency' | 'guide'
+        )) as ProfileApiResponse;
+
+        const resolvedProfile = (response?.data || response?.profile) as ProfileRecord | undefined;
+
+        if (response?.success && resolvedProfile) {
+          setProfileData(resolvedProfile);
+
+          // Load employees count for agencies
+          if (profileType === 'agency') {
+            try {
+              const employeesResp = await employeeService.getEmployees(profileId);
+              const list = (employeesResp?.employees as unknown) ?? [];
+              setEmployeesCount(Array.isArray(list) ? list.length : 0);
+            } catch {
+              setEmployeesCount(0);
+            }
+          } else {
+            setEmployeesCount(null);
+          }
           
           if (!initialData?.tours || initialData.tours.length === 0) {
-            if (response.data.tours && response.data.tours.length > 0) {
-              const mappedTours = (response.data.tours as BackendTour[]).map(mapBackendTourToTour);
-              setTours(mappedTours);
-            } else {
-              await fetchToursForProfile(profileId, profileType);
-            }
+            await fetchToursForProfile(profileId, profileType);
           }
         } else {
-          throw new Error(response.error || 'Failed to fetch profile');
+          throw new Error(response?.error || 'Failed to fetch profile');
         }
       } catch (err) {
         setError('Failed to load profile data');
@@ -192,51 +234,131 @@ const GuideProfilePage = () => {
   const getMappedProfile = (): MappedProfile | null => {
     if (!profileData) return null;
 
+    const pickString = (...values: unknown[]): string => {
+      for (const v of values) {
+        if (typeof v === 'string' && v.trim()) return v;
+        if (typeof v === 'number' && Number.isFinite(v)) return String(v);
+      }
+      return '';
+    };
+
+    const readRelatedEmail = (rel: unknown): string => {
+      if (!rel) return '';
+      if (Array.isArray(rel)) {
+        return pickString((rel[0] as any)?.email);
+      }
+      return pickString((rel as any).email);
+    };
+
     const fallbackImage = profileType === 'agency' ? defaultAgencyImage : defaultGuideImage;
-    const image = (typeof initialData?.image === 'string' && initialData.image.trim()) ? initialData.image : fallbackImage;
-    const about = typeof initialData?.subtitle === 'string' ? initialData.subtitle : '';
+    const backendImage =
+      profileType === 'agency'
+        ? pickString(profileData.agency_logo)
+        : pickString(profileData.guide_photo);
+    const image =
+      backendImage ||
+      ((typeof initialData?.image === 'string' && initialData.image.trim()) ? initialData.image : '') ||
+      fallbackImage;
+    const initialName = typeof initialData?.name === 'string' ? initialData.name : '';
+    const initialAbout = typeof initialData?.subtitle === 'string' ? initialData.subtitle : '';
+    const initialLocation = typeof initialData?.location === 'string' ? initialData.location : '';
+
+    const aboutFromBackend =
+      profileType === 'agency'
+        ? (typeof profileData.agency_description === 'string' ? profileData.agency_description : '')
+        : (typeof profileData.guide_description === 'string' ? profileData.guide_description : '');
+    const about = aboutFromBackend || initialAbout;
 
     if (profileType === 'agency') {
       const avgRating = profileData.num_raters && profileData.num_raters > 0 && profileData.rating
         ? (profileData.rating / profileData.num_raters).toFixed(1)
         : '0';
 
+      const locationValue =
+        (typeof profileData.main_office_location === 'string' && profileData.main_office_location.trim())
+          ? profileData.main_office_location
+          : initialLocation;
+
+      const managerEmail = readRelatedEmail(profileData.manager);
+      const emailValue = pickString(
+        // Backend stores agency contact email as support_email (and manager.user email is also available)
+        (profileData as any).agency_email,
+        profileData.support_email,
+        managerEmail,
+        (profileData as any).email,
+        managerEmail,
+        profileData.support_email
+      );
+
+      const phoneValue = pickString(
+        (profileData as any).agency_phone,
+        (profileData as any).phone,
+        profileData.phone_number
+      );
+
+      const websiteValue = pickString((profileData as any).agency_website, (profileData as any).website);
+
       return {
-        name: profileData.agency_name || 'Unknown Agency',
+        name: profileData.agency_name || initialName || 'Unknown Agency',
         specialty: "Travel Agency",
-        location: "", // Removed location
+        location: locationValue,
         rating: parseFloat(avgRating),
         toursCount: tours.length,
         experience: "",
-        email: profileData.manager?.email || "",
-        phone: "",
+        email: emailValue || 'Not provided',
+        phone: phoneValue || 'Not provided',
         about,
         languages: [],
         certifications: [],
         type: "agency",
         image,
-        num_raters: profileData.num_raters
+        num_raters: profileData.num_raters,
+        employeesCount: typeof employeesCount === 'number' ? employeesCount : undefined,
+
+  
+        agency_email: pickString((profileData as any).agency_email, profileData.support_email, managerEmail) || undefined,
+        agency_phone: pickString((profileData as any).agency_phone, profileData.phone_number) || undefined,
+        emergency_phone: pickString((profileData as any).emergency_phone, (profileData as any).emergency_contact) || undefined,
+        support_email: typeof profileData.support_email === 'string' ? profileData.support_email : undefined,
+        website: typeof (profileData as any).website === 'string' ? (profileData as any).website : undefined,
+        agency_website: typeof (profileData as any).agency_website === 'string' ? (profileData as any).agency_website : (typeof websiteValue === 'string' ? websiteValue : undefined),
       };
     } else {
       const avgRating = profileData.num_raters && profileData.num_raters > 0 && profileData.ratings
         ? (profileData.ratings / profileData.num_raters).toFixed(1)
         : '0';
 
+      const locationValue =
+        (typeof profileData.main_location === 'string' && profileData.main_location.trim())
+          ? profileData.main_location
+          : initialLocation;
+
+      const userEmail = readRelatedEmail(profileData.user);
+      const emailValue = pickString((profileData as any).email, userEmail, profileData.support_email);
+      const phoneValue = pickString((profileData as any).phone, profileData.phone_number);
+      const websiteValue = pickString((profileData as any).website);
+
       return {
-        name: profileData.guide_name || 'Unknown Guide',
+        name: profileData.guide_name || initialName || 'Unknown Guide',
         specialty: "Local Guide",
-        location: "", // Removed location
+        location: locationValue,
         rating: parseFloat(avgRating),
         toursCount: tours.length,
         experience: "",
-        email: profileData.user?.email || "",
-        phone: "",
+        email: emailValue || 'Not provided',
+        phone: phoneValue || 'Not provided',
         about,
         languages: [],
         certifications: [],
         type: "guide",
         image,
-        num_raters: profileData.num_raters
+        num_raters: profileData.num_raters,
+
+        guide_email: typeof (profileData as any).guide_email === 'string' ? (profileData as any).guide_email : undefined,
+        guide_phone: typeof (profileData as any).guide_phone === 'string' ? (profileData as any).guide_phone : undefined,
+        emergency_phone: pickString((profileData as any).emergency_phone, (profileData as any).emergency_contact) || undefined,
+        support_email: typeof profileData.support_email === 'string' ? profileData.support_email : undefined,
+        website: typeof websiteValue === 'string' ? websiteValue : undefined,
       };
     }
   };

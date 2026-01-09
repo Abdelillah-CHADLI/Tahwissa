@@ -20,6 +20,8 @@ interface BackendAgency {
   rating?: number;
   num_raters?: number;
   manager_id?: string;
+  agency_logo?: string;
+  main_office_location?: string;
   tours?: Array<{
     tour_id: string;
     tour_title: string;
@@ -35,6 +37,8 @@ interface BackendGuide {
   guide_name: string;
   ratings?: number;
   num_raters?: number;
+  guide_photo?: string;
+  main_location?: string;
 }
 
 interface BrowseAgenciesResponse {
@@ -79,8 +83,14 @@ const mapAgencyData = (backendAgency: BackendAgency) => {
     id: backendAgency.agency_id,
     name: backendAgency.agency_name,
     subtitle: `Rated ${avgRating} ⭐ • ${backendAgency.num_raters || 0} reviews`,
-    image: agencyImage,
-    location: "Algeria",
+    image:
+      typeof backendAgency.agency_logo === 'string' && backendAgency.agency_logo.trim()
+        ? backendAgency.agency_logo
+        : agencyImage,
+    location:
+      typeof backendAgency.main_office_location === 'string' && backendAgency.main_office_location.trim()
+        ? backendAgency.main_office_location
+        : "Algeria",
     tours: toursCount,
     teamSize: "Professional Team",
     verified: true,
@@ -98,8 +108,14 @@ const mapGuideData = (backendGuide: BackendGuide) => {
     id: backendGuide.guide_id,
     name: backendGuide.guide_name,
     subtitle: `Rated ${avgRating} ⭐ • ${backendGuide.num_raters || 0} reviews`,
-    image: guideImage,
-    location: "Algeria",
+    image:
+      typeof backendGuide.guide_photo === 'string' && backendGuide.guide_photo.trim()
+        ? backendGuide.guide_photo
+        : guideImage,
+    location:
+      typeof backendGuide.main_location === 'string' && backendGuide.main_location.trim()
+        ? backendGuide.main_location
+        : "Algeria",
     tours: 0,
     experience: "Professional Guide",
     languages: ["Arabic", "French", "English"],
@@ -216,6 +232,7 @@ const TravelAgenciesPage = () => {
           name: profileData.name,
           subtitle: profileData.subtitle,
           image: profileData.image,
+          location: profileData.location,
           tours: profileData.toursData || [],
           toursCount: profileData.tours || 0
         },
