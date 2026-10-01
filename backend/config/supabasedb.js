@@ -1,9 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
 
-export const supabase = createClient(
-"https://trbivupdngzmwpofgmrg.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRyYml2dXBkbmd6bXdwb2ZnbXJnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Mzk0MTEwNSwiZXhwIjoyMDc5NTE3MTA1fQ.DScpYgTyvifEQMjJerBhplBAVTiPXyRDxsEFcWeQG0w"
-);
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
-export default supabase
+if (!supabaseUrl || !supabaseKey) {
+  console.warn('⚠️ Warning: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not defined in environment variables.');
+}
+
+export const supabase = createClient(supabaseUrl || '', supabaseKey || '');
+
+export default supabase;

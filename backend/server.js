@@ -23,10 +23,17 @@ const allowedOrigins = [
   'http://127.0.0.1:3000'
 ];
 
+if (process.env.FRONTEND_URL) {
+  const customOrigins = process.env.FRONTEND_URL.split(',').map(url => url.trim().replace(/\/$/, ''));
+  allowedOrigins.push(...customOrigins);
+}
+
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
     if (allowedOrigins.includes(origin)) return callback(null, true);
+    // Allow vercel preview / production URLs
+    if (origin.endsWith('.vercel.app') || origin.endsWith('.netlify.app')) return callback(null, true);
     return callback(new Error(`CORS blocked for origin: ${origin}`));
   },
   credentials: true,

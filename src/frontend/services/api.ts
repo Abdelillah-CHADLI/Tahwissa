@@ -3,9 +3,9 @@ import { getCurrentAgencyUuid, getCurrentProfileType } from '../utils/session';
 
 // Base axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:5000',
-  timeout: 10000,
-  //withCredentials: true, // ENABLED for cookie-based auth
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  timeout: 15000,
+  withCredentials: true,
 });
 
 // Request interceptor
