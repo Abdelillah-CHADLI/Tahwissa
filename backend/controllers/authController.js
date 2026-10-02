@@ -299,7 +299,12 @@ export async function login(req, res) {
 
 export function logout(req, res) {
 
-  res.clearCookie("token");
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax'
+  });
   return res.status(200).json({ message: "Logged out successfully" });
   //must redirect to the login from the frontEnd.
 }

@@ -1,17 +1,16 @@
-import { CheckCircle, Calendar, Mail, Home } from "lucide-react";
+import { CheckCircle, Calendar, Home } from "lucide-react";
 
 interface BookingSuccessPageProps {
     onNavigate: (page: string) => void;
     tourTitle?: string;
-    email?: string;
     bookingRef?: string;
 }
 
-export function BookingSuccessPage({ onNavigate, tourTitle, email, bookingRef }: BookingSuccessPageProps) {
+export function BookingSuccessPage({ onNavigate, tourTitle, bookingRef }: BookingSuccessPageProps) {
     const currentDate = new Date().toLocaleDateString();
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#f5f8f7] flex items-center justify-center p-4">
             <div className="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8">
                 {/* Success Icon */}
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -21,10 +20,10 @@ export function BookingSuccessPage({ onNavigate, tourTitle, email, bookingRef }:
                 {/* Success Message */}
                 <div className="text-center mb-6">
                     <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                        Booking Confirmed!
+                        Booking request sent
                     </h1>
                     <p className="text-gray-600">
-                        Thank you for your booking. We've sent a confirmation email to your inbox with all the details.
+                        Your request is pending. You can track its status in My Requests.
                     </p>
                 </div>
 
@@ -38,7 +37,7 @@ export function BookingSuccessPage({ onNavigate, tourTitle, email, bookingRef }:
                                 Booking Reference
                             </h3>
                             <div className="text-center mb-6">
-                                <span className="text-3xl font-mono font-bold text-blue-600">
+                                <span className="text-3xl font-mono font-bold text-teal-700">
                                     {bookingRef}
                                 </span>
                                 <p className="text-sm text-gray-500 mt-1">
@@ -61,35 +60,28 @@ export function BookingSuccessPage({ onNavigate, tourTitle, email, bookingRef }:
                             <span className="text-gray-500">Booking Date:</span>
                             <span className="ml-auto font-medium">{currentDate}</span>
                         </div>
-                        {email ? (
-                            <div className="flex items-center gap-2">
-                                <Mail className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-500">Confirmation Sent To:</span>
-                                <span className="ml-auto font-medium">{email}</span>
-                            </div>
-                        ) : null}
                     </div>
                 </div>
 
                 {/* Next Steps */}
-                <div className="bg-blue-50 rounded-lg p-6 mb-6">
+                <div className="bg-teal-50 rounded-lg p-6 mb-6">
                     <h4 className="text-lg font-semibold mb-3">What's Next?</h4>
                     <ul className="space-y-2 text-sm">
                         <li className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                            <span>Check your email for booking confirmation and tour details</span>
+                            <span>Check My Requests for the provider's decision</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                            <span>The tour provider will contact you 24 hours before the tour date</span>
+                            <span>Contact the provider if you need to discuss tour details</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                            <span>You can view and manage your booking in "My Requests"</span>
+                            <span>You can view and manage your request in My Requests</span>
                         </li>
                         <li className="flex items-start gap-2">
                             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-                            <span>Free cancellation available up to 24 hours before tour date</span>
+                            <span>You can cancel a pending request from your account</span>
                         </li>
                     </ul>
                 </div>
@@ -105,7 +97,7 @@ export function BookingSuccessPage({ onNavigate, tourTitle, email, bookingRef }:
                     </button>
                     <button
                         onClick={() => onNavigate("explore")}
-                        className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                        className="flex-1 py-3 px-4 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors flex items-center justify-center gap-2"
                     >
                         <Home className="w-4 h-4" />
                         Explore More Tours

@@ -86,18 +86,18 @@ const ExplorePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200 top-0 z-10">
-        <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 py-4">
+      <div className="border-b border-[#dce9e5] bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           <SearchBar onSearch={handleSearch} />
           <FilterBar filters={filters} setFilters={handleFilterChange} />
           <PopularTags onTagClick={handleTagClick} />
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-3 xs:px-4 sm:px-6 py-6">
-        <div className="mb-6 flex justify-between items-center">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="text-2xl xs:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="mb-1 text-2xl font-bold text-[#193e41] sm:text-3xl">
               Explore Tours & Activities
             </h1>
             <p className="text-sm xs:text-base text-gray-600">
@@ -150,7 +150,7 @@ const ExplorePage = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 xs:gap-6 mb-6">
+            <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
               {tours.map((tour, index) => (
                 <TourCard
                   key={tour.tour_id || tour.id}

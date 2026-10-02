@@ -14,7 +14,7 @@ interface Tour {
 export function BookingSummary(tour: Tour) {
     return (
         <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Booking Summary</h2>
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Tour summary</h2>
 
             <img
                 src={tour.image}
@@ -41,13 +41,13 @@ export function BookingSummary(tour: Tour) {
                 </div>
             </div>
 
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="mt-4 p-3 bg-teal-50 rounded-lg">
                 <div className="flex items-start gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                     <div>
-                        <p className="font-medium text-sm text-gray-900">Free Cancellation</p>
+                        <p className="font-medium text-sm text-gray-900">Request first</p>
                         <p className="text-xs text-gray-600">
-                            Cancel up to 24 hours before for a full refund
+                            The provider confirms availability. No payment is collected on this site.
                         </p>
                     </div>
                 </div>

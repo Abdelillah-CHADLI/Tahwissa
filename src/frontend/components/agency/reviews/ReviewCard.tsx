@@ -1,4 +1,4 @@
-import { Star, ThumbsUp, MessageSquare } from "lucide-react";
+import { Star } from "lucide-react";
 
 type Review = {
     id: string;
@@ -16,11 +16,7 @@ type Review = {
     }
 }
 
-type ReviewCardProps = {
-    review: Review;
-    onHelpful?: (reviewId: string) => void;
-    onReply?: (reviewId: string) => void;
-}
+type ReviewCardProps = { review: Review; }
 
 const renderStars = (rating: number) => {
     return (
@@ -36,11 +32,11 @@ const renderStars = (rating: number) => {
     );
 };
 
-export function ReviewCard({ review, onHelpful, onReply }: ReviewCardProps) {
+export function ReviewCard({ review }: ReviewCardProps) {
     return (
-        <div className="border-2 hover:border-primary/50 transition-all rounded-lg p-6">
+        <div className="rounded-2xl border border-[#dce9e5] bg-white p-4 transition-shadow hover:shadow-sm sm:p-5">
             <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center font-medium">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#348086] font-medium text-white">
                     {review.customerName.split(" ").map((n) => n[0]).join("")}
                 </div>
 
@@ -52,33 +48,16 @@ export function ReviewCard({ review, onHelpful, onReply }: ReviewCardProps) {
                                 {review.tourName}
                             </p>
                         </div>
-                        <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                        <span className="rounded bg-[#edf5ef] px-2 py-1 text-xs text-[#28676d]">
                             {review.date}
                         </span>
                     </div>
 
                     <div className="mb-3">{renderStars(review.rating)}</div>
 
-                    <p className="text-muted-foreground mb-4">
+                    <p className="text-sm leading-relaxed text-slate-600">
                         {review.comment}
                     </p>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                            onClick={() => onHelpful?.(review.id)}
-                        >
-                            <ThumbsUp className="w-4 h-4" />
-                            Helpful ({review.helpful})
-                        </button>
-                        <button
-                            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-                            onClick={() => onReply?.(review.id)}
-                        >
-                            <MessageSquare className="w-4 h-4" />
-                            Reply
-                        </button>
-                    </div>
                 </div>
             </div>
         </div>

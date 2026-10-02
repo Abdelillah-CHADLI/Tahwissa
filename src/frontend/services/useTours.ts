@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { tourService } from './api';
+import { tourService, getApiErrorMessage } from './api';
 import type { Tour, TourFilters } from '../types/explore';
 import tourFallbackImage from '../assets/imgs/tour1.jpeg';
 
@@ -99,7 +99,7 @@ export const useTours = (): UseToursReturn => {
       rating,
       image: imageUrl,
       duration: backendTour.duration
-        ? `${backendTour.duration} days`
+        ? String(backendTour.duration)
         : "Flexible",
       location: backendTour.location,
       category: backendTour.category || "General",
@@ -138,7 +138,10 @@ export const useTours = (): UseToursReturn => {
       }
       
       // Add filters (only if they're not the default values)
-      const actualFilters = filters || currentFilters;
+      const actualFilters = filters || {
+        region: 'All Regions', category: 'All Categories',
+        priceRange: 'All Budgets', provider: 'All Providers'
+      };
       
       if (actualFilters.region && actualFilters.region !== "All Regions") {
         searchParams.region = actualFilters.region;
@@ -162,8 +165,9 @@ export const useTours = (): UseToursReturn => {
       if (Object.keys(searchParams).length > 0) {
         backendTours = await tourService.searchTours(searchParams);
       } else {
-        // Otherwise, get all tours using the regular endpoint
-        backendTours = await tourService.getTours(20);
+        const response = await tourService.browseTours(1, 12);
+        backendTours = response.data?.tours || [];
+        setHasMore(Boolean(response.data?.pagination?.hasNext));
       }
 
       const convertedTours = backendTours.map(convertBackendTourToFrontend);
@@ -171,19 +175,18 @@ export const useTours = (): UseToursReturn => {
   
       setTours(convertedTours);
       
-      const shouldHaveMore = Object.keys(searchParams).length === 0 && backendTours.length >= 20;
-      setHasMore(shouldHaveMore);
+      if (Object.keys(searchParams).length > 0) setHasMore(false);
       setCurrentPage(1);
 
     } catch (err: any) {
       console.error('Error fetching tours:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to fetch tours');
+      setError(getApiErrorMessage(err));
       setTours([]);
       setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, [currentFilters]);
+  }, []);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
@@ -204,26 +207,19 @@ export const useTours = (): UseToursReturn => {
         return;
       }
 
-      // For infinite scroll without filters, use getTours with limit
-      const limit = 20 * nextPage;
-      const moreTours = await tourService.getTours(limit);
-      
-      if (moreTours.length <= tours.length) {
-        setHasMore(false);
-      } else {
-        const convertedTours = moreTours.map(convertBackendTourToFrontend);
-        setTours(convertedTours);
-        setCurrentPage(nextPage);
-        setHasMore(moreTours.length >= limit);
-      }
+      const response = await tourService.browseTours(nextPage, 12);
+      const moreTours = response.data?.tours || [];
+      setTours(previous => [...previous, ...moreTours.map(convertBackendTourToFrontend)]);
+      setCurrentPage(nextPage);
+      setHasMore(Boolean(response.data?.pagination?.hasNext));
 
     } catch (err: any) {
       console.error('Error loading more tours:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to load more tours');
+      setError(getApiErrorMessage(err));
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore, currentPage, currentFilters, currentSearch, tours.length]);
+  }, [loading, hasMore, currentPage, currentFilters, currentSearch]);
 
   const clear = useCallback(() => {
     setTours([]);

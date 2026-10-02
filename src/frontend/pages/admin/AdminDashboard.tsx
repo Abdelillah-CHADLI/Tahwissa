@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { motion } from "framer-motion";
-import { LayoutDashboard, Shield, MessageSquare, Bell, LogOut, Menu, X } from 'lucide-react';
+import { motion } from "motion/react";
+import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/authService';
+import { LayoutDashboard, Shield, MessageSquare, LogOut, Menu, X } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 export function AdminDashboard() {
+    const { logout } = useAuth();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
     const location = useLocation();
@@ -44,8 +47,8 @@ export function AdminDashboard() {
     const currentMenuItem = menuItems.find(item => item.path === location.pathname) || menuItems[0];
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        authService.logout();
+        logout();
         navigate('/');
     };
 
@@ -58,12 +61,6 @@ export function AdminDashboard() {
                         {isSidebarOpen ? <X className='w-5 h-5 text-gray-600' /> : <Menu className='w-5 h-5 text-gray-600' />}
                     </button>
                     <h2 className="font-semibold text-gray-800">Admin Panel</h2>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button className='hover:bg-teal-50 p-2 rounded-full relative transition-colors'>
-                        <Bell className='w-5 h-5 text-gray-600' />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                    </button>
                 </div>
             </div>
 
@@ -149,10 +146,6 @@ export function AdminDashboard() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-4">
-                                <button className='hover:bg-teal-50 p-2 rounded-full relative transition-colors'>
-                                    <Bell className="w-5 h-5 text-gray-600" />
-                                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-                                </button>
                                 <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white font-medium text-sm">
                                     AD
                                 </div>

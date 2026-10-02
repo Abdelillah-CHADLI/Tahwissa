@@ -1,153 +1,110 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Save } from 'lucide-react';
 import { tourService, getApiErrorMessage } from '../../services/api';
-import { getCurrentAgencyUuid } from '../../utils/session';
+import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
 
-type Tour = Record<string, any>;
+type TourForm = {
+  tour_title: string; location: string; price: string; start_date: string;
+  category: string; duration: string; group_size: string;
+};
 
 export function AgencyEditTourProgram() {
   const navigate = useNavigate();
   const { tourId } = useParams();
-
-  const agencyId = useMemo(() => getCurrentAgencyUuid(), []);
-
+  const [form, setForm] = useState<TourForm | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [tour, setTour] = useState<Tour | null>(null);
 
   useEffect(() => {
-    let alive = true;
-
-    (async () => {
+    let active = true;
+    async function load() {
       try {
-        setLoading(true);
-        setError(null);
-
-        if (!agencyId) {
-          throw new Error('Agency account not detected. Please sign out and sign back in.');
-        }
-        if (!tourId) {
-          throw new Error('Missing tour id');
-        }
-
-        const found = await tourService.getTourById(tourId);
-        if (!found) throw new Error('Tour not found');
-
-        // Guard: only allow editing own tours (agency)
-        if (String(found.agency_id || '') !== String(agencyId)) {
-          throw new Error("You don't have permission to edit this tour.");
-        }
-
-        if (alive) setTour(found);
-      } catch (e) {
-        if (alive) setError(getApiErrorMessage(e));
+        if (!tourId) throw new Error('Missing tour ID.');
+        const profileId = getCurrentAgencyUuid();
+        const profileType = getCurrentProfileType();
+        if (!profileId || !profileType) throw new Error('Please sign in to edit this tour.');
+        const tour = await tourService.getTourById(tourId);
+        if (!tour) throw new Error('Tour not found.');
+        const ownerId = profileType === 'guide' ? tour.guide_id : tour.agency_id;
+        if (String(ownerId) !== profileId) throw new Error('This tour belongs to another provider.');
+        if (active) setForm({
+          tour_title: String(tour.tour_title ?? ''), location: String(tour.location ?? ''),
+          price: String(tour.price ?? ''), start_date: String(tour.start_date ?? '').slice(0, 10),
+          category: String(tour.category ?? ''), duration: String(tour.duration ?? ''),
+          group_size: String(tour.group_size ?? ''),
+        });
+      } catch (err) {
+        if (active) setError(getApiErrorMessage(err));
       } finally {
-        if (alive) setLoading(false);
+        if (active) setLoading(false);
       }
-    })();
+    }
+    load();
+    return () => { active = false; };
+  }, [tourId]);
 
-    return () => {
-      alive = false;
-    };
-  }, [agencyId, tourId]);
-
-  const disabledReason = "This project doesn't expose a tour update endpoint yet (backend only has POST /api/tours).";
-
-  if (loading) {
-    return (
-      <div className="p-6">
-        <div className="text-gray-600">Loading tour…</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded p-4 text-red-700">
-          {error}
-        </div>
-        <div className="mt-4">
-          <button
-            onClick={() => navigate('/agency/tour-programs')}
-            className="px-4 py-2 rounded bg-gray-900 text-white"
-          >
-            Back
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!form || !tourId) return;
+    const price = Number(form.price);
+    if (!form.tour_title.trim() || !form.location.trim() || !form.start_date || !Number.isFinite(price) || price < 0) {
+      setError('Add a title, location, valid date, and non-negative price.');
+      return;
+    }
+    try {
+      setSaving(true);
+      setError(null);
+      await tourService.updateTour(tourId, {
+        ...form, tour_title: form.tour_title.trim(), location: form.location.trim(), price,
+      });
+      navigate('/agency/tour-programs');
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Edit Tour</h1>
-          <p className="text-sm text-gray-600">{tour?.tour_title || tour?.title || ''}</p>
-        </div>
-        <button
-          onClick={() => navigate('/agency/tour-programs')}
-          className="px-4 py-2 rounded bg-gray-100 text-gray-900 hover:bg-gray-200"
-        >
-          Back
-        </button>
+    <div className="mx-auto w-full max-w-4xl space-y-6">
+      <button type="button" onClick={() => navigate('/agency/tour-programs')} className="inline-flex items-center gap-2 text-sm font-medium text-[#348086] hover:underline">
+        <ArrowLeft size={16} /> Tour programs
+      </button>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#348086]">Manage itinerary</p>
+        <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Edit tour</h1>
+        <p className="mt-2 text-sm text-slate-600">Update the essentials visitors see before booking.</p>
       </div>
-
-      <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-yellow-800">
-        {disabledReason}
-      </div>
-
-      <div className="bg-white border border-gray-100 rounded p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Title</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={String(tour?.tour_title || '')}
-              disabled
-              readOnly
-            />
+      {loading ? <p className="rounded-2xl bg-white p-6 text-slate-600">Loading tour…</p> : null}
+      {error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p> : null}
+      {form && !loading ? (
+        <form onSubmit={save} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            {([
+              ['tour_title', 'Tour title', 'text'], ['location', 'Location', 'text'],
+              ['price', 'Price (DZD)', 'number'], ['start_date', 'Start date', 'date'],
+              ['category', 'Category', 'text'], ['duration', 'Duration', 'text'],
+              ['group_size', 'Group size', 'text'],
+            ] as const).map(([field, label, type]) => (
+              <label key={field} className="block text-sm font-medium text-slate-700">
+                {label}
+                <input type={type} value={form[field]}
+                  onChange={event => setForm(current => current ? { ...current, [field]: event.target.value } : current)}
+                  required={['tour_title', 'location', 'price', 'start_date'].includes(field)}
+                  min={type === 'number' ? 0 : undefined}
+                  className="mt-2 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-[#348086] focus:ring-2 focus:ring-[#348086]/15" />
+              </label>
+            ))}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Location</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={String(tour?.location || '')}
-              disabled
-              readOnly
-            />
+          <div className="flex justify-end border-t border-slate-100 pt-5">
+            <button type="submit" disabled={saving} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#348086] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#28676d] disabled:opacity-60">
+              <Save size={16} /> {saving ? 'Saving…' : 'Save changes'}
+            </button>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Price</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={String(tour?.price ?? '')}
-              disabled
-              readOnly
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Start date</label>
-            <input
-              className="mt-1 w-full border rounded px-3 py-2"
-              value={String(tour?.start_date || '')}
-              disabled
-              readOnly
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 flex gap-3">
-          <button
-            className="px-4 py-2 rounded bg-gray-300 text-gray-700 cursor-not-allowed"
-            disabled
-            title={disabledReason}
-          >
-            Save changes
-          </button>
-        </div>
-      </div>
+        </form>
+      ) : null}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 // wassim
 const express = require("express");
 const router = express.Router();
+const { requireAuth, requireRole, requireSelf } = require('../middlewares/access.cjs');
 
 
 const {
@@ -17,8 +18,9 @@ const {
 } = require("../controllers/reportController");
 
 
-router.post("/reportAcc", reportAcc);
-router.post("/reportPost", reportPost);
+router.post("/reportAcc", requireAuth, requireSelf('reporter_id'), reportAcc);
+router.post("/reportPost", requireAuth, requireSelf('reporter_id'), reportPost);
+router.use(requireAuth, requireRole('admin'));
 router.get("/getPostReports", getPostReports);
 router.get("/getAccReports", getAccReports);
 router.get("/getPostReportDetails/:report_id", getPostReportDetails);

@@ -17,7 +17,7 @@ export default function HeroSection({
 }: HeroSectionProps) {
   return (
     <motion.section
-      className="relative h-[70vh] sm:h-[80vh] lg:h-[90vh] overflow-hidden"
+      className="relative h-[68svh] min-h-[440px] max-h-[680px] overflow-hidden sm:h-[72svh]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
@@ -34,7 +34,7 @@ export default function HeroSection({
         <div className="absolute inset-0 bg-linear-to-r from-[#348086]/90 via-[#348086]/50 to-[#348086]/10" />
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 sm:px-6 h-full flex flex-col justify-center max-w-7xl">
+      <div className="relative z-10 container mx-auto flex h-full max-w-6xl flex-col justify-center px-5 sm:px-6">
         <motion.div
           className="max-w-2xl text-center lg:text-left"
           initial={{ x: -100, opacity: 0 }}
@@ -42,7 +42,7 @@ export default function HeroSection({
           transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
         >
           <motion.h1
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight"
+            className="mb-4 max-w-2xl text-3xl font-bold leading-[1.12] text-white sm:text-4xl lg:text-5xl"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
@@ -51,12 +51,12 @@ export default function HeroSection({
           </motion.h1>
 
           <motion.p
-            className="text-base sm:text-lg md:text-xl text-white/95 mb-6 sm:mb-8 leading-relaxed max-w-3xl"
+            className="mb-6 max-w-xl text-sm leading-relaxed text-white/95 sm:text-base lg:text-lg"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
           >
-            Connect with local guides, discover verified tours, and join a
+            Connect with local guides, discover tours, and join a
             community of travelers exploring the beauty of Algeria - from Sahara
             deserts to Mediterranean shores, from ancient ruins to mountain
             peaks.

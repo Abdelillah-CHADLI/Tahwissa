@@ -1,5 +1,6 @@
 //wassim
 const { authMiddleware } = require("../middlewares/middleware");
+const { requireAuth } = require('../middlewares/access.cjs');
 const express = require("express");
 const router = express.Router();
 
@@ -9,7 +10,6 @@ const {
   login,
   logout,
   signUp,
-  googleAuth,
   changePassword,
   deleteAccount,
 } = require("../controllers/authController");
@@ -24,7 +24,9 @@ router.post("/signUp" , async ( req , res) => {
     }
 }) 
 router.post("/logout", logout);               // logout
-router.get("/google" , googleAuth);
+router.get('/session', requireAuth, (req, res) => {
+  res.json({ id: req.user.id, email: req.user.email, role: req.user.role });
+});
 router.post("/changePass" ,authMiddleware, changePassword);
 router.post("/deleteAcc" , authMiddleware , deleteAccount);
 

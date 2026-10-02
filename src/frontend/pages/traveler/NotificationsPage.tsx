@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import api from '../../services/api';
 import type { User } from '../../types/auth';
 
@@ -204,19 +204,19 @@ const NotificationsPage = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <motion.h1 
+    <div className="min-h-screen bg-[#f5f8f7] py-5 sm:py-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <motion.div className="mb-6 rounded-2xl bg-[#245f63] px-5 py-7 text-white sm:px-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-gray-800 mb-2"
         >
-          Notifications
-        </motion.h1>
-        <p className="text-gray-600 mb-8">Stay updated with your bookings, messages, and activities</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#cbf492]">Your activity</p>
+          <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Notifications</h1>
+          <p className="mt-2 text-sm text-white/85 sm:text-base">Updates about your trips and community activity.</p>
+        </motion.div>
         
         {/* Filter Tabs */}
-        <div className="flex space-x-4 mb-6">
+        <div className="mb-5 flex flex-wrap gap-2">
           {(['all', 'unread', 'read'] as const).map((filter) => (
             <motion.button
               key={filter}
@@ -225,8 +225,8 @@ const NotificationsPage = () => {
               onClick={() => setActiveFilter(filter)}
               className={`px-4 py-2 rounded-full text-sm font-medium ${
                 activeFilter === filter
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#348086] text-white'
+                  : 'bg-white text-gray-600 border border-[#dce9e5] hover:bg-[#eef6f1]'
               }`}
             >
               {filter === 'all' && `All (${notifications.length})`}
@@ -241,7 +241,7 @@ const NotificationsPage = () => {
           <div className="mb-6">
             <button
               onClick={markAllAsRead}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+              className="text-sm font-medium text-[#348086] hover:underline"
             >
               Mark all as read
             </button>
@@ -252,11 +252,11 @@ const NotificationsPage = () => {
         <div className="space-y-4">
           {loading ? (
             <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#348086]"></div>
               <p className="mt-2 text-gray-600">Loading notifications...</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow">
+            <div className="rounded-2xl border border-[#dce9e5] bg-white py-12 text-center shadow-sm">
               <p className="text-gray-600">No notifications found</p>
             </div>
           ) : (
@@ -266,14 +266,14 @@ const NotificationsPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`bg-white rounded-lg shadow p-6 border-l-4 ${
-                  notification.isRead ? 'border-gray-300' : 'border-blue-500'
+                className={`rounded-2xl border border-[#dce9e5] bg-white p-4 shadow-sm sm:p-5 ${
+                  notification.isRead ? 'border-l-4 border-l-gray-300' : 'border-l-4 border-l-[#348086]'
                 } hover:shadow-md transition-shadow cursor-pointer`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
-                    notification.isRead ? 'bg-gray-100' : 'bg-blue-100'
+                    notification.isRead ? 'bg-gray-100' : 'bg-[#e3f1e9]'
                   }`}>
                     {getNotificationIcon(notification.type)}
                   </div>
@@ -285,7 +285,7 @@ const NotificationsPage = () => {
                         <span className="text-sm text-gray-500 mt-2 block">{notification.timestamp}</span>
                       </div>
                       {!notification.isRead && (
-                        <span className="inline-block w-2 h-2 bg-blue-600 rounded-full"></span>
+                        <span className="inline-block h-2 w-2 rounded-full bg-[#348086]"></span>
                       )}
                     </div>
                   </div>

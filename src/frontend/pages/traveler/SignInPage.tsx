@@ -6,9 +6,6 @@ import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../contexts/AuthContext";
 import type { LoginRequest } from "../../types/auth";
-import { GoogleLogin } from "@react-oauth/google";
-import { jwtDecode } from "jwt-decode";
-import api from "../../services/api";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -62,13 +59,9 @@ export default function SignInPage() {
           if (user.userType == "admin") {
             window.location.href = "/admin";
           } else {
-            navigate(ROUTES.HOME, {
-              state: {
-                profileId: user.profileId,
-                profileType: "traveller",
-                userId: user.userId,
-              },
-            });
+            const returnPath = location.state?.from;
+            navigate(typeof returnPath === 'string' && returnPath.startsWith('/traveler/')
+              ? returnPath : ROUTES.HOME, { replace: true });
           }
         }
       } else {
@@ -83,78 +76,12 @@ export default function SignInPage() {
     }
   };
 
-  const handleGoogleLogin = async (credentialResponse: any) => {
-    try {
-      const decoded = jwtDecode(credentialResponse.credential);
-      const googleEmail = (decoded as any)?.email;
-      if (!googleEmail)
-        throw new Error("Google login did not return an email.");
-
-      const response = await api.get("/auth/google", {
-        params: { email: googleEmail },
-      });
-
-      const { user_id, role } = response.data;
-      if (!user_id || !role) throw new Error("Invalid Google auth response.");
-
-      // Store minimal user shape expected by the app
-      const googleUser = {
-        id: user_id,
-        email: googleEmail,
-        userType:
-          String(role).toLowerCase().includes("agency") ||
-          String(role).toLowerCase().includes("employee")
-            ? "agency"
-            : String(role).toLowerCase().includes("guide")
-            ? "guide"
-            : "traveller",
-        profileId: user_id,
-        profileType:
-          String(role).toLowerCase().includes("agency") ||
-          String(role).toLowerCase().includes("employee")
-            ? "agency"
-            : String(role).toLowerCase().includes("guide")
-            ? "guide"
-            : "traveller",
-        userId: user_id,
-      } as any;
-
-      login(googleUser);
-
-      if (
-        googleUser.userType === "AgencyEmployee" ||
-        googleUser.userType === "Guide"
-      ) {
-        window.location.href = "/agency";
-      } else {
-        navigate(ROUTES.HOME, {
-          state: {
-            profileId: googleUser.profileId,
-            profileType: "traveller",
-            userId: googleUser.userId,
-          },
-        });
-      }
-    } catch (error) {
-      const err = error as any;
-      console.error(
-        "Google login error:",
-        err?.response?.data || err?.message || err
-      );
-      setError("Google login failed. Please try again.");
-    }
-  };
-
   const handleBackToHome = () => {
     navigate(ROUTES.HOME);
   };
 
   const handleSignUp = () => {
     navigate(ROUTES.SIGN_UP);
-  };
-
-  const handleForgotPassword = () => {
-    // Not implemented yet
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -237,14 +164,6 @@ export default function SignInPage() {
                 >
                   Password
                 </label>
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  className="text-sm text-[#348086] hover:text-[#2a6970] font-medium transition-colors"
-                  disabled={isLoading}
-                >
-                  Forgot password?
-                </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -284,14 +203,6 @@ export default function SignInPage() {
               )}
               {isLoading ? "Signing In..." : "Sign In"}
             </button>
-          </div>
-
-          <br></br>
-          <div style={{ display: "flex", justifyContent: "center" }}>
-            <GoogleLogin
-              onSuccess={handleGoogleLogin}
-              onError={() => console.log("Login failed")}
-            />
           </div>
 
           <p className="text-center text-sm text-gray-600 mt-6">

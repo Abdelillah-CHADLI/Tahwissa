@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion } from "motion/react";
-import { LayoutDashboard, Building2, Calendar, Package, Bell, Star, Settings, LogOut, Menu, X, Shield, Crown } from 'lucide-react';
+import { LayoutDashboard, Building2, Calendar, Package, Star, Settings, LogOut, Menu, X, Shield } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/api';
 import { ROUTES } from '../../utils/routes';
 import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
 import { isGuide, getContextText } from '../../utils/userContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { authService } from '../../services/authService';
 
 export function AgencyDashboard() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,6 +16,7 @@ export function AgencyDashboard() {
     const [isManager, setIsManager] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+    const { logout } = useAuth();
 
     useEffect(() => {
         const handleResize = () => {
@@ -76,19 +79,12 @@ export function AgencyDashboard() {
         ...(isManager && !isGuide() ? [{ path: "/agency/admin", label: "Admin Panel", icon: Shield }] : []),
     ];
 
-    const currentMenuItem = [...menuItems, { path: "/agency/premium", label: "Premium Offers", icon: Crown }].find(item => item.path === location.pathname) || menuItems[0];
+    const currentMenuItem = menuItems.find(item => item.path === location.pathname) || menuItems[0];
 
     const handleLogout = () => {
-        localStorage.removeItem('agencyId');
-        localStorage.removeItem('token'); // If you use tokens
-        localStorage.removeItem('user');
-        localStorage.removeItem('profileId');
+        authService.logout();
+        logout();
         navigate(ROUTES.HOME);
-    };
-
-    const handlePremiumClick = () => {
-        navigate("/agency/premium");
-        setIsSidebarOpen(false);
     };
 
     return (
@@ -99,12 +95,6 @@ export function AgencyDashboard() {
                         {isSidebarOpen ? <X className='w-5 h-5 text-gray-600' /> : <Menu className='w-5 h-5 text-gray-600' />}
                     </button>
                     <h2 className="font-semibold text-gray-800">{getContextText('Agency Dashboard', 'Guide Dashboard')}</h2>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button className='hover:bg-green-50 p-2 rounded-full relative transition-colors'>
-                        <Bell className='w-5 h-5 text-gray-600' />
-                        <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                    </button>
                 </div>
             </div>
 
@@ -174,24 +164,6 @@ export function AgencyDashboard() {
                             ))}
                         </nav>
 
-                        {/* Premium Offer Banner */}
-                        <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            className="mt-6 p-4 bg-[#4A7B7B] rounded-lg cursor-pointer"
-                            onClick={handlePremiumClick}
-                        >
-                            <div className="flex items-center gap-2 mb-2">
-                                <Crown className="w-5 h-5 text-[#D4F58D]" />
-                                <span className="text-sm text-white font-medium">Go Premium</span>
-                            </div>
-                            <p className="text-xs text-white/90 mb-3">
-                                Boost your visibility and get 3x more bookings
-                            </p>
-                            <button className="w-full py-2 bg-[#D4F58D] hover:bg-[#c3e87b] text-[#375E5E] font-bold text-sm rounded-md transition-colors">
-                                View Plans
-                            </button>
-                        </motion.div>
-
                     </div>
 
                     <div className="mt-auto p-6 border-t border-gray-100">
@@ -217,10 +189,6 @@ export function AgencyDashboard() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-4">
-                                <button className='hover:bg-green-50 p-2 rounded-full relative transition-colors'>
-                                    <Bell className="w-5 h-5 text-gray-600" />
-                                    <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
-                                </button>
                                 {agencyProfile.agency_logo ? (
                                     <img
                                         src={agencyProfile.agency_logo}

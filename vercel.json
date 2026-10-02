@@ -1,8 +1,12 @@
 {
   "rewrites": [
     {
+      "source": "/backend/:path*",
+      "destination": "https://tahwissa-backend.onrender.com/:path*"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/"
+      "destination": "/index.html"
     }
   ]
 }

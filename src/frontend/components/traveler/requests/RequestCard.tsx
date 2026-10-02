@@ -11,7 +11,7 @@ type Request = {
     status: string;
     travelers: number;
     price: number;
-    duration: number;
+    duration: string;
     location: string;
     message: string;
     contactEmail: string;
@@ -43,8 +43,8 @@ const getStatusColor = (status: string) => {
 
 function RequestCard({ request }: RequestCardProps) {
     return (
-        <div className="border rounded-lg p-4 mb-4 shadow-sm">
-            <div className="flex justify-between items-start mb-3">
+        <div className="mb-4 rounded-2xl border border-[#dce9e5] bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                 <div>
                     <h3 className="font-bold text-lg">{request.providerName}</h3>
                     <p className="text-gray-600">{request.tourName}</p>
@@ -55,7 +55,7 @@ function RequestCard({ request }: RequestCardProps) {
                 </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-3">
+            <div className="mb-3 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2">
                 <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     <span>{request.preferredDate}</span>
@@ -74,7 +74,7 @@ function RequestCard({ request }: RequestCardProps) {
                 </div>
                 <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" />
-                    <span>{request.duration} day{request.duration !== 1 ? 's' : ''}</span>
+                    <span>{request.duration}</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <Banknote className="w-4 h-4" />
@@ -98,11 +98,11 @@ function RequestCard({ request }: RequestCardProps) {
                 </div>
             )}
 
-            <div className="flex justify-between items-center pt-3 border-t">
-                <div className="flex gap-4 text-sm">
+            <div className="border-t pt-3">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-600">
                     <div className="flex items-center gap-1">
                         <Mail className="w-4 h-4" />
-                        <span>{request.contactEmail}</span>
+                        <span className="break-all">{request.contactEmail}</span>
                     </div>
                     <div className="flex items-center gap-1">
                         <Phone className="w-4 h-4" />

@@ -32,24 +32,9 @@ function AppContent() {
 
   useEffect(() => {
   if (user && (user.userType === "agency" || user.userType === "guide")) {
-    const params = new URLSearchParams({
-      userId: user.userId,
-      profileId: user.profileId,
-      profileType: user.userType,
-      isManager: user.isManager?.toString() || 'false',
-      email: user.email
-    });
-    
-    if (user.userType === "agency" && user.agencyId) {
-      params.append('agencyId', user.agencyId);
-    }
-    if (user.userType === "guide" && user.guideName) {
-      params.append('guideName', user.guideName);
-    }
-    
-    window.location.href = `/agency?${params.toString()}`;
+    navigate('/agency', { replace: true });
   }
-  }, [user]);
+  }, [user, navigate]);
 
   const handleProfileComplete = () => {
     const accountType = location.state?.accountType || 'traveler';
@@ -83,6 +68,7 @@ function AppContent() {
           <Route path="signin" element={<SignInPage />} />
           <Route path="signup" element={<SignUpPage />} />
           <Route path="guide-profile" element={<GuideProfilePage />} />
+          <Route path="guide-profile/:type/:id" element={<GuideProfilePage />} />
           <Route path="notifications" element={<NotificationsPage />} />
           <Route path="add-post" element={<AddPostPage />} />
           <Route path="details/:tourId" element={<DetailsPage />} />

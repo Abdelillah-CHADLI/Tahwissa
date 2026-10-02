@@ -7,7 +7,7 @@ export default function FeaturesSection() {
     {
       icon: <Search className="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 text-teal-600" />,
       title: "Explore Algeria",
-      description: "Discover thousands of tours and activities across 69 regions. From Sahara deserts to Mediterranean coasts, Atlas mountains to ancient Roman ruins.",
+      description: "Browse tours and activities across Algeria, from Sahara deserts and Mediterranean coasts to mountains and ancient ruins.",
       route: ROUTES.EXPLORE,
       delay: 0.1
     },

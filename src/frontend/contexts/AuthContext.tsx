@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import type { User } from "../types/auth";
 import { syncLegacyIdsFromUser } from "../utils/session";
+import api from '../services/api';
 
 interface AuthContextType {
   user: User | null;
@@ -23,7 +24,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const savedUser = localStorage.getItem("user");
 
       if (savedUser) {
@@ -43,17 +44,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             }
           }
+          const response = await api.get('/auth/session', { timeout: 60000 });
+          const session = response.data;
+          const role = String(session?.role || '').toLowerCase();
+          const expectedType = role === 'admin' ? 'admin'
+            : role === 'guide' ? 'guide'
+            : role.includes('agency') ? 'agency' : 'traveller';
+          if (String(session?.id) !== String(userData.id) || expectedType !== userData.userType) {
+            throw new Error('Saved account does not match the server session.');
+          }
           setUser(userData);
           syncLegacyIdsFromUser(userData);
         } catch (error) {
-          console.error("AuthContext: failed to parse saved user", error);
+          console.warn("Session could not be restored", error);
           localStorage.removeItem("user");
+          localStorage.removeItem('agencyId');
+          localStorage.removeItem('profileId');
         }
       }
       setIsLoading(false);
     };
 
-    checkAuth();
+    void checkAuth();
   }, []);
 
   const login = (userData: User) => {

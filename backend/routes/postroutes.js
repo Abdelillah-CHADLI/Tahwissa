@@ -1,6 +1,7 @@
 //yacine
 const express = require('express');
 const multer = require('multer');
+const { requireAuth, requireRole, requireSelf } = require('../middlewares/access.cjs');
 const {
   addPost,
   browsePosts,
@@ -13,10 +14,10 @@ const {
   reportPost
 } = require('../controllers/postController');
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1 } });
 router.use(express.json());
 router.use(express.json({ limit: '50mb' }))
-router.post('/travellers/:travellerId/update', async (req, res) => {
+router.post('/travellers/:travellerId/update', requireAuth, requireRole('Traveller'), requireSelf('travellerId', 'params'), async (req, res) => {
   try {
     const travellerId = req.params.travellerId;
     const updateData = req.body;
@@ -26,7 +27,7 @@ router.post('/travellers/:travellerId/update', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.post('/posts/:postId/report', async (req, res) => {
+router.post('/posts/:postId/report', requireAuth, requireRole('Traveller'), requireSelf('reporter_id'), async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
     const reportData = { ...req.body, post_id: postId };
@@ -36,7 +37,7 @@ router.post('/posts/:postId/report', async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 });
-router.post('/posts', upload.array('images', 1), async (req, res) => {
+router.post('/posts', requireAuth, requireRole('Traveller'), upload.array('images', 1), requireSelf('traveller_id'), async (req, res) => {
   try {
     const postData = req.body;
     const images = req.files ? req.files.map(file => ({
@@ -70,7 +71,7 @@ router.get('/posts', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.post('/posts/:postId/comments', async (req, res) => {
+router.post('/posts/:postId/comments', requireAuth, requireRole('Traveller'), requireSelf('travellerId'), async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
     const commentData = { ...req.body, postId };
@@ -80,7 +81,7 @@ router.post('/posts/:postId/comments', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.post('/posts/:postId/like', async (req, res) => {
+router.post('/posts/:postId/like', requireAuth, requireRole('Traveller'), requireSelf('travellerId'), async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
     const { travellerId } = req.body;
@@ -90,7 +91,7 @@ router.post('/posts/:postId/like', async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 });
-router.post('/posts/:postId/unlike', async (req, res) => {
+router.post('/posts/:postId/unlike', requireAuth, requireRole('Traveller'), requireSelf('travellerId'), async (req, res) => {
   try {
     const postId = parseInt(req.params.postId);
     const { travellerId } = req.body;

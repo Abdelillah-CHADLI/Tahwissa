@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import GuideHeader from "../../components/guide_profile/GuideHeader";
 import AboutSection from "../../components/guide_profile/AboutSection";
 import ToursSection from "../../components/guide_profile/ToursSection";
 import ContactSection from "../../components/guide_profile/ContactSection";
 import { colors } from "../../assets/colors";
-import { employeeService, profileService, tourService } from "../../services/api";
+import { profileService, tourService } from "../../services/api";
 import { ROUTES } from "../../utils/routes";
 import type { Tour } from "../../types/explore";
 import defaultGuideImage from "../../assets/imgs/guide.png";
@@ -100,6 +100,7 @@ type BackendTour = {
 const GuideProfilePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const params = useParams();
   const [activeSection, setActiveSection] = useState<"about" | "tours" | "contact">("about");
   const [profileData, setProfileData] = useState<ProfileRecord | null>(null);
   const [tours, setTours] = useState<Tour[]>([]);
@@ -107,7 +108,9 @@ const GuideProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { profileId, profileType, initialData } = location.state || {};
+  const { initialData } = location.state || {};
+  const profileId = params.id || location.state?.profileId;
+  const profileType = params.type || location.state?.profileType;
 
   const mapBackendTourToTour = (tour: BackendTour): Tour => {
     const id = String(tour.id || tour.tour_id || "");
@@ -198,18 +201,7 @@ const GuideProfilePage = () => {
         if (response?.success && resolvedProfile) {
           setProfileData(resolvedProfile);
 
-          // Load employees count for agencies
-          if (profileType === 'agency') {
-            try {
-              const employeesResp = await employeeService.getEmployees(profileId);
-              const list = (employeesResp?.employees as unknown) ?? [];
-              setEmployeesCount(Array.isArray(list) ? list.length : 0);
-            } catch {
-              setEmployeesCount(0);
-            }
-          } else {
-            setEmployeesCount(null);
-          }
+          setEmployeesCount(null);
           
           // Always fetch tours from the tours endpoint to get images
           await fetchToursForProfile(profileId, profileType);

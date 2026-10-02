@@ -1,6 +1,22 @@
 //wassim
 import { supabase } from "../config/supabasedb.js";
 
+const documentPath = (storedValue) => {
+  const marker = '/storage/v1/object/public/verification-docs/';
+  return storedValue?.includes(marker)
+    ? storedValue.split(marker)[1]
+    : storedValue;
+};
+
+async function withSignedDocuments(rows) {
+  return Promise.all((rows || []).map(async (row) => {
+    const path = documentPath(row.verification_document);
+    const { data, error } = await supabase.storage.from('verification-docs')
+      .createSignedUrl(path, 15 * 60);
+    return { ...row, verification_document: error ? null : data.signedUrl };
+  }));
+}
+
 
 export async function verify(req, res) {
   try {
@@ -17,9 +33,14 @@ export async function verify(req, res) {
       return res.status(400).json({ error: "Account ID is required" });
     }
 
+    if (!['application/pdf', 'image/jpeg', 'image/png'].includes(file.mimetype)) {
+      return res.status(400).json({ error: 'Upload a PDF, JPG, or PNG file.' });
+    }
+
     // Generate a unique filename for storage
     const timestamp = Date.now();
-    const filename = `${acc_type.toLowerCase()}/${id}/${timestamp}-${file.originalname}`;
+    const extension = file.mimetype === 'application/pdf' ? 'pdf' : file.mimetype === 'image/png' ? 'png' : 'jpg';
+    const filename = `${acc_type.toLowerCase()}/${id}/${timestamp}.${extension}`;
 
     // Upload the file to Supabase Storage with proper content type
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -31,12 +52,9 @@ export async function verify(req, res) {
       return res.status(500).json({ error: "Failed to upload verification document" });
     }
 
-    // Construct the public URL manually (guaranteed to work if bucket is public)
-    const publicUrl = `${process.env.SUPABASE_URL}/storage/v1/object/public/verification-docs/${uploadData.path}`;
-
     // Prepare insert data
     let insertData = {
-      verification_document: publicUrl,
+      verification_document: uploadData.path,
       status: "Pending"
     };
 
@@ -100,7 +118,7 @@ export async function getAgencyVerifications(req, res) {
       return res.status(500).json({ error: "Failed to fetch agency verification requests" });
     }
 
-    return res.status(200).json({ requests: data });
+    return res.status(200).json({ requests: await withSignedDocuments(data) });
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({ error: "Internal server error" });
@@ -135,7 +153,7 @@ export async function getGuideVerifications(req, res) {
       return res.status(500).json({ error: "Failed to fetch guide verification requests" });
     }
 
-    return res.status(200).json({ requests: data });
+    return res.status(200).json({ requests: await withSignedDocuments(data) });
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({ error: "Internal server error" });

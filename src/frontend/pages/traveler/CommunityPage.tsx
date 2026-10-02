@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import api from '../../services/api';
 import defaultAvatar from '../../assets/imgs/guide.png';
 import { Heart, MessageCircle, Share2, Flag, MapPin } from 'lucide-react';
@@ -315,28 +315,29 @@ const CommunityFeedPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <motion.h1 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-bold text-gray-800 mb-8"
-        >
-          Community Feed
-        </motion.h1>
+    <div className="min-h-screen bg-[#f5f8f7] py-5 sm:py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
+          className="mb-6 overflow-hidden rounded-2xl bg-[#245f63] px-5 py-7 text-white sm:px-8 sm:py-9">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#cbf492]">Traveler stories</p>
+          <h1 className="mt-2 text-2xl font-bold sm:text-3xl">The Tahwissa community</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/85 sm:text-base">
+            Places, people, and moments worth sharing from around Algeria.
+          </p>
+        </motion.div>
 
-        <div className="max-w-3xl">
+        <div className="mx-auto max-w-3xl">
             {/* Create New Post */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow p-6 mb-6"
+              className="mb-6 rounded-2xl border border-[#dce9e5] bg-white p-4 shadow-sm sm:p-6"
             >
-              <h2 className="text-xl font-semibold mb-4">Reviews</h2>
+              <h2 className="mb-4 text-lg font-semibold text-[#193e41]">Share your journey</h2>
               
               {!showNewPostForm ? (
                 <div 
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition-colors"
+                  className="cursor-pointer rounded-xl border-2 border-dashed border-[#a9cbc1] bg-[#f8fbf8] p-6 text-center transition-colors hover:border-[#348086] sm:p-8"
                   onClick={() => setShowNewPostForm(true)}
                 >
                   <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -405,7 +406,7 @@ const CommunityFeedPage = () => {
                   <div className="flex space-x-3">
                     <button
                       type="submit"
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                      className="px-6 py-2 bg-[#348086] text-white rounded-md hover:bg-[#28676d]"
                     >
                       Post
                     </button>
@@ -429,7 +430,7 @@ const CommunityFeedPage = () => {
             {/* Posts */}
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#348086]"></div>
                 <p className="mt-2 text-gray-600">Loading posts...</p>
               </div>
             ) : posts.length === 0 ? (
@@ -443,7 +444,7 @@ const CommunityFeedPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-white rounded-xl shadow mb-6 overflow-hidden border border-gray-100"
+                  className="mb-5 overflow-hidden rounded-2xl border border-[#dce9e5] bg-white shadow-sm"
                 >
                   <div className="p-6">
                     {/* Post Header */}
@@ -579,7 +580,7 @@ const CommunityFeedPage = () => {
                             <button
                               type="button"
                               onClick={() => handleAddComment(post.post_id)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                              className="px-4 py-2 bg-[#348086] text-white rounded-md hover:bg-[#28676d]"
                             >
                               Post
                             </button>
@@ -601,7 +602,7 @@ const CommunityFeedPage = () => {
                     onClick={() => setCurrentPage(page)}
                     className={`px-3 py-1 mx-1 rounded ${
                       currentPage === page
-                        ? 'bg-blue-600 text-white'
+                        ? 'bg-[#348086] text-white'
                         : 'bg-white text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -615,7 +616,7 @@ const CommunityFeedPage = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-lg shadow p-6 mt-8"
+              className="mt-8 rounded-2xl border border-[#dce9e5] bg-white p-5 shadow-sm sm:p-6"
             >
               <h2 className="text-xl font-semibold mb-4">Community Guidelines</h2>
               <ul className="space-y-2">

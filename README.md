@@ -1,257 +1,44 @@
-# Tourism Platform
+# Tahwissa
 
-A full-stack tourism marketplace for travelers, guides, agencies, and administrators. The platform lets travelers explore tours, book trips, interact with the community, and manage their profiles. Agencies and guides can manage tour programs, bookings, reviews, employees, and premium offers, while administrators can review verification requests and manage reports.
+Tahwissa is a tourism marketplace for exploring Algerian tours, meeting guides and agencies, requesting bookings, and sharing travel stories. It has a React/Vite frontend, an Express API, and a Supabase PostgreSQL database.
 
-## Features
+## Run locally
 
-- **Traveler experience**
-  - Browse and search tours
-  - View tour details
-  - Book tours
-  - Discover guides and agencies
-  - Manage traveler profile
-  - Use community posts and notifications
+Use Node 20 or newer. Install dependencies in the repository root and in `backend/`:
 
-- **Agency and guide dashboard**
-  - Dashboard overview
-  - Manage agency or guide profile
-  - Create, edit, and delete tour programs
-  - Manage bookings
-  - Review customer feedback
-  - Manage settings and employees
-  - Access premium offers
-
-- **Admin dashboard**
-  - View platform overview
-  - Manage verification requests
-  - Review report details
-
-- **Authentication**
-  - Email/password authentication
-  - Google OAuth integration
-  - Role-based navigation for travelers, agencies, guides, and admins
-
-## Tech Stack
-
-### Frontend
-
-- React 19
-- TypeScript
-- Vite
-- React Router
-- Tailwind CSS
-- Axios
-- Lucide React
-- Motion
-- Google OAuth
-
-### Backend
-
-- Node.js
-- Express
-- Supabase
-- JWT
-- bcryptjs
-- cookie-parser
-- CORS
-- Multer
-
-## Project Structure
-
-```text
-Tourism_platform/
-├── backend/
-│   ├── config/
-│   ├── routes/
-│   ├── package.json
-│   └── server.js
-├── src/
-│   └── frontend/
-│       ├── components/
-│       ├── contexts/
-│       ├── pages/
-│       ├── services/
-│       ├── types/
-│       ├── utils/
-│       ├── AdminApp.tsx
-│       ├── AgencyApp.tsx
-│       ├── TravelerApp.tsx
-│       ├── App.tsx
-│       └── main.tsx
-├── package.json
-├── vite.config.ts
-└── README.md
-```
-
-## Prerequisites
-
-Make sure you have the following installed:
-
-- Node.js
-- npm
-- A Supabase project or access to the existing configured Supabase backend
-- A Google OAuth client ID if you want Google authentication to work
-
-## Environment Variables
-
-Create a frontend environment file in the project root if Google OAuth is enabled:
-
-```env
-VITE_CLIENT_ID=your_google_oauth_client_id
-```
-
-The backend loads environment variables from `backend/.env` using `dotenv`. Add backend secrets there when needed, for example:
-
-```env
-PORT=5000
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-JWT_SECRET=your_jwt_secret
-```
-
-Do not commit real API keys, service role keys, or secrets to version control.
-
-## Installation
-
-Install frontend dependencies from the project root:
-
-```bash
+```sh
 npm install
+cd backend && npm install
 ```
 
-Install backend dependencies:
+Copy `.env.example` to `.env`, and `backend/.env.example` to `backend/.env`. Set `VITE_API_URL` to the backend URL. Set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `JWT_SECRET`, and `FRONTEND_URL` in the backend environment. Never put the service role key in a `VITE_` variable or commit it.
 
-```bash
-cd backend
-npm install
-```
+In separate terminals, run `npm run dev` from the root and `npm start` from `backend/`. The local defaults are `http://localhost:5173` and `http://localhost:5000`.
 
-## Running the Project Locally
+`scripts/recreate_database.sql` builds a **new, empty** database with sample accounts. It drops application tables and must not be run against an existing deployment. For a database already created with the original reconstruction script, run the non-destructive `scripts/harden_existing_database.sql` in the Supabase SQL Editor. That script enables RLS, revokes direct client table access, reconciles post like counts, and makes the verification documents bucket private.
 
-### 1. Start the backend
+Run `scripts/audit_live_database.sql` in the Supabase SQL Editor to check the 16 expected tables, RLS state, the `fk_traveller_user` constraint, storage buckets, and schema naming quirks. The maintainer ran the hardening migration and shared an audit on 2026-10-02 in which every check passed. Re-run the audit after future schema or storage changes.
 
-From the `backend` directory:
+Create these Supabase Storage buckets if missing: public `tour-images`, `post-images`, `traveller-profiles`, and `agency-images`; private `verification-docs`. Only the backend should use the Supabase service role key. Verification documents are served to administrators with short-lived signed URLs.
 
-```bash
-node server.js
-```
+## Deploy
 
-By default, the backend runs on:
+- **Render:** deploy `backend/` as the root directory, with `npm install` as the build command and `npm start` as the start command. Set the backend environment variables above. `FRONTEND_URL` must contain the exact Vercel origin and any preview origins you intend to test.
+- **Vercel:** deploy the repository root as a Vite project. `vercel.json` proxies `/backend/*` to the public Render API and rewrites other client routes to the SPA entry point. The production frontend calls `/backend`, so its session cookie stays on the Vercel origin. If the Render service URL changes, update the proxy destination in `vercel.json`. `VITE_API_URL` is used for local development only.
 
-```text
-http://localhost:5000
-```
+Rebuild and redeploy both services after changing environment variables. The backend cookie uses `SameSite=None; Secure` in production, so the deployed frontend and backend must both use HTTPS.
+Deploy Render first, then Vercel: the updated frontend restores sessions through the new `/auth/session` backend endpoint.
 
-### 2. Start the frontend
+## Portfolio demo accounts
 
-From the project root:
+The **new database** seed script creates `traveler@tahwissa.com`, `guide@tahwissa.com`, `agency@tahwissa.com`, and `admin@tahwissa.com`, all with the initial password `password123`. Change or rotate these passwords before exposing real personal data. The non-destructive migration does not create or reset accounts.
 
-```bash
-npm run dev
-```
+Sample tour dates are set relative to the day the database was created. Run `scripts/refresh_demo_tour_dates.sql` when those four sample dates expire; it updates only expired rows with the original seed titles. The API rejects booking requests for past tour dates.
 
-By default, the Vite development server runs on:
+## Current scope
 
-```text
-http://localhost:5173
-```
+Working areas include email/password authentication, tour browsing and detail pages, booking requests, community posts, provider tour management, employee management, reviews, and admin verification/report workflows. Google sign-in, payment plans, and the old notification/payment/privacy settings were removed from the live interface because no verified backend flow existed for them.
 
-The frontend API client is configured to call the backend at:
+Run `npm run build` to type-check and bundle the frontend. `npm run lint` still reports legacy style and React lint violations across the original codebase; the production build is the release gate used here.
 
-```text
-http://localhost:5000
-```
-
-## Available Frontend Scripts
-
-From the project root, you can run:
-
-```bash
-npm run dev
-```
-
-Starts the Vite development server.
-
-```bash
-npm run build
-```
-
-Builds the TypeScript project and generates the production Vite build.
-
-```bash
-npm run lint
-```
-
-Runs ESLint on the project.
-
-```bash
-npm run preview
-```
-
-Previews the production build locally.
-
-## Main Application Routes
-
-### Traveler routes
-
-- `/` - Traveler app entry
-- `/traveler` - Traveler home
-- `/traveler/explore` - Explore tours
-- `/traveler/guides` - Browse guides
-- `/traveler/community` - Community page
-- `/traveler/requests` - Traveler requests
-- `/traveler/profile` - Traveler profile
-- `/traveler/signin` - Sign in
-- `/traveler/signup` - Sign up
-- `/traveler/details/:tourId` - Tour details
-- `/traveler/booking/:tourId` - Booking page
-
-### Agency and guide routes
-
-- `/agency` - Agency dashboard overview
-- `/agency/profile` - Edit profile
-- `/agency/tour-programs` - Manage tour programs
-- `/agency/bookings` - Manage bookings
-- `/agency/reviews` - Reviews
-- `/agency/settings` - Settings
-- `/agency/admin` - Agency admin page
-- `/agency/add-tour` - Add tour program
-- `/agency/edit-tour/:tourId` - Edit tour program
-- `/agency/premium` - Premium offers
-
-### Admin routes
-
-- `/admin` - Admin dashboard overview
-- `/admin/verifications` - Verification requests
-- `/admin/verifications/:type/:id` - Verification request details
-- `/admin/reports` - Reports management
-- `/admin/reports/:type/:id` - Report details
-
-## Backend API Mount Points
-
-The Express server mounts these route groups:
-
-- `/auth` - Authentication routes
-- `/api` - Booking, tours browsing, reviews, agencies, and guides API routes
-- `/pst` - Post routes
-- `/tour` - Tour routes
-- `/profile1` - Profile routes
-- `/manager` - Manager and employee routes
-- `/report` - Report routes
-- `/verification` - Verification routes
-
-## Build for Production
-
-Run the frontend production build:
-
-```bash
-npm run build
-```
-
-The compiled frontend assets will be generated by Vite in the build output directory.
-
-## Notes
-
-- The frontend expects the backend to be running on `http://localhost:5000`.
-- Backend CORS allows `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:3000`, and `http://127.0.0.1:3000`.
-- The backend currently does not define a `start` script in `backend/package.json`, so use `node server.js` unless a script is added later.
+The provided `report.md` documents the original reverse engineering and redeployment work. Its advice to disable RLS and make `verification-docs` public is superseded by the migration and deployment instructions above.

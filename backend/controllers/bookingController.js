@@ -125,12 +125,14 @@ export async function getBookingsByFilter(filter = {}) {
     .from('bookings')
     .select(`
       *,
-      travellers!inner(traveller_fn, traveller_ls),
+      travellers!inner(traveller_fn, traveller_ls, phone_number, users!fk_traveller_user(email)),
       tours!inner (
         tour_id,
         tour_title,
         location,
         price,
+        duration,
+        category,
         agency_id,
         guide_id,
         start_date
@@ -439,6 +441,16 @@ export async function browseTours(
   };
 }
 
+export async function getTourById(tourId) {
+  const { data, error } = await supabase
+    .from('tours')
+    .select('*, tour_images(image_url), agencies!agency_id(agency_id, agency_name, rating, num_raters), guides!guide_id(guide_id, guide_name, ratings, num_raters)')
+    .eq('tour_id', tourId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function addBooking(bookingData) {
   const { traveller_id, tour_id } = bookingData;
   const today = new Date().toISOString().split('T')[0];
@@ -452,6 +464,15 @@ export async function addBooking(bookingData) {
   if (!tour || new Date(today) > new Date(tour.start_date)) {
     throw new Error('Booking rejected: Tour start date is in the past');
   }
+  const { data: existing, error: existingError } = await supabase
+    .from('bookings')
+    .select('booking_id')
+    .eq('traveller_id', traveller_id)
+    .eq('tour_id', tour_id)
+    .in('status', ['PENDING', 'CONFIRMED'])
+    .limit(1);
+  if (existingError) throw new Error(`Failed to check existing requests: ${existingError.message}`);
+  if (existing?.length) throw new Error('Booking rejected: You already have an active request for this tour');
   const { data: newBooking, error: insertError } = await supabase
     .from('bookings')
     .insert({ traveller_id, tour_id, booking_date: today, status })

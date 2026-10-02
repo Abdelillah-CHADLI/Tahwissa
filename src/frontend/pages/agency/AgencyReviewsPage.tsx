@@ -146,14 +146,6 @@ export function AgencyReviewsPage() {
         }
     };
 
-    const handleHelpful = (reviewId: string) => {
-        alert(`Mark as helpful for review: ${reviewId}`);
-    };
-
-    const handleReply = (reviewId: string) => {
-        alert(`Reply to review: ${reviewId}`);
-    };
-
     if (loading) {
         return (
             <div className="space-y-6">
@@ -281,8 +273,6 @@ export function AgencyReviewsPage() {
                                     ...review,
                                     date: formatDate(review.date)
                                 }}
-                                onHelpful={handleHelpful}
-                                onReply={handleReply}
                             />
                         ))}
                     </div>

@@ -5,7 +5,7 @@ export default function ProcessSection() {
     {
       number: "1",
       title: "Explore Tours",
-      description: "Browse verified tours and activities",
+      description: "Browse tours and activities",
       delay: 0
     },
     {

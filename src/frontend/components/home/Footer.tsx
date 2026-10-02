@@ -1,87 +1,35 @@
-import { Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Compass } from 'lucide-react';
 import { ROUTES } from '../../utils/routes';
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white py-8 xs:py-10 sm:py-12">
-      <div className="container mx-auto px-3 xs:px-4 sm:px-6 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 xs:gap-6 sm:gap-8 mb-6 xs:mb-8 sm:mb-8">
-          {/* About */}
-          <div className="text-center md:text-left">
-            <h3 className="text-lg sm:text-xl font-bold mb-2 xs:mb-3 sm:mb-4">About</h3>
-            <p className="text-gray-400 text-xs xs:text-sm sm:text-base">
-              Discover authentic Algerian tours and connect with local guides. Explore deserts, mountains, coasts, and more.
-            </p>
-          </div>
-
-          {/* Explore */}
-          <div className="text-center md:text-left">
-            <h3 className="text-lg sm:text-xl font-bold mb-2 xs:mb-3 sm:mb-4">Explore</h3>
-            <ul className="text-gray-400 space-y-1 xs:space-y-2 text-xs xs:text-sm sm:text-base">
-              <li>
-                <Link to={ROUTES.EXPLORE} className="hover:text-lime-400 transition-colors">
-                  Explore Tours
-                </Link>
-              </li>
-              <li>
-                <Link to={ROUTES.SIGN_IN} className="hover:text-lime-400 transition-colors">
-                  Sign In
-                </Link>
-              </li>
-              <li>
-                <Link to={ROUTES.SIGN_UP} className="hover:text-lime-400 transition-colors">
-                  Sign Up
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Support */}
-          <div className="text-center md:text-left">
-            <h3 className="text-lg sm:text-xl font-bold mb-2 xs:mb-3 sm:mb-4">Support</h3>
-            <ul className="text-gray-400 space-y-1 xs:space-y-2 text-xs xs:text-sm sm:text-base">
-              <li>
-                <Link to="#" className="hover:text-lime-400 transition-colors">
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-lime-400 transition-colors">
-                  Terms & Conditions
-                </Link>
-              </li>
-              <li>
-                <Link to="#" className="hover:text-lime-400 transition-colors">
-                  Privacy Policy
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Connect */}
-          <div className="text-center md:text-left">
-            <h3 className="text-lg sm:text-xl font-bold mb-2 xs:mb-3 sm:mb-4">Connect</h3>
-            <div className="flex justify-center md:justify-start gap-2 xs:gap-3 sm:gap-4 text-gray-400">
-              <a href="#" aria-label="Facebook" className="hover:text-lime-400 transition-colors">
-                <Facebook className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-              </a>
-              <a href="#" aria-label="Instagram" className="hover:text-lime-400 transition-colors">
-                <Instagram className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-              </a>
-              <a href="#" aria-label="Twitter" className="hover:text-lime-400 transition-colors">
-                <Twitter className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-              </a>
-              <a href="#" aria-label="LinkedIn" className="hover:text-lime-400 transition-colors">
-                <Linkedin className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
-              </a>
-            </div>
-          </div>
+    <footer className="bg-[#193e41] py-10 text-white">
+      <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-3">
+        <div>
+          <div className="flex items-center gap-2 text-lg font-bold"><Compass size={24} /> Tahwissa</div>
+          <p className="mt-3 max-w-sm text-sm leading-relaxed text-white/75">
+            Find local tours, meet guides, and share the places you love around Algeria.
+          </p>
         </div>
-
-        <div className="border-t border-gray-800 pt-4 xs:pt-6 sm:pt-8 text-center text-gray-400 text-xs xs:text-sm sm:text-base">
-          <p>&copy; 2025 Algerian Travel. All rights reserved.</p>
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#cbf492]">Discover</h2>
+          <nav className="mt-3 flex flex-col gap-2 text-sm text-white/80" aria-label="Footer discovery links">
+            <Link to={ROUTES.EXPLORE} className="hover:text-white">Explore tours</Link>
+            <Link to={ROUTES.GUIDES} className="hover:text-white">Guides & agencies</Link>
+            <Link to={ROUTES.COMMUNITY} className="hover:text-white">Community</Link>
+          </nav>
         </div>
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-[#cbf492]">Your journey</h2>
+          <nav className="mt-3 flex flex-col gap-2 text-sm text-white/80" aria-label="Footer account links">
+            <Link to={ROUTES.SIGN_IN} className="hover:text-white">Sign in</Link>
+            <Link to={ROUTES.SIGN_UP} className="hover:text-white">Create an account</Link>
+          </nav>
+        </div>
+      </div>
+      <div className="mx-auto mt-8 max-w-6xl border-t border-white/20 px-4 pt-5 text-xs text-white/60 sm:px-6">
+        © {new Date().getFullYear()} Tahwissa
       </div>
     </footer>
   );

@@ -20,6 +20,7 @@ interface BackendAgency {
   rating?: number;
   num_raters?: number;
   manager_id?: string;
+  verified?: boolean;
   agency_logo?: string;
   main_office_location?: string;
   tours?: Array<{
@@ -38,6 +39,7 @@ interface BackendGuide {
   ratings?: number;
   num_raters?: number;
   guide_photo?: string;
+  verified?: boolean;
   main_location?: string;
 }
 
@@ -93,7 +95,7 @@ const mapAgencyData = (backendAgency: BackendAgency) => {
         : "Algeria",
     tours: toursCount,
     teamSize: "Professional Team",
-    verified: true,
+    verified: Boolean(backendAgency.verified),
     toursData: backendAgency.tours || []
   };
 };
@@ -119,7 +121,7 @@ const mapGuideData = (backendGuide: BackendGuide) => {
     tours: 0,
     experience: "Professional Guide",
     languages: ["Arabic", "French", "English"],
-    verified: true,
+    verified: Boolean(backendGuide.verified),
   };
 };
 
@@ -224,7 +226,7 @@ const TravelAgenciesPage = () => {
   );
 
   const handleViewProfile = (profileData: any, type: "agency" | "guide") => {
-    navigate(ROUTES.GUIDE_PROFILE, {
+    navigate(`${ROUTES.GUIDE_PROFILE}/${type}/${profileData.id}`, {
       state: {
         profileId: profileData.id,
         profileType: type,
@@ -272,7 +274,7 @@ const TravelAgenciesPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
           <SearchSection
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -283,14 +285,14 @@ const TravelAgenciesPage = () => {
       </div>
 
       {/* content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="mb-2 text-2xl font-bold text-[#193e41] sm:text-3xl">
             {getTitle()}
           </h1>
           <p className="text-gray-600">{getDescription()}</p>

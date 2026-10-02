@@ -1,6 +1,8 @@
 // wassim
 const express = require("express");
+const { requireAuth, requireRole, requireManager, requireManagedAgency } = require('../middlewares/access.cjs');
 const router = express.Router();
+router.use(requireAuth, requireRole('AgencyEmployee'), requireManager, requireManagedAgency);
 
 const {
   addAgencyEmployee,

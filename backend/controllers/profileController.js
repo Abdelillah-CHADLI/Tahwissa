@@ -70,7 +70,7 @@ export async function getProfile(req, res) {
 // Edit profile
 export async function editProfile(req, res) {
   const { id } = req.params;
-  const { TypeOfProfile, ...profileData } = req.body; 
+  const { TypeOfProfile } = req.body;
   
 
   try {
@@ -85,6 +85,17 @@ export async function editProfile(req, res) {
       ida = 'guide_id';
     } else {
       return res.status(400).json({ error: "Invalid TypeOfProfile. Must be 'Agency' or 'Guide'." });
+    }
+
+    const allowedFields = TypeOfProfile === 'Agency'
+      ? ['agency_name', 'phone_number', 'main_office_location', 'support_email', 'agency_description']
+      : ['guide_name', 'phone_number', 'main_location', 'support_email', 'guide_description'];
+    const profileData = Object.fromEntries(
+      allowedFields.filter(field => Object.prototype.hasOwnProperty.call(req.body, field))
+        .map(field => [field, req.body[field]])
+    );
+    if (Object.keys(profileData).length === 0) {
+      return res.status(400).json({ error: 'No supported profile fields were provided.' });
     }
 
     const { data, error } = await supabase
@@ -202,8 +213,13 @@ export async function uploadAgencyLogo(req, res) {
       return res.status(400).json({ error: "No image file provided" });
     }
 
+    const extensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+    if (!extensions[file.mimetype]) {
+      return res.status(400).json({ error: 'Upload a JPG, PNG, or WebP image.' });
+    }
+
     const bucket = 'agency-images';
-    const fileName = `${id}-logo-${Date.now()}.${file.originalname.split('.').pop()}`;
+    const fileName = `${id}-logo-${Date.now()}.${extensions[file.mimetype]}`;
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage

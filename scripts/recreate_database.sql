@@ -1,6 +1,7 @@
 -- ==============================================================================
 -- TAHWISSA TOURISM PLATFORM - FULL DATABASE RECREATION SCRIPT
 -- ==============================================================================
+-- DESTRUCTIVE: run only in a new, empty Supabase project.
 -- Run this entire script in your new Supabase project's SQL Editor:
 -- Supabase Dashboard -> SQL Editor -> New query -> Paste & Run.
 -- ==============================================================================
@@ -9,7 +10,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 2. DROP TABLES IN REVERSE DEPENDENCY ORDER (SAFE RE-RUN)
+-- 2. DROP TABLES IN REVERSE DEPENDENCY ORDER (DESTROYS EXISTING DATA)
 DROP TABLE IF EXISTS "guideverification" CASCADE;
 DROP TABLE IF EXISTS "agencyverification" CASCADE;
 DROP TABLE IF EXISTS "accreports" CASCADE;
@@ -219,26 +220,31 @@ CREATE TABLE "guideverification" (
 );
 
 -- ==============================================================================
--- 4. DISABLE RLS OR ALLOW FULL SERVICE ACCESS
--- (The backend connects via Supabase Service Role Key which bypasses RLS,
--- but we enable open SELECT permissions for peace of mind)
+-- 4. BLOCK DIRECT CLIENT ACCESS
+-- The Express backend uses a service role key, which bypasses RLS. There are
+-- deliberately no anon/authenticated policies on these application tables.
 -- ==============================================================================
-ALTER TABLE "users" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "travellers" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "agencies" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "guides" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "agency_employees" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "tours" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "tour_images" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "bookings" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "reviews" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "posts" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "comments" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "likes" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "postreports" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "accreports" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "agencyverification" DISABLE ROW LEVEL SECURITY;
-ALTER TABLE "guideverification" DISABLE ROW LEVEL SECURITY;
+ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "travellers" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "agencies" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "guides" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "agency_employees" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "tours" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "tour_images" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "bookings" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "reviews" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "posts" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "comments" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "likes" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "postreports" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "accreports" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "agencyverification" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "guideverification" ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE "users", "travellers", "agencies", "guides",
+  "agency_employees", "tours", "tour_images", "bookings", "reviews",
+  "posts", "comments", "likes", "postreports", "accreports",
+  "agencyverification", "guideverification" FROM anon, authenticated;
 
 -- ==============================================================================
 -- 5. PORTFOLIO DEMO SEED DATA
@@ -320,8 +326,8 @@ INSERT INTO "reviews" ("tour_id", "traveller_id", "comment", "review_score") VAL
 
 -- SEED COMMUNITY POSTS
 INSERT INTO "posts" ("post_id", "title", "text", "location", "traveller_id", "stars", "likes", "image_url") VALUES
-  (1, 'Sunset over the Red Dunes of Timimoun', 'Spent 3 days in the Gourara region. The contrast between green palm groves and crimson red sand is breathtaking!', 'Timimoun', 'd0000000-0000-0000-0000-000000000001', 5, 12, 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80'),
-  (2, 'Hidden gems of the Algiers Casbah', 'Make sure to stop by the artisan brass workshops down Sidi Ramdane stairs. The craftsmen are welcoming and keep centuries-old traditions alive.', 'Algiers', 'd0000000-0000-0000-0000-000000000002', 4, 8, 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80');
+  (1, 'Sunset over the Red Dunes of Timimoun', 'Spent 3 days in the Gourara region. The contrast between green palm groves and crimson red sand is breathtaking!', 'Timimoun', 'd0000000-0000-0000-0000-000000000001', 5, 1, 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=800&q=80'),
+  (2, 'Hidden gems of the Algiers Casbah', 'Make sure to stop by the artisan brass workshops down Sidi Ramdane stairs. The craftsmen are welcoming and keep centuries-old traditions alive.', 'Algiers', 'd0000000-0000-0000-0000-000000000002', 4, 1, 'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=800&q=80');
 
 -- SEED COMMENTS
 INSERT INTO "comments" ("postId", "travellerId", "caption") VALUES

@@ -63,10 +63,10 @@ export function AgencyBookingPage() {
                     people: booking.number_of_people || 1,
                     totalPrice: booking.total_amount || booking.tours?.price || 0,
                     status: mapStatus(booking.status),
-                    email: booking.travellers?.email || "No email",
-                    phone: booking.travellers?.phone || "No phone",
+                    email: booking.travellers?.users?.email || "No email",
+                    phone: booking.travellers?.phone_number || "No phone",
                     location: booking.tours?.location || "Unknown Location",
-                    duration: booking.tours?.duration ? `${booking.tours.duration} days` : "N/A",
+                    duration: booking.tours?.duration ? String(booking.tours.duration) : "N/A",
                     tourType: booking.tours?.category || "Standard",
                     bookedOn: booking.booking_date || new Date().toISOString().split('T')[0]
                 }));

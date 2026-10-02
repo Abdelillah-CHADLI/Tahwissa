@@ -74,7 +74,7 @@ export async function addAgencyEmployee(req, res) {
     res.status(201).json({
       message: "Agency employee added successfully",
       employee: employeeData,
-      user: newUser
+      user: { user_id: newUser.user_id, email: newUser.email, role: newUser.role }
     });
   } catch (err) {
     console.error(err);
@@ -127,7 +127,7 @@ export async function removeAgencyEmployee(req, res) {
     res.status(200).json({
       message: "Agency employee removed successfully",
       employee: deletedEmployee,
-      user: deletedUser
+      user: { user_id: deletedUser.user_id, email: deletedUser.email, role: deletedUser.role }
     });
   } catch (err) {
     console.error(err);

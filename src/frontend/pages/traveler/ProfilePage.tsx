@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import api, { profileService } from '../../services/api';
 import type { User } from '../../types/auth';
 import { useAuth } from '../../contexts/AuthContext';

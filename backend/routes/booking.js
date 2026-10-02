@@ -1,6 +1,7 @@
 //yacine
 const express = require('express');
 const multer = require('multer');
+const { requireAuth, requireRole, requireSelf, requireTourOwner, requireNewTourOwner, agencyForUser, ownsTour, db } = require('../middlewares/access.cjs');
 const {
   getBookingsByFilter,
   getProfile,
@@ -10,6 +11,7 @@ const {
   searchGuidesByName,
   browseAgencies,
   browseTours,
+  getTourById,
   addBooking,
   getUserBookings,
   addTour,
@@ -25,10 +27,10 @@ console.log(cancelBooking)
 
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 10 } });
 router.use(express.json());
 // Add this route
-router.post('/tours', upload.array('images', 10), async (req, res) => {
+router.post('/tours', requireAuth, requireRole('Guide', 'AgencyEmployee'), upload.array('images', 10), requireNewTourOwner, async (req, res) => {
   try {
     const tourData = req.body;
     const images = req.files ? req.files.map(file => ({
@@ -42,9 +44,15 @@ router.post('/tours', upload.array('images', 10), async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.get('/bookings', async (req, res) => {
+router.get('/bookings', requireAuth, requireRole('Guide', 'AgencyEmployee'), async (req, res) => {
   try {
     const { agencyId, guideId, travellerName, status } = req.query;
+    if (req.user.role === 'Guide' && (String(guideId) !== String(req.user.id) || agencyId)) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+    if (req.user.role === 'AgencyEmployee' && (String(agencyId) !== String(await agencyForUser(req.user.id)) || guideId)) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
     const filter = { agencyId, guideId, travellerName, status };
     const bookings = await getBookingsByFilter(filter);
     res.json({ success: true, data: bookings });
@@ -55,7 +63,7 @@ router.get('/bookings', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.post('/bookings', async (req, res) => {
+router.post('/bookings', requireAuth, requireRole('Traveller'), requireSelf('traveller_id'), async (req, res) => {
   try {
     const bookingData = req.body;
     if (!bookingData.traveller_id || !bookingData.tour_id) {
@@ -70,7 +78,7 @@ router.post('/bookings', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.get('/bookings/explore', async (req, res) => {
+router.get('/bookings/explore', requireAuth, requireRole('Traveller'), requireSelf('userId', 'query'), async (req, res) => {
   try {
     const { userId } = req.query;
     const bookings = await getUserBookings(userId);
@@ -95,7 +103,7 @@ router.get('/profile/:id', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
-router.post('/reviews', async (req, res) => {
+router.post('/reviews', requireAuth, requireRole('Traveller'), requireSelf('traveller_id'), async (req, res) => {
   try {
     const reviewData = req.body;
     if (!reviewData.tour_id || !reviewData.traveller_id || !reviewData.review_score) {
@@ -197,10 +205,24 @@ router.get('/tours/browse', async (req, res) => {
   }
 });
 
+router.get('/tours/:tourId', async (req, res) => {
+  try {
+    const tour = await getTourById(req.params.tourId);
+    if (!tour) return res.status(404).json({ success: false, error: 'Tour not found' });
+    res.json({ success: true, data: tour });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // New routes for booking cancellation and confirmation
-router.patch('/bookings/:bookingId/cancel', async (req, res) => {
+router.patch('/bookings/:bookingId/cancel', requireAuth, async (req, res, next) => {
   try {
     const { bookingId } = req.params;
+    const supabase = await db();
+    const { data: booking } = await supabase.from('bookings').select('traveller_id, tour_id').eq('booking_id', bookingId).maybeSingle();
+    const allowed = booking && (String(booking.traveller_id) === String(req.user.id) || await ownsTour(req.user, booking.tour_id));
+    if (!allowed) return res.status(403).json({ message: 'Access denied.' });
     if (!bookingId) {
       return res.status(400).json({ success: false, error: 'Missing required field: bookingId' });
     }
@@ -210,13 +232,16 @@ router.patch('/bookings/:bookingId/cancel', async (req, res) => {
     if (error.message.includes('not found') || error.message.includes('cannot cancel')) {
       return res.status(400).json({ success: false, error: error.message });
     }
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
-router.patch('/bookings/:bookingId/confirm', async (req, res) => {
+router.patch('/bookings/:bookingId/confirm', requireAuth, requireRole('Guide', 'AgencyEmployee'), async (req, res, next) => {
   try {
     const { bookingId } = req.params;
+    const supabase = await db();
+    const { data: booking } = await supabase.from('bookings').select('tour_id').eq('booking_id', bookingId).maybeSingle();
+    if (!booking || !await ownsTour(req.user, booking.tour_id)) return res.status(403).json({ message: 'Access denied.' });
     if (!bookingId) {
       return res.status(400).json({ success: false, error: 'Missing required field: bookingId' });
     }
@@ -226,15 +251,16 @@ router.patch('/bookings/:bookingId/confirm', async (req, res) => {
     if (error.message.includes('not found') || error.message.includes('cannot confirm')) {
       return res.status(400).json({ success: false, error: error.message });
     }
-    res.status(500).json({ success: false, error: error.message });
+    next(error);
   }
 });
 
 // New routes for editing and deleting tours
-router.put('/tours/:tourId', upload.array('images', 10), async (req, res) => {
+router.put('/tours/:tourId', requireAuth, requireRole('Guide', 'AgencyEmployee'), requireTourOwner, upload.array('images', 10), async (req, res) => {
   try {
     const { tourId } = req.params;
-    const tourData = req.body;
+    const allowed = ['tour_title', 'location', 'price', 'start_date', 'category', 'duration', 'group_size', 'tour_details', 'tour_included', 'requirements', 'tour_not_included'];
+    const tourData = Object.fromEntries(Object.entries(req.body).filter(([key]) => allowed.includes(key)));
     const images = req.files ? req.files.map(file => ({
       name: file.originalname,
       content: file.buffer,
@@ -253,7 +279,7 @@ router.put('/tours/:tourId', upload.array('images', 10), async (req, res) => {
   }
 });
 
-router.delete('/tours/:tourId', async (req, res) => {
+router.delete('/tours/:tourId', requireAuth, requireRole('Guide', 'AgencyEmployee'), requireTourOwner, async (req, res) => {
   try {
     const { tourId } = req.params;
     if (!tourId) {

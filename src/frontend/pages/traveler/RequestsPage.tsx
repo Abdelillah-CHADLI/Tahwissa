@@ -39,7 +39,7 @@ interface Request {
   status: "pending" | "confirmed" | "declined";
   travelers: number;
   price: number;
-  duration: number;
+  duration: string;
   location: string;
   message: string;
   contactEmail: string;
@@ -111,17 +111,17 @@ function RequestsPage() {
               requestDate: formatDate(booking.booking_date),
               preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
               status: status,
-              travelers: tour?.group_size || 0,
+              travelers: 1,
               location: tour?.location || "Unknown Location",
               message: `Booking for ${tour?.tour_title || "tour"}`,
               price: tour?.price || 0,
               image: getTourImage(tour),
-              duration: tour?.duration || "3 days",
+              duration: tour?.duration || "Not specified",
               tourId: booking.tour_id,
               bookingDate: booking.booking_date,
               startDate: tour?.start_date,
               confirmedDetails: status === "confirmed" ? "Your booking has been confirmed!" : undefined,
-              declineReason: status === "declined" ? "Booking was declined by the provider" : undefined,
+              declineReason: status === "declined" ? "Booking was cancelled" : undefined,
             };
           })
         );
@@ -243,7 +243,7 @@ function RequestsPage() {
   // --- Loading State ---
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6">
         <PageHeader
           title="My Requests"
           description="Track all your tour and guide requests"
@@ -259,7 +259,7 @@ function RequestsPage() {
   // --- Error State ---
   if (error) {
     return (
-      <div className="p-6">
+      <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6">
         <PageHeader
           title="My Requests"
           description="Track all your tour and guide requests"
@@ -279,7 +279,7 @@ function RequestsPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="mx-auto min-h-screen max-w-6xl px-4 py-6 sm:px-6">
       <PageHeader
         title="My Requests"
         description="Track all your tour and guide requests"

@@ -3,7 +3,7 @@ import { getCurrentAgencyUuid, getCurrentProfileType } from '../utils/session';
 
 // Base axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  baseURL: import.meta.env.PROD ? '/backend' : (import.meta.env.VITE_API_URL || 'http://localhost:5000'),
   timeout: 15000,
   withCredentials: true,
 });
@@ -303,31 +303,13 @@ export const tourService = {
   },
 
   getTourById: async (tourId: string) => {
-    try {
-      const response = await api.get('/api/tours/browse');
+    const response = await api.get(`/api/tours/${encodeURIComponent(tourId)}`);
+    return response.data?.data ?? null;
+  },
 
-      // Check if request was successful
-      if (!response.data?.success) {
-        console.error('API request failed');
-        return null;
-      }
-
-      // Correct path: response.data.data.tours
-      const tours = Array.isArray(response.data?.data?.tours)
-        ? response.data.data.tours
-        : [];
-
-      // Find the specific tour
-      const foundTour = tours.find((t: any) =>
-        String(t.tour_id) === tourId || String(t.id) === tourId
-      );
-
-      return foundTour || null;
-
-    } catch (error) {
-      console.error('Error fetching tour by ID:', error);
-      return null;
-    }
+  updateTour: async (tourId: string, changes: Record<string, string | number>) => {
+    const response = await api.put(`/api/tours/${encodeURIComponent(tourId)}`, changes);
+    return response.data?.data;
   },
 
   deleteTour: async (tourId: string) => {
@@ -395,41 +377,9 @@ export const guideService = {
 };
 
 export const reviewService = {
-  // Get all reviews for an agency
-  getAgencyReviews: async (agencyId: string, filters?: {
-    sortBy?: 'recent' | 'rating' | 'helpful';
-    tourId?: string;
-    minRating?: number;
-  }) => {
-    const response = await api.get(`/api/reviews/agency/${agencyId}`, {
-      params: filters
-    });
-    return response.data;
-  },
-
   // Get reviews for a specific tour
   getReviewsByTour: async (tourId: string) => {
     const response = await api.get(`/api/reviews/${tourId}`);
-    return response.data;
-  },
-
-  // Get overall stats for agency reviews
-  getAgencyReviewStats: async (agencyId: string) => {
-    const response = await api.get(`/api/reviews/agency/${agencyId}/stats`);
-    return response.data;
-  },
-
-  // Mark review as helpful
-  markReviewHelpful: async (reviewId: string) => {
-    const response = await api.post(`/api/reviews/${reviewId}/helpful`);
-    return response.data;
-  },
-
-  // Reply to a review
-  replyToReview: async (reviewId: string, replyText: string) => {
-    const response = await api.post(`/api/reviews/${reviewId}/reply`, {
-      reply_text: replyText
-    });
     return response.data;
   },
 
@@ -441,84 +391,6 @@ export const reviewService = {
     review_score: number;
   }) => {
     const response = await api.post('/api/reviews', reviewData);
-    return response.data;
-  },
-};
-
-export const settingsService = {
-  // Get account settings
-  getAccountSettings: async (agencyId: string) => {
-    const response = await api.get(`/api/settings/account/${agencyId}`);
-    return response.data;
-  },
-
-  // Update account settings
-  updateAccountSettings: async (agencyId: string, data: {
-    agency_name?: string;
-    email?: string;
-    phone?: string;
-  }) => {
-    const response = await api.put(`/api/settings/account/${agencyId}`, data);
-    return response.data;
-  },
-
-  // Change password
-  changePassword: async (agencyId: string, data: {
-    current_password: string;
-    new_password: string;
-  }) => {
-    const response = await api.post(`/api/settings/password/${agencyId}`, data);
-    return response.data;
-  },
-
-  // Get notification preferences
-  getNotificationSettings: async (agencyId: string) => {
-    const response = await api.get(`/api/settings/notifications/${agencyId}`);
-    return response.data;
-  },
-
-  // Update notification preferences
-  updateNotificationSettings: async (agencyId: string, settings: {
-    email_notifications?: boolean;
-    booking_alerts?: boolean;
-    review_alerts?: boolean;
-    promotional_emails?: boolean;
-    weekly_report?: boolean;
-  }) => {
-    const response = await api.put(`/api/settings/notifications/${agencyId}`, settings);
-    return response.data;
-  },
-
-  // Get payment settings
-  getPaymentSettings: async (agencyId: string) => {
-    const response = await api.get(`/api/settings/payment/${agencyId}`);
-    return response.data;
-  },
-
-  // Update payment settings
-  updatePaymentSettings: async (agencyId: string, data: {
-    account_holder?: string;
-    bank_name?: string;
-    account_number?: string;
-    swift_code?: string;
-  }) => {
-    const response = await api.put(`/api/settings/payment/${agencyId}`, data);
-    return response.data;
-  },
-
-  // Get privacy settings
-  getPrivacySettings: async (agencyId: string) => {
-    const response = await api.get(`/api/settings/privacy/${agencyId}`);
-    return response.data;
-  },
-
-  // Update privacy settings
-  updatePrivacySettings: async (agencyId: string, settings: {
-    profile_visibility?: boolean;
-    show_contact_info?: boolean;
-    allow_reviews?: boolean;
-  }) => {
-    const response = await api.put(`/api/settings/privacy/${agencyId}`, settings);
     return response.data;
   },
 };
