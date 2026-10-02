@@ -1,3 +1,5 @@
+import { Dialog } from '../../ui';
+import type { ComponentType } from 'react';
 import { Mail, Phone, MapPin, Briefcase, Languages } from "lucide-react";
 import type { Employee } from "../../../types/employee";
 
@@ -8,31 +10,20 @@ interface ViewModalProps {
 
 export function ViewModal({ employee, onClose }: ViewModalProps) {
     return (
-        <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full">
-                <div className="p-6">
-                    <div className="flex justify-between items-start mb-6">
-                        <h2 className="text-xl font-bold">Employee Details</h2>
-                        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                            x
-                        </button>
-                    </div>
-
+        <Dialog open onClose={onClose} title="Team member details" wide>
                     <div className="space-y-6">
                         <EmployeeHeader employee={employee} />
                         <EmployeeDetails employee={employee} />
                         <EmployeeSpecialization employee={employee} />
                     </div>
-                </div>
-            </div>
-        </div>
+        </Dialog>
     );
 }
 
 function EmployeeHeader({ employee }: { employee: Employee }) {
     return (
-        <div className="flex gap-4">
-            <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center">
+        <div className="flex gap-4 min-w-0">
+            <div className="shrink-0 w-12 h-12 bg-brand-soft text-brand rounded-full flex items-center justify-center">
                 {(employee.full_name || employee.users.email.split("@")[0] || "?")
                     .split(" ")
                     .map((n: string) => n[0])
@@ -71,13 +62,13 @@ function EmployeeDetails({ employee }: { employee: Employee }) {
     );
 }
 
-function DetailItem({ icon: Icon, label, value }: any) {
+function DetailItem({ icon: Icon, label, value }: { icon: ComponentType<{ className?: string }>; label: string; value: string }) {
     return (
         <div className="flex items-center gap-3">
             <Icon className="w-5 h-5 text-gray-500" />
             <div>
                 <p className="text-sm text-gray-500">{label}</p>
-                <p>{value}</p>
+                <p className="break-all">{value}</p>
             </div>
         </div>
     );

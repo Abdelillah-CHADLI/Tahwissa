@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import { PageHeader, PageState } from '../../components/ui';
+import defaultAvatar from '../../assets/imgs/guide.png';
+import { useFeedback } from '../../components/ui/FeedbackProvider';
+import { useState, useEffect, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import api, { profileService } from '../../services/api';
@@ -78,7 +81,8 @@ const toUserFriendlyBackendError = (rawMessage: string): string => {
   return msg;
 };
 
-const ProfilePage = () => {
+const ProfilePage = ({ onboarding = false }: { onboarding?: boolean }) => {
+  const { notify } = useFeedback();
   const navigate = useNavigate();
   const { updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'account'>('profile');
@@ -114,7 +118,7 @@ const ProfilePage = () => {
         setIsLoading(true);
         const userStr = localStorage.getItem('user');
         if (!userStr) {
-          navigate('/signin');
+          navigate('/traveler/signin');
           return;
         }
 
@@ -123,7 +127,7 @@ const ProfilePage = () => {
         const travellerId = user.profileId || user.userId || user.id;
         if (!travellerId) {
           setMessage({ text: 'Missing user id; please sign in again.', type: 'error' });
-          navigate('/signin');
+          navigate('/traveler/signin');
           return;
         }
         
@@ -180,7 +184,7 @@ const ProfilePage = () => {
       const travellerId = user.profileId || user.userId || user.id;
       if (!travellerId) {
         setMessage({ text: 'Missing user id; please sign in again.', type: 'error' });
-        navigate('/signin');
+        navigate('/traveler/signin');
         return;
       }
 
@@ -319,7 +323,7 @@ const ProfilePage = () => {
       setPasswordLoading(true);
       const userStr = localStorage.getItem('user');
       if (!userStr) {
-        navigate('/signin');
+        navigate('/traveler/signin');
         return;
       }
 
@@ -360,7 +364,7 @@ const ProfilePage = () => {
       setDeleteLoading(true);
       const userStr = localStorage.getItem('user');
       if (!userStr) {
-        navigate('/signin');
+        navigate('/traveler/signin');
         return;
       }
 
@@ -373,7 +377,7 @@ const ProfilePage = () => {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       navigate('/');
-      alert('Account deleted successfully');
+      notify('Account deleted successfully');
       
     } catch (error: any) {
       const backendError = toUserFriendlyBackendError(extractBackendErrorMessage(error));
@@ -450,9 +454,7 @@ const ProfilePage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <div className="page-shell"><PageState kind="loading" title="Loading your profile" /></div>
     );
   }
 
@@ -469,18 +471,18 @@ const ProfilePage = () => {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span className="text-sm font-medium">Back to Dashboard</span>
+          <span className="text-sm font-medium">Back to exploring</span>
         </motion.button>
 
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Profile Settings</h1>
+        <div className="mb-6"><PageHeader title={onboarding ? "Make yourself at home" : "Your profile"} description={onboarding ? "Add your details, then save your profile below. You can update them any time." : "Manage the details you share and keep your account secure."} /></div>
         
-        <div className="flex border-b mb-6">
+        <div className="segmented-tabs mb-6">
           {tabs.map((tab) => (
             <motion.button
-              key={tab.id}
+              key={tab.id} aria-pressed={activeTab === tab.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`px-4 py-2 font-medium ${activeTab === tab.id ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600'}`}
+              className={`px-4 py-2 font-medium ${activeTab === tab.id ? 'text-brand border-b-2 border-brand' : 'text-gray-600'}`}
               onClick={() => setActiveTab(tab.id)}
             >
               {tab.label}
@@ -492,7 +494,7 @@ const ProfilePage = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`p-4 mb-6 rounded ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
+            role={message.type === 'error' ? 'alert' : 'status'} className={`p-4 mb-6 rounded ${message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}
           >
             {message.text}
           </motion.div>
@@ -500,7 +502,7 @@ const ProfilePage = () => {
 
         <motion.div
           variants={itemVariants}
-          className="bg-white rounded-lg shadow p-6"
+          className="panel panel-body"
         >
           <AnimatePresence mode="wait">
             {activeTab === 'profile' && (
@@ -580,30 +582,30 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, upl
     transition={{ duration: 0.3 }}
     className="space-y-8"
   >
-    <div className="flex items-center mb-6">
+    <div className="flex flex-wrap items-center gap-4 mb-6">
       <div className="relative">
         <img
-          src={profileImage || data.profile_picture || "https://via.placeholder.com/100"}
+          src={profileImage || data.profile_picture || defaultAvatar}
           alt="Profile"
           className="w-24 h-24 rounded-full object-cover"
         />
-        <button className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full">
-          <label htmlFor="profile-upload" className="cursor-pointer">
+        <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-brand text-white p-2 rounded-full cursor-pointer focus-within:outline-2">
+          <span aria-hidden="true">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-          </label>
-        </button>
+          </span>
+        </label>
         <input
           type="file"
-          id="profile-upload"
+          id="profile-upload" aria-label="Upload profile photo"
           accept="image/*"
           onChange={onImageUpload}
-          className="hidden"
+          className="sr-only"
         />
       </div>
-      <div className="ml-6">
+      <div className="min-w-0">
         <h2 className="text-xl font-semibold">Profile Information</h2>
         <p className="text-gray-600">Update your photo and personal details</p>
       </div>
@@ -673,11 +675,11 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, upl
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
-        <textarea
+        <label htmlFor="profile-bio" className="field-label">Bio *</label>
+        <textarea id="profile-bio"
           value={data.bio}
           onChange={(e) => onChange('bio', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-blue-500 text-sm"
           rows={3}
           placeholder="Adventure seeker exploring the beauty of Algeria"
           required
@@ -691,7 +693,7 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, upl
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isLoading}
-          className={`px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50`}
+          className={`px-6 py-2 bg-brand text-white rounded-md hover:bg-brand-dark disabled:opacity-50`}
         >
           {isLoading ? 'Saving...' : 'Save Changes'}
         </motion.button>
@@ -749,7 +751,7 @@ const SecurityTab = ({ data, onChange, onSubmit, isLoading }: SecurityTabProps) 
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isLoading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="px-6 py-2 bg-brand text-white rounded-md hover:bg-brand-dark disabled:opacity-50"
         >
           {isLoading ? 'Updating...' : 'Update Password'}
         </motion.button>
@@ -810,12 +812,15 @@ interface FormFieldProps {
   inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
 }
 
-const FormField = ({ label, value, onChange, type = 'text', disabled = false, placeholder, required, minLength, maxLength, pattern, inputMode }: FormFieldProps) => (
+const FormField = ({ label, value, onChange, type = 'text', disabled = false, placeholder, required, minLength, maxLength, pattern, inputMode }: FormFieldProps) => {
+  const id = useId();
+  return (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-2">
-      {label}
+    <label htmlFor={id} className="field-label">
+      {label}{required && <span aria-hidden="true"> *</span>}
     </label>
     <motion.input
+      id={id}
       whileFocus={{ scale: disabled ? 1 : 1.02 }}
       type={type}
       value={value}
@@ -827,11 +832,12 @@ const FormField = ({ label, value, onChange, type = 'text', disabled = false, pl
       maxLength={maxLength}
       pattern={pattern}
       inputMode={inputMode}
-      className={`w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${
+      className={`field ${
         disabled ? 'bg-gray-100 cursor-not-allowed' : ''
       }`}
     />
   </div>
 );
+};
 
 export default ProfilePage;

@@ -1,110 +1,19 @@
-import { MapPin, Star, Users, Calendar, Building } from 'lucide-react';
-
-interface GuideHeaderProps {
-  guide: {
-    name: string;
-    specialty: string;
-    location: string;
-    rating?: number | null;
-    toursCount?: number | null;
-    experience: string;
-    image?: string;
-    type?: 'guide' | 'agency'; 
-    num_raters?: number; 
-  };
-}
-
-const GuideHeader = ({ guide }: GuideHeaderProps) => {
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex items-center">
-        {[...Array(5)].map((_, i) => (
-          <Star
-            key={i}
-            className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  const hasRating = guide.rating !== null && guide.rating !== undefined;
-  const hasToursCount = guide.toursCount !== null && guide.toursCount !== undefined;
-  const hasImage = guide.image && guide.image !== '';
-  const isAgency = guide.type === 'agency';
-
-  return (
-    <div className="bg-white border-b">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-          <div className="shrink-0">
-            {hasImage ? (
-              <img 
-                src={guide.image} 
-                alt={guide.name}
-                className="w-32 h-32 md:w-40 md:h-40 rounded-full object-cover border-4 border-white shadow-lg"
-              />
-            ) : (
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full bg-gray-200 flex items-center justify-center border-4 border-white shadow-lg">
-                {isAgency ? (
-                  <Building className="w-12 h-12 text-gray-400" />
-                ) : (
-                  <Users className="w-12 h-12 text-gray-400" />
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex-1 text-center md:text-left">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{guide.name}</h1>
-            <p className="text-lg text-gray-600 mb-4">
-              {isAgency ? 'Travel Agency' : 'Local Guide'}
-            </p>
-            <div className="flex items-center justify-center md:justify-start text-gray-500 mb-6">
-              <MapPin className="w-4 h-4 mr-1" />
-              <span>{guide.location}</span>
-            </div>
-
-            <div className="flex justify-center md:justify-start items-center gap-6 mb-6">
-              <div className="flex items-center gap-4 text-gray-600">
-                {hasRating && (
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span className="font-semibold">{guide.rating}</span>
-                    {guide.num_raters && (
-                      <span className="text-sm text-gray-500">
-                        ({guide.num_raters} reviews)
-                      </span>
-                    )}
-                  </div>
-                )}
-                {hasToursCount && (
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{guide.toursCount} tours</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>{guide.experience}</span>
-                </div>
-              </div>
-            </div>
-
-            {hasRating && (
-              <div className="flex justify-center md:justify-start items-center gap-2">
-                {renderStars(guide.rating!)}
-                <span className="font-semibold text-gray-900">{guide.rating}</span>
-                <span className="text-sm text-gray-500">
-                  • {guide.num_raters || 0} reviews
-                </span>
-              </div>
-            )}
-          </div>
+import { MapPin, Star, Compass, Building2 } from 'lucide-react';
+type Guide = { name: string; specialty: string; location: string; rating?: number | null; toursCount?: number | null; experience: string; image?: string; type?: 'guide' | 'agency'; num_raters?: number };
+export default function GuideHeader({ guide }: { guide: Guide }) {
+  return <section className="border-b border-line bg-white">
+    <div className="page-shell flex items-start gap-4 sm:gap-6">
+      {guide.image ? <img src={guide.image} alt="" className="h-20 w-20 shrink-0 rounded-xl object-cover sm:h-28 sm:w-28" /> : <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-brand-soft"><Building2 className="text-brand" /></div>}
+      <div className="min-w-0">
+        <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-brand">{guide.type === 'agency' ? 'Travel agency' : 'Local guide'}</p>
+        <h1 className="break-words text-2xl font-bold text-brand-ink sm:text-3xl">{guide.name}</h1>
+        {guide.location && <p className="mt-2 flex items-center gap-1.5 text-sm text-gray-500"><MapPin size={15} className="shrink-0" />{guide.location}</p>}
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-600">
+          <span className="inline-flex items-center gap-1.5"><Star size={15} className="text-amber-500" />{guide.num_raters ? `${guide.rating} · ${guide.num_raters} reviews` : 'No reviews yet'}</span>
+          <span className="inline-flex items-center gap-1.5"><Compass size={15} />{guide.toursCount ?? 0} tours</span>
+          {guide.experience && <span>{guide.experience}</span>}
         </div>
       </div>
     </div>
-  );
-};
-
-export default GuideHeader;
+  </section>;
+}

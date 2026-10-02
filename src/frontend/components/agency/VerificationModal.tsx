@@ -1,5 +1,6 @@
+import { Dialog } from '../ui';
 import { useState } from "react";
-import { X, Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText, AlertCircle } from "lucide-react";
 import api from "../../services/api";
 import { getCurrentProfileType } from "../../utils/session";
 import { getContextText } from "../../utils/userContext";
@@ -72,21 +73,7 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profil
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full">
-                <div className="p-6">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <h2 className="text-xl font-bold">Apply for Verification</h2>
-                            <p className="text-gray-600 text-sm mt-1">
-                                {getContextText('Upload official documents to verify your agency', 'Upload official documents to verify your profile')}
-                            </p>
-                        </div>
-                        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-
+        <Dialog open={isOpen} onClose={onClose} busy={loading} title="Apply for verification" description={getContextText('Upload an official document to verify your agency.', 'Upload an official document to verify your guide profile.')}>
                     {error && (
                         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center gap-2">
                             <AlertCircle className="w-4 h-4" />
@@ -107,13 +94,13 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profil
 
                         <div>
                             <label className="block text-sm font-medium mb-2">Upload Document</label>
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                            <div className="border border-dashed border-line rounded-lg p-5 text-center focus-within:ring-2 focus-within:ring-brand">
                                 <input
                                     type="file"
                                     id="file-upload"
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     onChange={handleFileChange}
-                                    className="hidden"
+                                    className="sr-only"
                                 />
                                 <label
                                     htmlFor="file-upload"
@@ -121,7 +108,7 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profil
                                 >
                                     {file ? (
                                         <>
-                                            <FileText className="w-12 h-12 text-green-500 mb-2" />
+                                            <FileText className="w-8 h-8 text-green-500 mb-2" />
                                             <p className="text-sm font-medium text-gray-700">{file.name}</p>
                                             <p className="text-xs text-gray-500 mt-1">
                                                 {(file.size / 1024).toFixed(2)} KB
@@ -131,7 +118,7 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profil
                                         <>
                                             <Upload className="w-12 h-12 text-gray-400 mb-2" />
                                             <p className="text-sm font-medium text-gray-700">
-                                                Click to upload or drag and drop
+                                                Choose a document
                                             </p>
                                             <p className="text-xs text-gray-500 mt-1">
                                                 PDF, JPG, PNG (max 5MB)
@@ -142,10 +129,9 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profil
                             </div>
                         </div>
 
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                            <p className="text-sm text-blue-800">
-                                <strong>Note:</strong> Verification typically takes 1-3 days.
-                                You'll be notified once your application is reviewed.
+                        <div className="bg-brand-soft border border-line rounded-lg p-4">
+                            <p className="text-sm text-brand-ink">
+                                Your document is private and available to the Tahwissa review team. Check your dashboard for your verification status.
                             </p>
                         </div>
 
@@ -160,15 +146,13 @@ export function VerificationModal({ isOpen, onClose, agencyId, onSuccess, profil
                             </button>
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                className="px-4 py-2 bg-brand text-white rounded-lg hover:bg-brand-dark disabled:opacity-50"
                                 disabled={loading || !file}
                             >
                                 {loading ? 'Submitting...' : 'Submit Application'}
                             </button>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
+        </Dialog>
     );
 }

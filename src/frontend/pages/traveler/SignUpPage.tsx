@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
 import {
-  ArrowLeft,
+  Compass, ArrowLeft,
   Mail,
   Lock,
   User,
@@ -38,6 +38,7 @@ export default function SignUpPage() {
   const navigate = useNavigate();
 
   const handleCreateAccount = async () => {
+    if (isLoading) return;
     // Reset error
     setError("");
 
@@ -138,12 +139,6 @@ export default function SignUpPage() {
         };
       }
 
-      console.log("Sending signup data:", {
-        ...signupData,
-        password: "[HIDDEN]",
-        confirmPassword: "[HIDDEN]",
-      });
-
       const response = await authService.signup(signupData);
 
       if (response.success) {
@@ -175,11 +170,7 @@ export default function SignUpPage() {
     navigate(ROUTES.SIGN_IN);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleCreateAccount();
-    }
-  };
+
 
   // Update account type with proper typing
   const handleAccountTypeChange = (type: "traveller" | "guide" | "agency") => {
@@ -189,7 +180,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 xs:p-6 py-8 xs:py-12">
+    <div className="min-h-screen bg-canvas flex flex-col items-center justify-center p-4 xs:p-6 py-8 xs:py-12">
       <div className="w-full max-w-2xl mb-6 xs:mb-8">
         <button
           onClick={handleBackToHome}
@@ -203,28 +194,29 @@ export default function SignUpPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.2 }}
         className="w-full max-w-2xl"
       >
-        <div className="bg-white rounded-xl xs:rounded-2xl shadow-lg p-6 xs:p-8">
+        <div className="panel p-5 sm:p-7">
           <div className="text-center mb-6 xs:mb-8">
+            <div className="mb-5 flex items-center justify-center gap-2 text-lg font-bold text-brand-ink"><Compass className="text-brand" size={25} />Tahwissa</div>
             <h1 className="text-xl xs:text-2xl font-bold text-gray-900 mb-2">
               Create an Account
             </h1>
             <p className="text-gray-600 text-sm xs:text-base">
-              Join thousands of travelers exploring Algeria
+              Find your next adventure or share your local expertise.
             </p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-600 text-sm text-center">{error}</p>
             </div>
           )}
 
           <div className="bg-gray-100 rounded-lg p-1 grid grid-cols-3 gap-1 mb-6">
             <button
-              onClick={() => handleAccountTypeChange("traveller")}
+              aria-pressed={accountType === "traveller"} disabled={isLoading} onClick={() => handleAccountTypeChange("traveller")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "traveller"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -236,7 +228,7 @@ export default function SignUpPage() {
             </button>
 
             <button
-              onClick={() => handleAccountTypeChange("guide")}
+              aria-pressed={accountType === "guide"} disabled={isLoading} onClick={() => handleAccountTypeChange("guide")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "guide"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -248,7 +240,7 @@ export default function SignUpPage() {
             </button>
 
             <button
-              onClick={() => handleAccountTypeChange("agency")}
+              aria-pressed={accountType === "agency"} disabled={isLoading} onClick={() => handleAccountTypeChange("agency")}
               className={`flex items-center justify-center gap-1 xs:gap-2 px-2 xs:px-4 py-2 xs:py-2.5 rounded-md font-medium transition-all text-xs xs:text-sm ${
                 accountType === "agency"
                   ? "bg-white text-gray-900 shadow-sm"
@@ -260,7 +252,7 @@ export default function SignUpPage() {
             </button>
           </div>
 
-          <div className="space-y-4 xs:space-y-5" onKeyPress={handleKeyPress}>
+          <form className="space-y-4 xs:space-y-5" onSubmit={event => { event.preventDefault(); void handleCreateAccount(); }}>
             {accountType === "agency" && (
               <>
                 <div>
@@ -454,7 +446,7 @@ export default function SignUpPage() {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
-                  id="email"
+                  id="email" autoComplete="email" required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -481,7 +473,7 @@ export default function SignUpPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
-                  id="password"
+                  id="password" autoComplete="new-password" required
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -491,7 +483,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? (
@@ -513,7 +505,7 @@ export default function SignUpPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 xs:w-5 xs:h-5 text-gray-400" />
                 <input
-                  id="confirmPassword"
+                  id="confirmPassword" autoComplete="new-password" required
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -523,7 +515,7 @@ export default function SignUpPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   {showConfirmPassword ? (
@@ -536,9 +528,9 @@ export default function SignUpPage() {
             </div>
 
             <button
-              onClick={handleCreateAccount}
+              type="submit"
               disabled={isLoading}
-              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md text-sm xs:text-base min-h-12"
+              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300  text-sm xs:text-base min-h-12"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -553,7 +545,7 @@ export default function SignUpPage() {
                 ? "Create Guide Account"
                 : "Create Account"}
             </button>
-          </div>
+          </form>
 
           <p className="text-center text-xs xs:text-sm text-gray-600 mt-6">
             Already have an account?{" "}

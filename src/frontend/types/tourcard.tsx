@@ -1,4 +1,4 @@
-import { MapPin, Calendar, Users, DollarSign, MoreVertical, Trash2 } from "lucide-react";
+import { MapPin, Calendar, Users, MoreVertical, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface TourCardProps {
@@ -59,16 +59,17 @@ export function TourCard({
     }, []);
 
     return (
-        <div className="border border-gray-300 rounded-3xl overflow-hidden shadow-sm bg-white">
+        <div className="panel overflow-hidden">
             <div className="relative">
-                <img src={image} className="w-full h-48 object-cover" />
+                <img src={image} alt={title} className="w-full h-44 object-cover" />
 
                 <div className="absolute top-3 right-3 flex gap-2">
-                    <span className={`${statusColor} text-white text-sm px-3 py-1 rounded-full`}>
+                    <span className={`${statusColor} text-white text-xs px-2.5 py-1 rounded-md`}>
                         {displayStatus}
                     </span>
-                    <div className="relative" ref={menuRef}>
+                    <div className="relative" ref={menuRef} onKeyDown={event => { if (event.key === 'Escape') setShowMenu(false); }}>
                         <button 
+                            aria-label={`Actions for ${title}`} aria-expanded={showMenu}
                             className="bg-[#375E5E] text-white p-2 rounded-lg hover:bg-[#2c4b4b] transition-colors"
                             onClick={() => setShowMenu(!showMenu)}
                         >
@@ -91,20 +92,20 @@ export function TourCard({
                     </div>
                 </div>
 
-                <span className="absolute bottom-3 left-3 bg-[#375E5E] text-white px-3 py-1 rounded-full text-sm">
+                <span className="absolute bottom-3 left-3 bg-brand-ink text-white px-2.5 py-1 rounded-md text-xs">
                     {category}
                 </span>
             </div>
 
             <div className="p-5 space-y-3">
-                <h2 className="text-xl font-semibold">{title}</h2>
+                <h2 className="text-lg leading-6 font-semibold">{title}</h2>
 
                 <div className="flex items-center text-gray-600 gap-2">
                     <MapPin className="w-4 h-4" />
                     <span>{location}</span>
                 </div>
 
-                <div className="flex justify-between items-center text-gray-700 pt-1">
+                <div className="flex flex-wrap gap-x-4 gap-y-2 items-center text-sm text-gray-700 pt-1">
                     <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" /> {duration}
                     </div>
@@ -112,13 +113,13 @@ export function TourCard({
                         <Users className="w-4 h-4" /> {groupSize}
                     </div>
                     <div className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" /> {price}
+                        <span className="font-semibold text-brand-ink">{price.toLocaleString()} DZD</span>
                     </div>
                 </div>
 
-                <hr />
+                <hr className="border-line" />
 
-                <div className="flex justify-between items-center">
+                <div className="flex flex-wrap gap-3 justify-between items-center text-sm">
                     <div>
                         <p className="text-gray-600 text-sm">Bookings</p>
                         <p className="font-semibold text-xl">{bookings}</p>
@@ -129,7 +130,7 @@ export function TourCard({
 
                     <button
                         onClick={onEdit}
-                        className="px-5 py-2 rounded-xl border text-gray-700 hover:bg-gray-100 transition"
+                        className="button button-secondary"
                     >
                         Edit
                     </button>

@@ -6,6 +6,7 @@ import { BookingSuccessPage } from '../../components/traveler/booking/BookingSuc
 import { useAuth } from '../../contexts/AuthContext';
 import { bookingService, getApiErrorMessage, tourService } from '../../services/api';
 import defaultTourImage from '../../assets/imgs/tour1.jpeg';
+import { PageState } from '../../components/ui';
 
 type Tour = { id: number; title: string; location: string; duration: string; price: number; image: string };
 
@@ -72,7 +73,7 @@ export function BookingPage() {
     }
   }
 
-  if (loading || authLoading) return <div className="flex min-h-64 items-center justify-center text-teal-700"><Loader2 className="animate-spin" /></div>;
+  if (loading || authLoading) return <div className="page-shell"><PageState kind="loading" title="Preparing your request" /></div>;
   if (success) return <BookingSuccessPage tourTitle={tour?.title} bookingRef={bookingRef} onNavigate={page => navigate(page === 'requests' ? '/traveler/requests' : '/traveler/explore')} />;
 
   return <main className="min-h-screen bg-[#f5f8f7] px-4 py-8 sm:px-6">

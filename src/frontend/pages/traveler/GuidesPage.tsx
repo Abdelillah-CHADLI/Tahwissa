@@ -1,3 +1,4 @@
+import { PageState, Button } from '../../components/ui';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
@@ -132,6 +133,7 @@ const TravelAgenciesPage = () => {
   const [agencies, setAgencies] = useState<any[]>([]);
   const [guides, setGuides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [retry, setRetry] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [visibleAgencies, setVisibleAgencies] = useState<any[]>([]);
   const [visibleGuides, setVisibleGuides] = useState<any[]>([]);
@@ -207,7 +209,7 @@ const TravelAgenciesPage = () => {
     };
 
     loadData();
-  }, [activeTab, searchQuery]);
+  }, [activeTab, searchQuery, retry]);
 
   const filteredAgencies = visibleAgencies.filter(
     (agency) =>
@@ -265,7 +267,7 @@ const TravelAgenciesPage = () => {
   const getDescription = () => {
     return activeTab === "agencies"
       ? "Professional agencies offering comprehensive tour packages across Algeria"
-      : "Certified local guides providing personalized experiences and expert knowledge";
+      : "Meet local guides and discover the places they know best";
   };
 
   const hasMoreAgencies = visibleAgencies.length < agencies.length;
@@ -297,18 +299,10 @@ const TravelAgenciesPage = () => {
           </h1>
           <p className="text-gray-600">{getDescription()}</p>
 
-          {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
-            </div>
-          )}
+
         </motion.div>
 
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#348086]"></div>
-          </div>
-        ) : (
+        {loading ? <PageState kind="loading" title="Finding local experts" /> : error ? <PageState kind="error" title="Providers unavailable" description="Please check your connection and try again." action={<Button onClick={() => setRetry(value => value + 1)}>Try again</Button>} /> : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {activeTab === "agencies" &&
@@ -343,12 +337,7 @@ const TravelAgenciesPage = () => {
 
             {((activeTab === "agencies" && filteredAgencies.length === 0) ||
               (activeTab === "guides" && filteredGuides.length === 0)) && (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                  No {activeTab === "agencies" ? "agencies" : "guides"} found
-                  {searchQuery && ` matching "${searchQuery}"`}.
-                </p>
-              </div>
+              <PageState title="No providers found" description="Try another name or location, or switch between guides and agencies." action={<Button variant="secondary" onClick={() => setSearchQuery('')}>Clear search</Button>} />
             )}
           </>
         )}

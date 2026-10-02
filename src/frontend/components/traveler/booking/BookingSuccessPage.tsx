@@ -10,16 +10,16 @@ export function BookingSuccessPage({ onNavigate, tourTitle, bookingRef }: Bookin
     const currentDate = new Date().toLocaleDateString();
 
     return (
-        <div className="min-h-screen bg-[#f5f8f7] flex items-center justify-center p-4">
-            <div className="max-w-2xl w-full bg-white rounded-xl shadow-lg p-8">
+        <div className="min-h-[70vh] bg-[#f5f8f7] flex items-center justify-center p-4">
+            <div className="panel max-w-xl w-full p-5 sm:p-7">
                 {/* Success Icon */}
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle className="w-12 h-12 text-green-600" />
+                <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle className="w-7 h-7 text-green-600" />
                 </div>
 
                 {/* Success Message */}
                 <div className="text-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-3">
+                    <h1 className="text-2xl font-bold text-gray-900 mb-3">
                         Booking request sent
                     </h1>
                     <p className="text-gray-600">
@@ -37,7 +37,7 @@ export function BookingSuccessPage({ onNavigate, tourTitle, bookingRef }: Bookin
                                 Booking Reference
                             </h3>
                             <div className="text-center mb-6">
-                                <span className="text-3xl font-mono font-bold text-teal-700">
+                                <span className="text-2xl font-mono break-all font-bold text-teal-700">
                                     {bookingRef}
                                 </span>
                                 <p className="text-sm text-gray-500 mt-1">
@@ -93,7 +93,7 @@ export function BookingSuccessPage({ onNavigate, tourTitle, bookingRef }: Bookin
                         className="flex-1 py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                     >
                         <Calendar className="w-4 h-4" />
-                        View My Bookings
+                        View my requests
                     </button>
                     <button
                         onClick={() => onNavigate("explore")}

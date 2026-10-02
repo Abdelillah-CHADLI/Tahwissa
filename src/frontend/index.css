@@ -1,5 +1,66 @@
 @import "tailwindcss";
 
+@media (max-width: 639px) {
+  .responsive-table { display: block; }
+  .responsive-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .responsive-table tbody { display: block; }
+  .responsive-table tr { display: block; padding: 1rem; }
+  .responsive-table td { display: flex; justify-content: space-between; gap: 1rem; padding: .4rem 0; white-space: normal; max-width: none; overflow-wrap: anywhere; font-size: .875rem; }
+  .responsive-table td::before { content: attr(data-label); flex-shrink: 0; min-width: 5.5rem; color: #64748b; font-size: .75rem; font-weight: 500; }
+  .responsive-table td > * { min-width: 0; text-align: right; }
+  .responsive-table .truncate { white-space: normal; overflow: visible; }
+  .responsive-table td[colspan] { display: block; }
+  .responsive-table td[colspan]::before { display: none; }
+}
+
+@theme {
+  --color-brand: #348086;
+  --color-brand-dark: #2a6970;
+  --color-brand-ink: #193e41;
+  --color-brand-soft: #edf5f3;
+  --color-accent: #c8f688;
+  --color-canvas: #f5f8f7;
+  --color-line: #dce5e2;
+}
+
+@layer base {
+  html { color: #1f2937; background: #f5f8f7; }
+  body { margin: 0; min-width: 320px; }
+  button, input, select, textarea { font: inherit; }
+  button:not(:disabled), [role="button"] { cursor: pointer; }
+  button:disabled { cursor: not-allowed; }
+  :focus-visible { outline: 3px solid #348086; outline-offset: 3px; }
+  ::selection { background: #c8f688; color: #193e41; }
+}
+
+@layer components {
+  .page-shell { @apply mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8; }
+  .page-stack { @apply space-y-6; }
+  .panel { @apply rounded-xl border border-line bg-white shadow-sm; }
+  .panel-body { @apply p-4 sm:p-6; }
+  .field-label { @apply mb-1.5 block text-sm font-medium text-gray-800; }
+  .field { @apply w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/15 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500; }
+  .field-hint { @apply mt-1.5 text-xs leading-5 text-gray-500; }
+  .form-section { @apply space-y-5 border-b border-line pb-6 last:border-0 last:pb-0; }
+  .form-section-title { @apply text-base font-semibold text-brand-ink; }
+  .button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50; }
+  .button-primary { @apply bg-brand text-white hover:bg-brand-dark; }
+  .button-secondary { @apply border border-line bg-white text-brand-ink hover:bg-brand-soft; }
+  .button-quiet { @apply text-brand hover:bg-brand-soft; }
+  .button-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+  .icon-button { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-brand-soft hover:text-brand; }
+  .segmented-tabs { @apply flex gap-1 overflow-x-auto border-b border-line; scrollbar-width: thin; }
+  .segmented-tab { @apply shrink-0 border-b-2 border-transparent px-3 py-3 text-sm font-medium text-gray-500 transition-colors hover:text-brand; }
+  .segmented-tab[aria-pressed="true"] { @apply border-brand text-brand; }
+  .data-table { @apply w-full text-left text-sm; }
+  .data-table thead { @apply border-b border-line bg-gray-50; }
+  .data-table th { @apply px-4 py-3 text-xs font-semibold text-gray-500; }
+  .data-table td { @apply px-4 py-4 align-top; }
+  .data-table tbody tr { @apply border-b border-line last:border-0 hover:bg-brand-soft/40; }
+  .app-dialog { @apply fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-xl border border-line bg-white p-0 text-gray-800 shadow-xl; }
+  .app-dialog::backdrop { background: rgb(15 35 36 / 48%); }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -15,7 +76,6 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Prevent minor horizontal scroll on mobile */
-body {
-  overflow-x: hidden;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

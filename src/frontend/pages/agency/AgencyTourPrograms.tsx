@@ -1,6 +1,7 @@
+import { Button, Dialog, Notice, PageState } from '../../components/ui';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, Loader2, AlertCircle, X } from 'lucide-react';
+import { Plus, Search, AlertCircle } from 'lucide-react';
 import { TourCard } from '../../types/tourcard';
 import { bookingService, tourService } from '../../services/api';
 import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
@@ -11,6 +12,8 @@ export function AgencyTourPrograms() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [query, setQuery] = useState('');
+    const [category, setCategory] = useState('all');
+    const [deleteError, setDeleteError] = useState('');
     const [deleteModal, setDeleteModal] = useState<{ open: boolean; tourId: string | null; tourTitle: string }>({
         open: false,
         tourId: null,
@@ -85,13 +88,13 @@ export function AgencyTourPrograms() {
     const handleDeleteConfirm = async () => {
         if (!deleteModal.tourId) return;
         
-        setDeleting(true);
+        setDeleting(true); setDeleteError('');
         try {
             await tourService.deleteTour(deleteModal.tourId);
             setTours(prev => prev.filter(t => String(t.tour_id || t.id) !== deleteModal.tourId));
             setDeleteModal({ open: false, tourId: null, tourTitle: '' });
         } catch (err) {
-            setError("Failed to delete tour. Please try again.");
+            setDeleteError("Failed to delete tour. Please try again.");
         } finally {
             setDeleting(false);
         }
@@ -101,22 +104,20 @@ export function AgencyTourPrograms() {
         setDeleteModal({ open: false, tourId: null, tourTitle: '' });
     };
 
-    const filteredTours = tours.filter(tour =>
+    const filteredTours = tours.filter(tour => (category === 'all' || tour.category === category) && (
         (tour.tour_title || tour.title || '').toLowerCase().includes(query.toLowerCase()) ||
-        (tour.location || '').toLowerCase().includes(query.toLowerCase())
+        (tour.location || '').toLowerCase().includes(query.toLowerCase()))
     );
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center h-64">
-                <Loader2 className="w-8 h-8 animate-spin text-[#375E5E]" />
-            </div>
+            <PageState kind="loading" title="Loading tour programs" />
         );
     }
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
                 <h1 className="text-2xl font-bold text-gray-900">Tour Programs</h1>
                 <button
                     onClick={() => navigate('/agency/add-tour')}
@@ -143,18 +144,13 @@ export function AgencyTourPrograms() {
                         type="text"
                         value={query}
                         onChange={handleSearch}
-                        placeholder="Search tour programs..."
+                        aria-label="Search tour programs" placeholder="Search tour programs..."
                         className="w-full border border-gray-300 rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-[#375E5E]"
                     />
                 </form>
             </div>
 
-            <div className="w-full">
-                <button className='text-shadow-lg rounded-lg bg-gray-50 w-full p-2 flex items-center justify-center gap-2 border border-gray-300 hover:bg-lime-200 transition-colors'>
-                    <Filter className="w-4 h-4" />
-                    Filter
-                </button>
-            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-3 text-sm text-gray-600">Category<select className="field w-auto" value={category} onChange={event => setCategory(event.target.value)}><option value="all">All categories</option>{[...new Set(tours.map(tour => tour.category).filter(Boolean))].map(value => <option key={value} value={value}>{value}</option>)}</select></label><p className="text-sm text-gray-500">{filteredTours.length} tour{filteredTours.length === 1 ? '' : 's'}</p></div>
 
             {filteredTours.length === 0 && !error ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
@@ -187,48 +183,7 @@ export function AgencyTourPrograms() {
                 </div>
             )}
 
-            {/* Delete Confirmation Modal */}
-            {deleteModal.open && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-xl">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-semibold text-gray-900">Delete Tour</h3>
-                            <button
-                                onClick={handleDeleteCancel}
-                                className="text-gray-400 hover:text-gray-600"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <p className="text-gray-600 mb-6">
-                            Are you sure you want to delete "<span className="font-medium">{deleteModal.tourTitle}</span>"? This action cannot be undone.
-                        </p>
-                        <div className="flex gap-3 justify-end">
-                            <button
-                                onClick={handleDeleteCancel}
-                                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                                disabled={deleting}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleDeleteConfirm}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                                disabled={deleting}
-                            >
-                                {deleting ? (
-                                    <>
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                        Deleting...
-                                    </>
-                                ) : (
-                                    'Delete Tour'
-                                )}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Dialog open={deleteModal.open} onClose={handleDeleteCancel} busy={deleting} title="Delete tour" footer={<><Button variant="secondary" disabled={deleting} onClick={handleDeleteCancel}>Keep tour</Button><Button variant="danger" busy={deleting} onClick={() => void handleDeleteConfirm()}>Delete tour</Button></>}><p className="text-sm leading-6">Delete <strong>{deleteModal.tourTitle}</strong>? This action cannot be undone.</p>{deleteError && <div className="mt-4"><Notice tone="error">{deleteError}</Notice></div>}</Dialog>
         </div>
     );
 }

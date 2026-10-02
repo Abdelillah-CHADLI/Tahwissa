@@ -40,11 +40,11 @@ export function ReviewCard({ review }: ReviewCardProps) {
                     {review.customerName.split(" ").map((n) => n[0]).join("")}
                 </div>
 
-                <div className="flex-1">
-                    <div className="flex items-start justify-between mb-2">
+                <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
                         <div>
                             <h4 className="mb-1">{review.customerName}</h4>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="text-sm text-gray-500">
                                 {review.tourName}
                             </p>
                         </div>

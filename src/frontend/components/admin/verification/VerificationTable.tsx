@@ -1,3 +1,4 @@
+import { PageState } from '../../ui';
 import { Eye } from 'lucide-react';
 
 export interface VerificationRequest {
@@ -13,7 +14,7 @@ export interface VerificationRequest {
 
 interface VerificationTableProps {
     requests: VerificationRequest[];
-    onViewRequest: (id: number) => void;
+    onViewRequest: (request: VerificationRequest) => void;
 }
 
 export function VerificationTable({ requests, onViewRequest }: VerificationTableProps) {
@@ -32,16 +33,14 @@ export function VerificationTable({ requests, onViewRequest }: VerificationTable
 
     if (requests.length === 0) {
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                <p className="text-gray-500">No verification requests found</p>
-            </div>
+            <PageState title="No verification requests" description="Try another status or search term. New provider submissions will appear here." />
         );
     }
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="data-table responsive-table" role="table">
 
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-200">
@@ -57,31 +56,31 @@ export function VerificationTable({ requests, onViewRequest }: VerificationTable
                     <tbody className="divide-y divide-gray-200">
                         {requests.map((request) => (
                             <tr
-                                key={request.id}
+                                key={`${request.type}-${request.id}`}
                                 className="hover:bg-gray-50 transition-colors"
                             >
-                                <td className="px-6 py-4 text-sm text-gray-900 font-medium whitespace-nowrap">
+                                <td data-label="Name" className="px-6 py-4 text-sm text-gray-900 font-medium whitespace-nowrap">
                                     {request.name}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Type" className="px-6 py-4">
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700 whitespace-nowrap">
                                         {request.type}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                <td data-label="Email" className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {request.email}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                <td data-label="Registered" className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {request.registrationDate}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Status" className="px-6 py-4">
                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(request.status)}`}>
                                         {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Action" className="px-6 py-4">
                                     <button
-                                        onClick={() => onViewRequest(request.id)}
+                                        onClick={() => onViewRequest(request)}
                                         className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors"
                                     >
                                         <Eye className="w-4 h-4" />

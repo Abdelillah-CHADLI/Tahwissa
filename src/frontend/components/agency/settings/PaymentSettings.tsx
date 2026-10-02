@@ -56,7 +56,7 @@ export function PaymentSettings({
             </div>
 
             <div className="bg-gray-50 p-4 rounded-lg mt-6">
-                <div className="flex items-center gap-2 text-blue-600 mb-2">
+                <div className="flex items-center gap-2 text-brand mb-2">
                     <Shield className="w-5 h-5" />
                     <h4 className="font-medium">Secure Payment Processing</h4>
                 </div>
@@ -71,7 +71,7 @@ export function PaymentSettings({
                 </button>
                 <button
                     onClick={onSave}
-                    className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600"
+                    className="bg-brand-soft0 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-brand"
                 >
                     <Save className="w-4 h-4" />
                     Save Payment Info

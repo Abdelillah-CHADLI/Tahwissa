@@ -4,13 +4,13 @@ import GuideHeader from "../../components/guide_profile/GuideHeader";
 import AboutSection from "../../components/guide_profile/AboutSection";
 import ToursSection from "../../components/guide_profile/ToursSection";
 import ContactSection from "../../components/guide_profile/ContactSection";
-import { colors } from "../../assets/colors";
 import { profileService, tourService } from "../../services/api";
 import { ROUTES } from "../../utils/routes";
 import type { Tour } from "../../types/explore";
 import defaultGuideImage from "../../assets/imgs/guide.png";
 import defaultAgencyImage from "../../assets/imgs/agency.jpeg";
 import defaultTourImage from "../../assets/imgs/tour1.jpeg";
+import { PageState } from '../../components/ui';
 
 type ProfileApiResponse = {
   success: boolean;
@@ -101,7 +101,7 @@ const GuideProfilePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
-  const [activeSection, setActiveSection] = useState<"about" | "tours" | "contact">("about");
+  const [activeSection, setActiveSection] = useState<"about" | "tours" | "contact">(location.state?.section === "contact" ? "contact" : "about");
   const [profileData, setProfileData] = useState<ProfileRecord | null>(null);
   const [tours, setTours] = useState<Tour[]>([]);
   const [employeesCount, setEmployeesCount] = useState<number | null>(null);
@@ -370,7 +370,7 @@ const GuideProfilePage = () => {
   };
 
   const handleTourClick = (tour: Tour) => {
-    navigate(ROUTES.DETAILS, {
+    navigate(`${ROUTES.DETAILS}/${tour.id}`, {
       state: {
         tourId: tour.id,
         tourData: tour
@@ -406,16 +406,7 @@ const GuideProfilePage = () => {
 
   const profile = getMappedProfile();
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#348086] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <div className="page-shell"><PageState kind="loading" title="Loading provider profile" /></div>;
 
   if (error && !profile) {
     return (
@@ -452,10 +443,10 @@ const GuideProfilePage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={handleBack}
-            className={`text-[${colors.primary.green}] font-medium hover:text-[${colors.primary.darkTeal}] transition-colors`}
+            className={`text-brand font-medium hover:text-brand-dark transition-colors`}
           >
             ← Back to Guides & Agencies
           </button>
@@ -465,33 +456,33 @@ const GuideProfilePage = () => {
       <GuideHeader guide={profile} />
 
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex justify-center gap-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-4 py-4 sm:px-6">
+          <div className="flex gap-6 overflow-x-auto">
             <button
-              onClick={() => setActiveSection("about")}
+              aria-pressed={activeSection === "about"} onClick={() => setActiveSection("about")}
               className={`font-medium pb-2 transition-colors ${
                 activeSection === "about"
-                  ? `text-[${colors.primary.green}] border-b-2 border-[${colors.primary.green}]`
+                  ? `text-brand border-b-2 border-brand`
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
               About
             </button>
             <button
-              onClick={() => setActiveSection("tours")}
+              aria-pressed={activeSection === "tours"} onClick={() => setActiveSection("tours")}
               className={`font-medium pb-2 transition-colors ${
                 activeSection === "tours"
-                  ? `text-[${colors.primary.green}] border-b-2 border-[${colors.primary.green}]`
+                  ? `text-brand border-b-2 border-brand`
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
               Tours ({tours.length})
             </button>
             <button
-              onClick={() => setActiveSection("contact")}
+              aria-pressed={activeSection === "contact"} onClick={() => setActiveSection("contact")}
               className={`font-medium pb-2 transition-colors ${
                 activeSection === "contact"
-                  ? `text-[${colors.primary.green}] border-b-2 border-[${colors.primary.green}]`
+                  ? `text-brand border-b-2 border-brand`
                   : "text-gray-600 hover:text-gray-900"
               }`}
             >
@@ -501,7 +492,7 @@ const GuideProfilePage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {renderActiveSection()}
       </div>
     </div>

@@ -34,20 +34,20 @@ export function EmployeeList({ employees, onView, onEdit, onToggleStatus, onDele
     );
 }
 
-function EmployeeCard({ employee, onView, onEdit, onToggleStatus, onDelete }: any) {
+function EmployeeCard({ employee, onView, onEdit, onToggleStatus, onDelete }: Omit<EmployeeListProps, 'employees'> & { employee: Employee }) {
     const [showMenu, setShowMenu] = useState(false);
 
     return (
         <div className="border border-gray-200 rounded-lg p-4">
-            <div className="flex justify-between items-start">
-                <div className="flex gap-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+            <div className="flex flex-wrap justify-between items-start gap-3">
+                <div className="flex min-w-0 gap-3">
+                    <div className="shrink-0 w-10 h-10 bg-brand-soft text-brand rounded-full flex items-center justify-center">
                         {(employee.full_name || employee.users.email.split("@")[0] || "?")
                             .split(" ")
                             .map((n: string) => n[0])
                             .join("")}
                     </div>
-                    <div>
+                    <div className="min-w-0 break-words">
                         <h3 className="font-semibold">{employee.full_name || employee.users.email.split("@")[0]}</h3>
                         <p className="text-gray-600 text-sm">{employee.role || employee.users.role}</p>
                         <p className="text-gray-500 text-sm">{employee.users.email}</p>
@@ -65,8 +65,8 @@ function EmployeeCard({ employee, onView, onEdit, onToggleStatus, onDelete }: an
 
                     <div className="relative">
                         <button
-                            onClick={() => setShowMenu(!showMenu)}
-                            className="p-1 hover:bg-gray-100 rounded"
+                            aria-label={`Actions for ${employee.full_name || employee.users.email}`} aria-expanded={showMenu} onKeyDown={event => { if (event.key === 'Escape') setShowMenu(false); }} onClick={() => setShowMenu(!showMenu)}
+                            className="icon-button"
                         >
                             <MoreVertical className="w-4 h-4" />
                         </button>

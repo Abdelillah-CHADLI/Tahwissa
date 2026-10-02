@@ -7,10 +7,11 @@ import { ReportsManagement } from './pages/admin/ReportsManagement';
 import { VerificationRequestDetails } from './pages/admin/VerificationRequestDetails';
 import { ReportDetails } from './pages/admin/ReportDetails';
 import './App.css';
+import { PageState } from './components/ui';
 
 function AdminAppContent() {
     const { user, isLoading } = useAuth();
-    if (isLoading) return <div className="grid min-h-screen place-items-center text-sm text-slate-600">Restoring your session…</div>;
+    if (isLoading) return <div className="page-shell"><PageState kind="loading" title="Restoring your session" /></div>;
     if (user?.userType !== 'admin') return <Navigate to="/traveler/signin" replace />;
     return (
         <Routes>
@@ -20,6 +21,7 @@ function AdminAppContent() {
                 <Route path="verifications/:type/:id" element={<VerificationRequestDetails />} />
                 <Route path="reports" element={<ReportsManagement />} />
                 <Route path="reports/:type/:id" element={<ReportDetails />} />
+                <Route path="*" element={<Navigate to="/admin" replace />} />
             </Route>
         </Routes>
     );

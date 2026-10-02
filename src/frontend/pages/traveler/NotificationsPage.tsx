@@ -1,3 +1,5 @@
+import { PageState, Button } from '../../components/ui';
+import { CalendarCheck, MapPin } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import api from '../../services/api';
@@ -87,14 +89,13 @@ const saveReadIds = (travellerId: string, ids: Set<string>) => {
 const NotificationsPage = () => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+
 
   const fetchNotifications = async () => {
-    setLoading(true);
+    setLoading(true); setError('');
     try {
       const travellerId = getTravellerIdFromStorage();
       if (!travellerId) {
@@ -146,11 +147,13 @@ const NotificationsPage = () => {
 
       setNotifications(built);
     } catch {
-      setNotifications([]);
+      setError('Trip updates could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => { void fetchNotifications(); }, []);
 
   const markAsRead = async (id: string) => {
     try {
@@ -182,19 +185,6 @@ const NotificationsPage = () => {
     }
   };
 
-  const getNotificationIcon = (type: Notification['type']) => {
-    const icons = {
-      booking: '✓',
-      review: '★',
-      message: '💬',
-      tour: '📍',
-      guide: '👤',
-      post: '❤️',
-      offer: '🎁'
-    };
-    return icons[type] || '🔔';
-  };
-
   const filteredNotifications = notifications.filter(notif => {
     if (activeFilter === 'unread') return !notif.isRead;
     if (activeFilter === 'read') return notif.isRead;
@@ -212,14 +202,14 @@ const NotificationsPage = () => {
         >
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#cbf492]">Your activity</p>
           <h1 className="mt-2 text-2xl font-bold sm:text-3xl">Notifications</h1>
-          <p className="mt-2 text-sm text-white/85 sm:text-base">Updates about your trips and community activity.</p>
+          <p className="mt-2 text-sm text-white/85 sm:text-base">Booking updates and reminders for your upcoming trips.</p>
         </motion.div>
         
         {/* Filter Tabs */}
         <div className="mb-5 flex flex-wrap gap-2">
           {(['all', 'unread', 'read'] as const).map((filter) => (
             <motion.button
-              key={filter}
+              key={filter} aria-pressed={activeFilter === filter}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveFilter(filter)}
@@ -250,19 +240,10 @@ const NotificationsPage = () => {
 
         {/* Notifications List */}
         <div className="space-y-4">
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#348086]"></div>
-              <p className="mt-2 text-gray-600">Loading notifications...</p>
-            </div>
-          ) : filteredNotifications.length === 0 ? (
-            <div className="rounded-2xl border border-[#dce9e5] bg-white py-12 text-center shadow-sm">
-              <p className="text-gray-600">No notifications found</p>
-            </div>
-          ) : (
+          {loading ? <PageState kind="loading" title="Loading your updates" /> : error ? <PageState kind="error" title="Updates unavailable" description={error} action={<Button onClick={() => void fetchNotifications()}>Try again</Button>} /> : filteredNotifications.length === 0 ? <PageState title={activeFilter === 'unread' ? "You're all caught up" : 'No updates here yet'} description="Booking confirmations and upcoming trip reminders will appear here." /> : (
             filteredNotifications.map((notification, index) => (
               <motion.div
-                key={notification.id}
+                key={notification.id} role="button" tabIndex={0} aria-label={`${notification.title}${notification.isRead ? ' · Read' : ' · Mark as read'}`} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); void markAsRead(notification.id); } }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
@@ -272,16 +253,16 @@ const NotificationsPage = () => {
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex items-start">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg ${
+                  <div className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-lg ${
                     notification.isRead ? 'bg-gray-100' : 'bg-[#e3f1e9]'
                   }`}>
-                    {getNotificationIcon(notification.type)}
+                    {notification.type === 'tour' ? <MapPin size={18} /> : <CalendarCheck size={18} />}
                   </div>
-                  <div className="ml-4 flex-1">
+                  <div className="ml-3 min-w-0 flex-1">
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-medium text-gray-900">{notification.title}</h3>
-                        <p className="text-gray-600 mt-1">{notification.message}</p>
+                        <p className="text-sm leading-6 text-gray-600 mt-1">{notification.message}</p>
                         <span className="text-sm text-gray-500 mt-2 block">{notification.timestamp}</span>
                       </div>
                       {!notification.isRead && (

@@ -2,6 +2,7 @@ import { useEffect, useState, type ChangeEvent } from 'react';
 import { AlertCircle, Loader2, Save, Upload } from 'lucide-react';
 import api, { getApiErrorMessage, profileService } from '../../services/api';
 import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
+import { PageState } from '../../components/ui';
 
 type ProfileForm = { name: string; phone: string; email: string; location: string; description: string };
 const emptyForm: ProfileForm = { name: '', phone: '', email: '', location: '', description: '' };
@@ -94,7 +95,7 @@ export function AgencyEditProfile() {
     }
   }
 
-  if (loading) return <div className="flex min-h-64 items-center justify-center text-teal-800"><Loader2 className="mr-2 animate-spin" /> Loading profile...</div>;
+  if (loading) return <PageState kind="loading" title="Loading your profile" />;
 
   const fields: { key: keyof ProfileForm; label: string; type?: string; required?: boolean }[] = [
     { key: 'name', label: isAgency ? 'Agency name' : 'Guide name', required: true },
@@ -104,7 +105,7 @@ export function AgencyEditProfile() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f5f8f7] px-4 py-8 sm:px-6">
+    <div>
       <div className="mx-auto max-w-3xl">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-[#173f3d] sm:text-3xl">Edit {isAgency ? 'agency' : 'guide'} profile</h1>
@@ -112,7 +113,7 @@ export function AgencyEditProfile() {
         </div>
         {error && <p role="alert" className="mb-4 flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><AlertCircle size={18} />{error}</p>}
         {success && <p role="status" className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">Profile updated successfully.</p>}
-        <div className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <form onSubmit={event => { event.preventDefault(); void save(); }} className="panel panel-body space-y-6">
           {isAgency && <div className="flex flex-wrap items-center gap-4">
             {logo ? <img src={logo} alt="Agency logo" className="h-20 w-20 rounded-full object-cover" /> : <div className="flex h-20 w-20 items-center justify-center rounded-full bg-teal-700 text-2xl font-bold text-white">{form.name.slice(0, 2).toUpperCase() || 'AG'}</div>}
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-teal-200 px-4 py-2 text-sm font-medium text-teal-800 hover:bg-teal-50">
@@ -131,12 +132,12 @@ export function AgencyEditProfile() {
             <textarea rows={6} value={form.description} onChange={event => change('description', event.target.value)} className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-100" />
           </label>
           <div className="flex justify-end">
-            <button onClick={() => void save()} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-5 py-2.5 font-medium text-white hover:bg-teal-800 disabled:opacity-60">
+            <button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-teal-700 px-5 py-2.5 font-medium text-white hover:bg-teal-800 disabled:opacity-60">
               {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}{saving ? 'Saving...' : 'Save changes'}
             </button>
           </div>
-        </div>
+        </form>
       </div>
-    </main>
+    </div>
   );
 }

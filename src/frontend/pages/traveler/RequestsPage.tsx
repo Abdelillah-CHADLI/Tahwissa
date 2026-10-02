@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import { PageState } from '../../components/ui';
+import { useFeedback } from '../../components/ui/FeedbackProvider';
+import { advancedBookingService, getApiErrorMessage } from '../../services/api';
+import { useState, useEffect, useCallback } from "react";
 import RequestCard from "../../components/traveler/requests/RequestCard";
 import StatsCards from "../../components/traveler/requests/StatsCards";
 import TabsNavigation from "../../components/traveler/requests/TabsNavigation";
@@ -36,7 +39,7 @@ interface Request {
   tourName: string;
   requestDate: string;
   preferredDate: string;
-  status: "pending" | "confirmed" | "declined";
+  status: "pending" | "confirmed" | "cancelled";
   travelers: number;
   price: number;
   duration: string;
@@ -52,98 +55,8 @@ interface Request {
   startDate?: string;
 }
 
-function RequestsPage() {
-  const [activeTab, setActiveTab] = useState("all");
-  const [requests, setRequests] = useState<Request[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
-
-  const getCurrentTravellerId = (): string | null => {
-    const id = user?.id || (user as any)?.userId || (user as any)?.profileId;
-    if (id) return String(id);
-
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-    try {
-      const parsed = JSON.parse(userStr) as Record<string, unknown>;
-      const travellerId =
-        (parsed.traveller_id as string | undefined) ||
-        (parsed.userId as string | undefined) ||
-        (parsed.profileId as string | undefined) ||
-        (parsed.id as string | undefined);
-      return travellerId ? String(travellerId) : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const currentTravellerId = getCurrentTravellerId();
-
-  // --- API Calls ---
-  const fetchUserBookings = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!currentTravellerId) {
-        setRequests([]);
-        setError('Please sign in to view your requests.');
-        return;
-      }
-
-      const response = await bookingService.getUserBookings(currentTravellerId);
-
-      if (response.success && response.data) {
-        const transformedRequests = await Promise.all(
-          response.data.map(async (booking: BackendBooking) => {
-            const tour = booking.tours;
-            const providerDetails = await getProviderDetails(tour);
-            const status = mapStatus(booking.status);
-
-            return {
-              id: booking.booking_id,
-              type: tour?.agency_id ? "agency" : "guide",
-              providerName: providerDetails?.name || "Unknown Provider",
-              contactEmail: providerDetails?.email || "No email",
-              contactPhone: providerDetails?.phone || "No phone",
-              tourName: tour?.tour_title || "Unknown Tour",
-              requestDate: formatDate(booking.booking_date),
-              preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
-              status: status,
-              travelers: 1,
-              location: tour?.location || "Unknown Location",
-              message: `Booking for ${tour?.tour_title || "tour"}`,
-              price: tour?.price || 0,
-              image: getTourImage(tour),
-              duration: tour?.duration || "Not specified",
-              tourId: booking.tour_id,
-              bookingDate: booking.booking_date,
-              startDate: tour?.start_date,
-              confirmedDetails: status === "confirmed" ? "Your booking has been confirmed!" : undefined,
-              declineReason: status === "declined" ? "Booking was cancelled" : undefined,
-            };
-          })
-        );
-
-        setRequests(transformedRequests);
-      } else {
-        setError(response.error || "Failed to load bookings");
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // --- Effects ---
-  useEffect(() => {
-    fetchUserBookings();
-  }, []);
-
   // --- Data Processing ---
-  const getProviderDetails = async (tour?: BackendBooking['tours']): Promise<any> => {
+  const getProviderDetails = async (tour?: BackendBooking['tours']): Promise<{ name: string; email: string; phone: string } | null> => {
     if (!tour) return null;
 
     try {
@@ -185,12 +98,12 @@ function RequestsPage() {
 
 
 
-  const mapStatus = (backendStatus: string): "pending" | "confirmed" | "declined" => {
-    const statusMap: Record<string, "pending" | "confirmed" | "declined"> = {
+  const mapStatus = (backendStatus: string): "pending" | "confirmed" | "cancelled" => {
+    const statusMap: Record<string, "pending" | "confirmed" | "cancelled"> = {
       "PENDING": "pending",
       "CONFIRMED": "confirmed",
-      "DECLINED": "declined",
-      "CANCELLED": "declined"
+      "DECLINED": "cancelled",
+      "CANCELLED": "cancelled"
     };
     return statusMap[backendStatus] || "pending";
   };
@@ -215,23 +128,102 @@ function RequestsPage() {
     return tourImage3;
   };
 
+
+function RequestsPage() {
+  const { confirm, notify } = useFeedback();
+  const [cancelling, setCancelling] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
+  const [requests, setRequests] = useState<Request[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  const currentTravellerId = user?.id || user?.userId || user?.profileId;
+
+  // --- API Calls ---
+  const fetchUserBookings = useCallback(async () => {
+    try {
+
+      if (!currentTravellerId) {
+        setRequests([]);
+        setError('Please sign in to view your requests.');
+        return;
+      }
+
+      const response = await bookingService.getUserBookings(currentTravellerId);
+
+      if (response.success && response.data) {
+        const transformedRequests = await Promise.all(
+          response.data.map(async (booking: BackendBooking) => {
+            const tour = booking.tours;
+            const providerDetails = await getProviderDetails(tour);
+            const status = mapStatus(booking.status);
+
+            return {
+              id: String(booking.booking_id),
+              type: tour?.agency_id ? "agency" : "guide",
+              providerName: providerDetails?.name || "Unknown Provider",
+              contactEmail: providerDetails?.email || "No email",
+              contactPhone: providerDetails?.phone || "No phone",
+              tourName: tour?.tour_title || "Unknown Tour",
+              requestDate: formatDate(booking.booking_date),
+              preferredDate: tour?.start_date ? formatDate(tour.start_date) : "Flexible",
+              status: status,
+              travelers: 1,
+              location: tour?.location || "Unknown Location",
+              message: `Booking for ${tour?.tour_title || "tour"}`,
+              price: tour?.price || 0,
+              image: getTourImage(tour),
+              duration: tour?.duration || "Not specified",
+              tourId: booking.tour_id,
+              bookingDate: booking.booking_date,
+              startDate: tour?.start_date,
+              confirmedDetails: status === "confirmed" ? "Your booking has been confirmed!" : undefined,
+              declineReason: status === "cancelled" ? "Booking was cancelled" : undefined,
+            };
+          })
+        );
+
+        setRequests(transformedRequests);
+      } else {
+        setError(response.error || "Failed to load bookings");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  }, [currentTravellerId]);
+
+  async function cancelRequest(id: string) {
+    if (cancelling || !await confirm('Cancel this pending booking request?')) return;
+    setCancelling(id);
+    try { await advancedBookingService.cancelBooking(id); await fetchUserBookings(); notify('Your booking request was cancelled.'); }
+    catch (error) { notify(getApiErrorMessage(error)); }
+    finally { setCancelling(null); }
+  }
+  // --- Effects ---
+  useEffect(() => {
+    fetchUserBookings();
+  }, [fetchUserBookings]);
+
   // --- Filter Logic ---
   const pendingRequests = requests.filter((r) => r.status === "pending");
   const confirmedRequests = requests.filter((r) => r.status === "confirmed");
-  const declinedRequests = requests.filter((r) => r.status === "declined");
+  const cancelledRequests = requests.filter((r) => r.status === "cancelled");
 
   const tabs = [
     { id: "all", label: `All (${requests.length})` },
     { id: "pending", label: `Pending (${pendingRequests.length})` },
     { id: "confirmed", label: `Confirmed (${confirmedRequests.length})` },
-    { id: "declined", label: `Declined (${declinedRequests.length})` },
+    { id: "cancelled", label: `Cancelled (${cancelledRequests.length})` },
   ];
 
   const getRequestsToShow = (): Request[] => {
     switch (activeTab) {
       case "pending": return pendingRequests;
       case "confirmed": return confirmedRequests;
-      case "declined": return declinedRequests;
+      case "cancelled": return cancelledRequests;
       default: return requests;
     }
   };
@@ -248,10 +240,7 @@ function RequestsPage() {
           title="My Requests"
           description="Track all your tour and guide requests"
         />
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <div className="ml-4 text-lg">Loading your requests...</div>
-        </div>
+        <PageState kind="loading" title="Loading your requests" />
       </div>
     );
   }
@@ -268,7 +257,7 @@ function RequestsPage() {
           <div className="text-red-800 font-semibold text-lg">Error loading requests</div>
           <div className="text-red-600 mt-2">{error}</div>
           <button
-            onClick={fetchUserBookings}
+            onClick={() => { setLoading(true); setError(null); void fetchUserBookings(); }}
             className="mt-4 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
           >
             Try Again
@@ -288,7 +277,7 @@ function RequestsPage() {
       <StatsCards
         pendingCount={pendingRequests.length}
         confirmedCount={confirmedRequests.length}
-        declinedCount={declinedRequests.length}
+        cancelledCount={cancelledRequests.length}
       />
 
       <TabsNavigation
@@ -302,7 +291,7 @@ function RequestsPage() {
           requestsToShow.map((request) => (
             <RequestCard
               key={request.id}
-              request={request}
+              request={request} onCancel={cancelRequest} busy={cancelling !== null}
             />
           ))
         ) : (

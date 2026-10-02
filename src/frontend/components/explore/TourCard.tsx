@@ -80,11 +80,11 @@ const TourCard = ({ tour, onClick, index = 0 }: TourCardProps) => {
           <span className="text-xs xs:text-sm truncate">{tour.location}</span>
         </div>
 
-        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 text-xs xs:text-sm text-gray-600">
-          <div className="flex items-center">
+        <div className="flex flex-wrap items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 text-xs xs:text-sm text-gray-600">
+          {tour.rating > 0 && <div className="flex items-center">
             <Star className="w-3 h-3 xs:w-4 xs:h-4 text-yellow-400 fill-yellow-400 mr-1" />
             <span className="font-semibold text-gray-900">{tour.rating}</span>
-          </div>
+          </div>}
 
           <div className="flex items-center">
             <Calendar className="w-3 h-3 xs:w-4 xs:h-4 mr-1" />

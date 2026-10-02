@@ -141,7 +141,7 @@ export function AccountSettings({
                 </button>
                 <button
                     onClick={onSave}
-                    className="bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-blue-600"
+                    className="bg-brand-soft0 text-white px-4 py-2 rounded flex items-center gap-2 hover:bg-brand"
                 >
                     <Save className="w-4 h-4" />
                     Save Changes

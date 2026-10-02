@@ -1,3 +1,4 @@
+import { useFeedback } from '../../components/ui/FeedbackProvider';
 import { useState, useEffect } from "react";
 import { UserPlus, Search, AlertCircle } from "lucide-react";
 import { EmployeeList } from "../../components/agency/admin/EmployeeList";
@@ -5,9 +6,11 @@ import { AddEditModal } from "../../components/agency/admin/AddEditModal";
 import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
 import api from "../../services/api";
+import { PageState } from '../../components/ui';
 
 
 export function AdminPage() {
+  const { notify, confirm } = useFeedback();
     const [searchQuery, setSearchQuery] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -54,7 +57,7 @@ export function AdminPage() {
     };
 
     const handleDeleteEmployee = async (id: string) => {
-        if (confirm("Are you sure you want to delete this employee?")) {
+        if (await confirm("Are you sure you want to delete this employee?")) {
             setLoading(true);
             setError(null);
             try {
@@ -78,7 +81,7 @@ export function AdminPage() {
             const agencyId = getAgencyId();
             if (!agencyId) throw new Error('No agency account found.');
 
-            const generatedPassword = `Emp-${Math.random().toString(36).slice(2, 10)}!`;
+            const generatedPassword = `Emp-${crypto.randomUUID().slice(0, 12)}!`;
             await api.post(`/manager/employees`, {
                 email: employeeData.users.email,
                 password: generatedPassword,
@@ -95,7 +98,7 @@ export function AdminPage() {
 
             await fetchEmployees();
             setIsAddModalOpen(false);
-            alert(`Employee created. Temporary password: ${generatedPassword}`);
+            notify(`Employee created. Temporary password: ${generatedPassword}`);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to add employee";
             setError(errorMessage);
@@ -119,11 +122,11 @@ export function AdminPage() {
                 )
             );
 
-            alert(`${response.data.message}`);
+            notify(`${response.data.message}`);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to toggle status";
             setError(errorMessage);
-            alert(errorMessage);
+            notify(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -174,16 +177,16 @@ export function AdminPage() {
     });
 
     return (
-        <div className="p-6 space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-6">
+            <div className="flex flex-wrap justify-between items-center gap-3">
                 <div>
                     <h1 className="text-2xl font-bold">Employee Management</h1>
                     <p className="text-gray-600">Manage your tour guides and staff</p>
                 </div>
                 <button
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={() => { setSelectedEmployee(null); setError(null); setIsAddModalOpen(true); }}
                     disabled={loading}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50"
+                    className="bg-brand text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-brand-dark disabled:opacity-50"
                 >
                     <UserPlus className="w-4 h-4" />
                     Add Employee
@@ -203,18 +206,18 @@ export function AdminPage() {
                 </div>
             )}
 
-            <div className="bg-white rounded-lg shadow p-4">
-                <div className="flex gap-4 mb-4">
+            <div className="panel panel-body">
+                <div className="flex flex-col gap-3 mb-4 sm:flex-row">
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                         <input
-                            placeholder="Search employees..."
+                            aria-label="Search team members" placeholder="Search employees..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full pl-10 p-2 border border-gray-300 rounded-lg"
                         />
                     </div>
-                    <select
+                    <select aria-label="Filter by team member status"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
                         className="border border-gray-300 rounded-lg p-2"
@@ -226,9 +229,7 @@ export function AdminPage() {
                 </div>
 
                 {fetchLoading ? (
-                    <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    </div>
+                    <PageState compact kind="loading" title="Loading your team" />
                 ) : (
                     <EmployeeList
                         employees={filteredEmployees}
@@ -247,7 +248,7 @@ export function AdminPage() {
             </div>
 
             {(isAddModalOpen || isEditModalOpen) && (
-                <AddEditModal
+                <AddEditModal key={selectedEmployee?.employee_id || 'new'} busy={loading} error={error}
                     employee={selectedEmployee}
                     isOpen={isAddModalOpen || isEditModalOpen}
                     onClose={() => {

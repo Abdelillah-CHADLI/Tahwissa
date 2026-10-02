@@ -18,18 +18,13 @@ export function VerificationTabs({ activeTab, onTabChange, counts }: Verificatio
     ];
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 mb-6">
-            <div className="flex">
+        <div className="segmented-tabs">
+            <div className="flex min-w-max">
                 {tabs.map((tab) => (
                     <button
-                        key={tab.id}
+                        key={tab.id} aria-pressed={activeTab === tab.id}
                         onClick={() => onTabChange(tab.id)}
-                        className={`flex-1 px-6 py-4 text-sm font-medium transition-colors
-                            ${activeTab === tab.id
-                                ? 'text-gray-900 border-b-2 border-teal-600 bg-gray-50'
-                                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                            }
-                        `}
+                        className="segmented-tab"
                     >
                         {tab.label} ({tab.count})
                     </button>

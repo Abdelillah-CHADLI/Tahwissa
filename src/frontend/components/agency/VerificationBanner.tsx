@@ -20,15 +20,15 @@ export function VerificationBanner({ verified, onApplyVerification }: Verificati
     }
 
     return (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center gap-3">
-            <Shield className="w-6 h-6 text-blue-600" />
+        <div className="bg-brand-soft border border-blue-200 rounded-lg p-4 flex items-center gap-3">
+            <Shield className="w-6 h-6 text-brand" />
             <div className="flex-1">
                 <h3 className="font-semibold text-blue-900">Get Verified</h3>
-                <p className="text-sm text-blue-700">{getContextText('Increase trust with travelers by verifying your agency', 'Increase trust with travelers by verifying your profile')}</p>
+                <p className="text-sm text-brand-dark">{getContextText('Increase trust with travelers by verifying your agency', 'Increase trust with travelers by verifying your profile')}</p>
             </div>
             <button
                 onClick={onApplyVerification}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                className="bg-brand text-white px-4 py-2 rounded-lg hover:bg-brand-dark transition-colors"
             >
                 Apply Now
             </button>

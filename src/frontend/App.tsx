@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { lazy, Suspense } from "react";
+import { FeedbackProvider } from './components/ui/FeedbackProvider';
+import { PageState } from './components/ui';
 
 const AgencyApp = lazy(() => import('./AgencyApp'));
 const TravelerApp = lazy(() => import('./TravelerApp'));
@@ -8,14 +10,14 @@ const AdminApp = lazy(() => import('./AdminApp'));
 function App() {
   return (
     <BrowserRouter>
-      <Suspense fallback={<div className="grid min-h-screen place-items-center text-teal-800">Loading Tahwissa…</div>}>
+      <FeedbackProvider><Suspense fallback={<div className="page-shell py-12"><PageState kind="loading" title="Opening Tahwissa" description="Getting everything ready for your next adventure." /></div>}>
         <Routes>
           <Route path="/" element={<TravelerApp />} />
           <Route path="/agency/*" element={<AgencyApp />} />
           <Route path="/traveler/*" element={<TravelerApp />} />
           <Route path="/admin/*" element={<AdminApp />} />
         </Routes>
-      </Suspense>
+      </Suspense></FeedbackProvider>
     </BrowserRouter>
   );
 }

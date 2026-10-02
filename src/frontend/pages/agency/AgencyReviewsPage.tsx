@@ -1,10 +1,10 @@
+import { Button, PageState } from '../../components/ui';
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, AlertCircle, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import PageHeader from "../../components/traveler/requests/PageHeader";
 import { ReviewCard } from "../../components/agency/reviews/ReviewCard";
 import { reviewService, tourService } from "../../services/api";
-import { getCurrentAgencyUuid } from "../../utils/session";
-import { getContextText } from "../../utils/userContext";
+import { getCurrentAgencyUuid, getCurrentProfileType } from "../../utils/session";
 
 interface Review {
     id: string;
@@ -47,7 +47,7 @@ export function AgencyReviewsPage() {
                 return;
             }
 
-            const agencyTours = await tourService.getAgencyTours(agencyId);
+            const agencyTours = await tourService.getAgencyTours(agencyId, getCurrentProfileType() || 'agency');
 
             if (agencyTours.length === 0) {
                 setReviews([]);
@@ -57,12 +57,12 @@ export function AgencyReviewsPage() {
                     ratings: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
                 });
                 setLoading(false);
-                setError(getContextText('No tours found for your agency.', 'No tours found for your profile.'));
                 return;
             }
 
             const allReviews: Review[] = [];
             let totalRatingSum = 0;
+            let failedTours = 0;
             const ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
 
             for (const tour of agencyTours) {
@@ -98,10 +98,11 @@ export function AgencyReviewsPage() {
                         });
                     }
                 } catch {
-                    // Continue to next tour if one fails
+                    failedTours++;
                 }
             }
 
+            if (failedTours) setError('Some reviews could not be loaded. Try again to see the complete list.');
             allReviews.sort((a, b) =>
                 new Date(b.date).getTime() - new Date(a.date).getTime()
             );
@@ -118,9 +119,7 @@ export function AgencyReviewsPage() {
                 ratings: ratingDistribution
             });
 
-            if (allReviews.length === 0) {
-                setError(`No reviews found for your ${agencyTours.length} tours. Your tours exist but haven't received any reviews yet.`);
-            }
+
 
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Failed to load reviews";
@@ -146,60 +145,18 @@ export function AgencyReviewsPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="space-y-6">
-                <PageHeader
-                    title="Feedback & Reviews"
-                    description="Manage customer feedback and tour ratings"
-                />
-                <div className="flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-                        <p className="text-lg text-gray-600">Loading reviews...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+    if (loading) return <PageState kind="loading" title="Loading traveler feedback" />;
     return (
         <div className="space-y-6">
-            <PageHeader
-                title="Feedback & Reviews"
-                description="Manage customer feedback and tour ratings"
-            />
-
-            {error && reviews.length > 0 ? (
-                <div className="bg-yellow-50 border-yellow-200 border rounded-lg p-4 flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                        <div className="text-yellow-800 font-semibold">
-                            Notice
-                        </div>
-                        <div className="text-yellow-700 mt-1">{error}</div>
-                    </div>
-                    <button
-                        onClick={fetchReviews}
-                        className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-sm transition-colors"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            ) : reviews.length === 0 && !error ? (
-                <div className="bg-gray-50 border-gray-200 border rounded-lg p-4 text-center">
-                    <div className="text-gray-600">No reviews yet for this tour.</div>
-                    <div className="text-gray-500 text-sm mt-1">Be the first to leave a review!</div>
-                </div>
-            ) : null}
-
+            <PageHeader title="Feedback & reviews" description="See what travelers enjoyed and where you can improve their experience." />
+            {error && <PageState kind="error" title="Some feedback is unavailable" description={error} action={<Button onClick={() => void fetchReviews()}>Try again</Button>} />}
             {reviews.length > 0 && (
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="panel panel-body">
                     <h3 className="text-lg font-semibold mb-4">Overall Ratings</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div className="flex items-center gap-4">
-                                <div className="text-5xl font-bold text-blue-600">
+                                <div className="text-4xl font-bold text-brand">
                                     {stats.averageRating.toFixed(1)}
                                 </div>
                                 <div>
@@ -255,15 +212,7 @@ export function AgencyReviewsPage() {
                 </div>
 
                 {reviews.length === 0 ? (
-                    <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-                        <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-600 text-lg font-medium mb-2">
-                            No Reviews Yet
-                        </p>
-                        <p className="text-gray-500 text-sm">
-                            Keep providing excellent service to receive reviews from travelers!
-                        </p>
-                    </div>
+                    <PageState title="No reviews yet" description="Feedback from travelers will appear here after they review your tours." />
                 ) : (
                     <div className="space-y-4">
                         {reviews.map((review) => (

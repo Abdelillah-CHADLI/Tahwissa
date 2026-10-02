@@ -8,6 +8,7 @@ interface Traveller {
 }
 
 interface Tour {
+  rating?: number;
   tour_id?: string | number;
   id?: string | number;
   tour_title?: string;
@@ -30,6 +31,7 @@ interface Booking {
 
 interface AgencyProfile {
   rating?: number;
+  ratings?: number;
   num_raters?: number;
 }
 
@@ -56,34 +58,17 @@ export const dashboardService = {
       };
     }
 
-    let bookings: Booking[] = [];
-    let tours: Tour[] = [];
-    let agencyProfile: AgencyProfile | null = null;
-
-    // Fetch profile for rating data
-    try {
-      const profileResponse = await profileService.getProfile(agencyId, profileType);
-      agencyProfile = profileResponse?.data || profileResponse?.profile || null;
-    } catch {
-      agencyProfile = null;
-    }
-
-    // Fetch bookings for this agency/guide
-    try {
-      const filterKey = profileType === 'agency' ? 'agencyId' : 'guideId';
-      const bookingsResponse = await bookingService.getBookings({ [filterKey]: agencyId });
-      const data = bookingsResponse?.data;
-      bookings = Array.isArray(data) ? data : Array.isArray(bookingsResponse) ? bookingsResponse : [];
-    } catch {
-      bookings = [];
-    }
-
-    // Fetch tours for this agency/guide
-    try {
-      tours = await tourService.getAgencyTours(agencyId, profileType);
-    } catch {
-      tours = [];
-    }
+    // Failed requests must reach the page's error state instead of showing
+    // fabricated zero counts as if the provider has no activity.
+    const filterKey = profileType === 'agency' ? 'agencyId' : 'guideId';
+    const [profileResponse, bookingsResponse, tourResponse] = await Promise.all([
+      profileService.getProfile(agencyId, profileType),
+      bookingService.getBookings({ [filterKey]: agencyId }),
+      tourService.getAgencyTours(agencyId, profileType),
+    ]);
+    const agencyProfile: AgencyProfile | null = profileResponse?.data || profileResponse?.profile || null;
+    const bookings: Booking[] = Array.isArray(bookingsResponse?.data) ? bookingsResponse.data : Array.isArray(bookingsResponse) ? bookingsResponse : [];
+    const tours: Tour[] = tourResponse;
 
     // Calculate stats
     const totalBookings = bookings.length;
@@ -92,7 +77,7 @@ export const dashboardService = {
     let averageRating = 0;
     let totalReviews = 0;
     if (agencyProfile) {
-      const rating = Number(agencyProfile.rating) || 0;
+      const rating = Number(agencyProfile.rating ?? agencyProfile.ratings) || 0;
       const numRaters = Number(agencyProfile.num_raters) || 0;
       averageRating = numRaters > 0 ? rating / numRaters : 0;
       totalReviews = numRaters;
@@ -137,11 +122,12 @@ export const dashboardService = {
       name: String(tour.tour_title || tour.title || 'Unknown Tour'),
       bookings: tour.bookingCount,
       views: Number(tour.views || 0),
-      rating: parseFloat((averageRating > 0 ? averageRating : 4.5).toFixed(2)),
+      rating: Number(tour.rating || 0),
     }));
 
     // Count active tours (tours with start_date in the future)
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const activeTours = tours.filter((tour) => {
       const startDate = tour.start_date ? new Date(tour.start_date) : null;
       return startDate && startDate >= now;
@@ -149,7 +135,7 @@ export const dashboardService = {
 
     return {
       stats: {
-        activeTours: activeTours || tours.length,
+        activeTours,
         totalBookings,
         averageRating: parseFloat(averageRating.toFixed(2)),
         monthlyBookingChange: 0,

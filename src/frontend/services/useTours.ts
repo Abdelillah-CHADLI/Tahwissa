@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { tourService, getApiErrorMessage } from './api';
 import type { Tour, TourFilters } from '../types/explore';
 import tourFallbackImage from '../assets/imgs/tour1.jpeg';
@@ -16,7 +16,8 @@ interface UseToursReturn {
 
 export const useTours = (): UseToursReturn => {
   const [tours, setTours] = useState<Tour[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const requestVersion = useRef(0);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -59,8 +60,9 @@ export const useTours = (): UseToursReturn => {
       : backendTour.guides;
 
     let rating = 0;
-    if (providerInfo?.rating && providerInfo?.num_raters > 0) {
-      rating = Math.round((providerInfo.rating / providerInfo.num_raters) * 10) / 10;
+    const ratingTotal = providerInfo?.rating ?? providerInfo?.ratings;
+    if (ratingTotal && providerInfo?.num_raters > 0) {
+      rating = Math.round((ratingTotal / providerInfo.num_raters) * 10) / 10;
     }
 
     let guideRating = 0;
@@ -121,6 +123,7 @@ export const useTours = (): UseToursReturn => {
   };
 
   const refetch = useCallback(async (filters?: TourFilters, searchQuery?: string) => {
+    const version = ++requestVersion.current;
     try {
       setLoading(true);
       setError(null);
@@ -166,10 +169,12 @@ export const useTours = (): UseToursReturn => {
         backendTours = await tourService.searchTours(searchParams);
       } else {
         const response = await tourService.browseTours(1, 12);
+        if (version !== requestVersion.current) return;
         backendTours = response.data?.tours || [];
         setHasMore(Boolean(response.data?.pagination?.hasNext));
       }
 
+      if (version !== requestVersion.current) return;
       const convertedTours = backendTours.map(convertBackendTourToFrontend);
       
   
@@ -179,17 +184,19 @@ export const useTours = (): UseToursReturn => {
       setCurrentPage(1);
 
     } catch (err: any) {
+      if (version !== requestVersion.current) return;
       console.error('Error fetching tours:', err);
       setError(getApiErrorMessage(err));
       setTours([]);
       setHasMore(false);
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, []);
 
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
+    const version = requestVersion.current;
 
     try {
       setLoading(true);
@@ -208,20 +215,24 @@ export const useTours = (): UseToursReturn => {
       }
 
       const response = await tourService.browseTours(nextPage, 12);
+      if (version !== requestVersion.current) return;
       const moreTours = response.data?.tours || [];
       setTours(previous => [...previous, ...moreTours.map(convertBackendTourToFrontend)]);
       setCurrentPage(nextPage);
       setHasMore(Boolean(response.data?.pagination?.hasNext));
 
     } catch (err: any) {
+      if (version !== requestVersion.current) return;
       console.error('Error loading more tours:', err);
       setError(getApiErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [loading, hasMore, currentPage, currentFilters, currentSearch]);
 
   const clear = useCallback(() => {
+    requestVersion.current += 1;
+    setLoading(false);
     setTours([]);
     setCurrentPage(1);
     setHasMore(true);

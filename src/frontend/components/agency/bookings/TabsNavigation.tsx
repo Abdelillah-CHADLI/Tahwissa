@@ -11,15 +11,12 @@ interface TabsNavigationProps {
 
 export function TabsNavigation({ tabs, activeTab, onTabChange }: TabsNavigationProps) {
     return (
-        <div className="border-b mb-6">
-            <div className="flex gap-6">
+        <div className="segmented-tabs mb-6">
+            <div className="flex min-w-max">
                 {tabs.map((tab) => (
                     <button
-                        key={tab.id}
-                        className={`pb-3 px-1 font-medium ${activeTab === tab.id
-                                ? "border-b-2 border-blue-500 text-blue-600"
-                                : "text-gray-600"
-                            }`}
+                        key={tab.id} aria-pressed={activeTab === tab.id}
+                        className="segmented-tab"
                         onClick={() => onTabChange(tab.id)}
                     >
                         {tab.label}

@@ -1,5 +1,7 @@
+import { PageHeader, PageState } from '../../components/ui';
+import { useFeedback } from '../../components/ui/FeedbackProvider';
 import { useState, useEffect, useCallback } from "react";
-import { Calendar, Users, DollarSign, MapPin, Loader2, AlertCircle } from "lucide-react";
+import { Calendar, Users, DollarSign, MapPin, AlertCircle } from "lucide-react";
 import { BookingCard } from "../../components/agency/bookings/BookingCard";
 import { StatsCards } from "../../components/agency/bookings/StatsCards";
 import { TabsNavigation } from "../../components/agency/bookings/TabsNavigation";
@@ -25,7 +27,21 @@ interface Booking {
     bookedOn: string;
 }
 
+    const mapStatus = (backendStatus: string): "pending" | "confirmed" | "cancelled" => {
+        const statusMap: Record<string, "pending" | "confirmed" | "cancelled"> = {
+            "PENDING": "pending",
+            "CONFIRMED": "confirmed",
+            "CANCELLED": "cancelled",
+            "DECLINED": "cancelled"
+        };
+        return statusMap[backendStatus] || "pending";
+    };
+
+
 export function AgencyBookingPage() {
+    const { confirm } = useFeedback();
+    const [actionError, setActionError] = useState('');
+    const [busy, setBusy] = useState(false);
     const [activeTab, setActiveTab] = useState("all");
     const [selectedBooking, setSelectedBooking] = useState<string | null>(null);
     const [bookings, setBookings] = useState<Booking[]>([]);
@@ -85,25 +101,19 @@ export function AgencyBookingPage() {
     }, []);
 
     const handleConfirmBooking = async (bookingId: string) => {
+        if (busy) return; setBusy(true); setActionError('');
         try {
             setError(null);
             await advancedBookingService.confirmBooking(bookingId);
             await fetchAgencyBookings();
             setSelectedBooking(null);
         } catch (err) {
-            const msg = getApiErrorMessage(err);
-
-            if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
-                setError('Booking confirmation endpoint not found');
-            } else if (msg.includes('405')) {
-                setError('Method not allowed - check if using correct HTTP method (PATCH)');
-            } else {
-                setError(msg || 'Failed to confirm booking');
-            }
-        }
+            setActionError(getApiErrorMessage(err));
+        } finally { setBusy(false); }
     };
 
     const handleCancelBooking = async (bookingId: string) => {
+        if (busy || !await confirm('Cancel this traveler’s booking?')) return; setBusy(true); setActionError('');
 
         try {
             setError(null);
@@ -111,30 +121,13 @@ export function AgencyBookingPage() {
             await fetchAgencyBookings();
             setSelectedBooking(null);
         } catch (err) {
-            const msg = getApiErrorMessage(err);
-            if (msg.includes('404') || msg.toLowerCase().includes('not found')) {
-                setError('Booking cancellation endpoint not found');
-            } else if (msg.includes('405')) {
-                setError('Method not allowed - check if using correct HTTP method (PATCH)');
-            } else {
-                setError(msg || 'Failed to cancel booking');
-            }
-        }
+            setActionError(getApiErrorMessage(err));
+        } finally { setBusy(false); }
     };
 
     useEffect(() => {
         fetchAgencyBookings();
     }, [fetchAgencyBookings]);
-
-    const mapStatus = (backendStatus: string): "pending" | "confirmed" | "cancelled" => {
-        const statusMap: Record<string, "pending" | "confirmed" | "cancelled"> = {
-            "PENDING": "pending",
-            "CONFIRMED": "confirmed",
-            "CANCELLED": "cancelled",
-            "DECLINED": "cancelled"
-        };
-        return statusMap[backendStatus] || "pending";
-    };
 
     const confirmedCount = bookings.filter((b) => b.status === "confirmed").length;
     const pendingCount = bookings.filter((b) => b.status === "pending").length;
@@ -148,19 +141,19 @@ export function AgencyBookingPage() {
             title: "Total Bookings",
             value: bookings.length.toString(),
             icon: Calendar,
-            color: "text-blue-600",
+            color: "text-brand",
         },
         {
-            title: "Total Revenue",
+            title: "Confirmed value",
             value: `${totalRevenue.toLocaleString()} DZD`,
             icon: DollarSign,
             color: "text-green-600",
         },
         {
-            title: "Active Tours",
+            title: "Tours with bookings",
             value: new Set(bookings.map(b => b.tour)).size.toString(),
             icon: MapPin,
-            color: "text-purple-600",
+            color: "text-brand",
         },
         {
             title: "Total Travelers",
@@ -183,6 +176,7 @@ export function AgencyBookingPage() {
     });
 
     const handleViewDetails = (bookingId: string) => {
+        setActionError('');
         setSelectedBooking(bookingId);
     };
 
@@ -196,19 +190,13 @@ export function AgencyBookingPage() {
 
     if (loading) {
         return (
-            <div className="p-6">
-                <div className="flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600" />
-                        <p className="text-lg text-gray-600">Loading bookings...</p>
-                    </div>
-                </div>
-            </div>
+            <PageState kind="loading" title="Loading bookings" />
         );
     }
 
     return (
-        <div className="p-6">
+        <div className="space-y-6">
+            <PageHeader title="Bookings" description="Review reservations, traveler details, and upcoming departures." />
             {error && (
                 <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
@@ -233,13 +221,13 @@ export function AgencyBookingPage() {
                 onTabChange={setActiveTab}
             />
 
-            <div className="border rounded-lg bg-white">
-                <div className="p-4 border-b">
+            <div className="panel overflow-hidden">
+                <div className="p-4 border-b border-line">
                     <h2 className="text-lg font-semibold">Bookings ({filteredBookings.length})</h2>
                 </div>
 
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="data-table responsive-table" role="table">
                         <thead className="bg-gray-50">
                             <tr>
                                 <th className="text-left p-3 text-sm font-medium">Booking ID</th>
@@ -271,7 +259,7 @@ export function AgencyBookingPage() {
 
             {selectedBookingData && (
                 <BookingDetails
-                    booking={selectedBookingData}
+                    busy={busy} error={actionError} booking={selectedBookingData}
                     onClose={handleCloseModal}
                     onConfirmBooking={handleConfirmBooking}
                     onCancelBooking={handleCancelBooking}

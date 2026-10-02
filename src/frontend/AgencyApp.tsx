@@ -11,10 +11,11 @@ import { AgencyEditTourProgram } from './pages/agency/AgencyEditTourProgram';
 import { AdminPage } from './pages/agency/AdminPage';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import './App.css';
+import { PageState } from './components/ui';
 
 function AgencyAppContent() {
   const { user, isLoading } = useAuth();
-  if (isLoading) return <div className="grid min-h-screen place-items-center text-sm text-slate-600">Restoring your session…</div>;
+  if (isLoading) return <div className="page-shell"><PageState kind="loading" title="Restoring your session" /></div>;
   if (!user || !['agency', 'guide'].includes(user.userType)) return <Navigate to="/traveler/signin" replace />;
 
   return (

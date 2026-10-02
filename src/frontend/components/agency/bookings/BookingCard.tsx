@@ -49,21 +49,21 @@ const getStatusBadge = (status: string) => {
 export function BookingCard({ booking, onViewDetails }: BookingCardProps) {
     return (
         <tr className="border-t hover:bg-gray-50">
-            <td className="p-3 font-medium">{booking.id}</td>
-            <td className="p-3">
+            <td data-label="Reference" className="p-3 font-medium">{booking.id}</td>
+            <td data-label="Traveler" className="p-3">
                 <div>
                     <p className="font-medium">{booking.customerName}</p>
                     <p className="text-sm text-gray-600">{booking.email}</p>
                 </div>
             </td>
-            <td className="p-3 max-w-xs">
+            <td data-label="Tour" className="p-3 max-w-xs">
                 <p className="truncate">{booking.tour}</p>
             </td>
-            <td className="p-3">{booking.date}</td>
-            <td className="p-3">{booking.people}</td>
-            <td className="p-3">{booking.totalPrice.toLocaleString()} DZD</td>
-            <td className="p-3">{getStatusBadge(booking.status)}</td>
-            <td className="p-3">
+            <td data-label="Departure" className="p-3">{booking.date}</td>
+            <td data-label="People" className="p-3">{booking.people}</td>
+            <td data-label="Value" className="p-3">{booking.totalPrice.toLocaleString()} DZD</td>
+            <td data-label="Status" className="p-3">{getStatusBadge(booking.status)}</td>
+            <td data-label="Action" className="p-3">
                 <button
                     className="border p-2 rounded hover:bg-gray-100"
                     onClick={() => onViewDetails(booking.id)}

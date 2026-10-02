@@ -1,3 +1,5 @@
+import { Button, PageHeader, PageState, Notice } from '../../components/ui';
+import { useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Building2, Clock, UserCheck, Flag, CheckCircle } from 'lucide-react';
@@ -7,6 +9,8 @@ import { getDashboardStats } from '../../services/adminService';
 
 export function AdminDashboardOverview() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const [error, setError] = useState('');
     const [stats, setStats] = useState({
         totalUsers: 0,
         approvedAgencies: 0,
@@ -18,26 +22,27 @@ export function AdminDashboardOverview() {
     });
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        fetchStats();
-    }, []);
+
 
     const fetchStats = async () => {
+        setLoading(true); setError('');
         try {
             const data = await getDashboardStats();
             setStats(data);
         } catch (error) {
             console.error('Error fetching dashboard stats:', error);
+            setError('We could not load this page. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
+    useEffect(() => { void fetchStats(); }, []);
+
+    if (error) return <PageState kind="error" title="Unable to load platform overview" description={error} action={<Button onClick={() => void fetchStats()}>Try again</Button>} />;
     if (loading) {
         return (
-            <div className="p-6 flex items-center justify-center min-h-[400px]">
-                <p className="text-gray-600">Loading dashboard...</p>
-            </div>
+            <PageState kind="loading" title="Loading platform overview" />
         );
     }
 
@@ -47,8 +52,8 @@ export function AdminDashboardOverview() {
             label: 'Total Users',
             value: stats.totalUsers,
             icon: Users,
-            iconColor: 'text-blue-600',
-            iconBgColor: 'bg-blue-100'
+            iconColor: 'text-brand',
+            iconBgColor: 'bg-brand-soft'
         },
         {
             label: 'Approved Agencies',
@@ -96,21 +101,19 @@ export function AdminDashboardOverview() {
             label: 'Resolved Reports',
             value: stats.resolvedReports,
             icon: CheckCircle,
-            iconColor: 'text-purple-600',
-            iconBgColor: 'bg-purple-100'
+            iconColor: 'text-brand',
+            iconBgColor: 'bg-brand-soft'
         }
     ];
 
     return (
-        <div className="p-6 space-y-8">
+        <div className="space-y-6">
             {/* Header Section */}
-            <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Platform Overview</h1>
-                <p className="text-gray-600">Current statistics and platform status</p>
-            </div>
+            <PageHeader title="Platform overview" description="An overview of your community, providers, and moderation queue." />
+            {location.state?.message && <Notice tone="success">{location.state.message}</Notice>}
 
             {/* Statistics Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 {statsData.map((stat, index) => (
                     <StatCard
                         key={index}
@@ -126,9 +129,9 @@ export function AdminDashboardOverview() {
             {/* Quick Actions Section */}
             <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <QuickActionCard
-                        label="Pending"
+                        label="Review pending verifications"
                         value={stats.pendingAgencies + stats.pendingGuides}
                         icon={Clock}
                         iconColor="text-orange-600"

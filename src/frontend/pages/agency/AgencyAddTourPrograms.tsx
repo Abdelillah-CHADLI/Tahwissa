@@ -1,7 +1,9 @@
+import { Button, Notice } from '../../components/ui';
+import { useFeedback } from '../../components/ui/FeedbackProvider';
 import { motion } from 'motion/react';
-import { useState } from 'react';
+import { useState, useId, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Save, ArrowLeft, Clock, Users, DollarSign, MapPin, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle, XCircle, Shield, Upload, Loader2, Calendar } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Trash2, ChevronLeft, ChevronRight, CheckCircle, XCircle, Shield, Upload, Loader2 } from 'lucide-react';
 import { getApiErrorMessage, tourService } from '../../services/api';
 
 interface TourFormData {
@@ -39,115 +41,14 @@ const initialFormData: TourFormData = {
 };
 
 function BasicInfoTab({ data, updateData, onNext }: { data: TourFormData; updateData: (updates: Partial<TourFormData>) => void; onNext: () => void }) {
-    return (
-        <div className="p-2 space-y-5">
-            <h3 className="text-xl font-semibold text-gray-600">Basic Tour Information</h3>
-            <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Tour Name *</label>
-                <input 
-                    type="text" 
-                    value={data.title}
-                    onChange={(e) => updateData({ title: e.target.value })}
-                    placeholder='e.g: Sahara Desert Adventure' 
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                />
-            </div>
-            <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Description *</label>
-                <textarea 
-                    value={data.description}
-                    onChange={(e) => updateData({ description: e.target.value })}
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#000000] resize-none" 
-                    rows={4}
-                />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Location *</label>
-                <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></MapPin>
-                    <input 
-                        type="text" 
-                        value={data.location}
-                        onChange={(e) => updateData({ location: e.target.value })}
-                        placeholder="e.g: Algiers, Tamanrasset" 
-                        className="mt-1 w-full px-3 pl-10 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                    />
-                </div>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Duration *</label>
-                <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></Clock>
-                    <input 
-                        type="text" 
-                        value={data.duration}
-                        onChange={(e) => updateData({ duration: e.target.value })}
-                        placeholder='e.g: 5 Days and 4 Nights' 
-                        className="mt-1 w-full px-3 pl-12 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                    />
-                </div>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Group Size *</label>
-                <div className="relative">
-                    <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></Users>
-                    <input 
-                        type="text" 
-                        value={data.groupSize}
-                        onChange={(e) => updateData({ groupSize: e.target.value })}
-                        placeholder='e.g: 4-12 people' 
-                        className="mt-1 w-full px-3 pl-10 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                    />
-                </div>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Price (DZD)*</label>
-                <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></DollarSign>
-                    <input 
-                        type="number" 
-                        value={data.price}
-                        onChange={(e) => updateData({ price: e.target.value })}
-                        placeholder='e.g: 5000' 
-                        className="mt-1 w-full px-3 pl-10 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                    />
-                </div>
-            </div>
-            <div className="relative">
-                <label className="block text-sm font-medium text-gray-700">Category *</label>
-                <input 
-                    type="text" 
-                    value={data.category}
-                    onChange={(e) => updateData({ category: e.target.value })}
-                    placeholder="e.g: Adventure, Cultural" 
-                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                />
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700">Start Date *</label>
-                <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></Calendar>
-                    <input 
-                        type="date" 
-                        value={data.startDate}
-                        onChange={(e) => updateData({ startDate: e.target.value })}
-                        min={new Date().toISOString().split('T')[0]}
-                        className="mt-1 w-full px-3 pl-10 py-2 border border-gray-300 rounded-lg focus:border-[#000000]"
-                    />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Select the date when this tour will start</p>
-            </div>
-            <div className="flex justify-end pt-4">
-                <button 
-                    onClick={onNext}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-lime-300 transition-colors text-gray-700 font-medium"
-                >
-                    Next ' Schedule '
-                    <ChevronRight className="w-4 h-4" />
-                </button>
-            </div>
-        </div>
-    );
+  const id = useId();
+  const fields = [['title', 'Tour name', 'text', 'Sahara desert adventure'], ['location', 'Location', 'text', 'City or region'], ['duration', 'Duration', 'text', '5 days, 4 nights'], ['groupSize', 'Group size', 'text', '4–12 people'], ['price', 'Price per person (DZD)', 'number', '5000'], ['category', 'Category', 'text', 'Desert Tours'], ['startDate', 'Departure date', 'date', '']] as const;
+  return <form onSubmit={event => { event.preventDefault(); onNext(); }} className="space-y-6">
+    <div><h2 className="form-section-title">The essentials</h2><p className="field-hint">All fields are required. These details help travelers choose the right trip.</p></div>
+    <div className="grid gap-5 sm:grid-cols-2">{fields.map(([key,label,type,placeholder]) => <div key={key} className={key === 'title' ? 'sm:col-span-2' : ''}><label className="field-label mb-1.5" htmlFor={id + key}>{label}</label><input id={id + key} className="field" type={type} required value={data[key]} placeholder={placeholder} min={type === 'number' ? 0 : type === 'date' ? new Date().toLocaleDateString('en-CA') : undefined} step={type === 'number' ? '0.01' : undefined} onChange={event => updateData({ [key]: event.target.value })} /></div>)}</div>
+    <div><label className="field-label mb-1.5" htmlFor={id+'description'}>Tour description</label><textarea id={id+'description'} className="field resize-y" required rows={4} value={data.description} onChange={event => updateData({ description: event.target.value })} placeholder="What makes this trip special? Describe the places and experiences travelers can expect." /></div>
+    <div className="flex justify-end border-t border-line pt-4"><Button type="submit">Continue to itinerary<ChevronRight size={16} /></Button></div>
+  </form>;
 }
 
 function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourFormData; updateData: (updates: Partial<TourFormData>) => void; onPrev: () => void; onNext: () => void }) {
@@ -225,7 +126,7 @@ function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourF
                                 </label>
                                 <input
                                     type="text"
-                                    value={day.title}
+                                    aria-label={`Day ${day.id} title`} value={day.title}
                                     onChange={(e) => updateDay(index, 'title', e.target.value)}
                                     placeholder="e.g., Arrival & Desert Introduction"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-white"
@@ -238,7 +139,7 @@ function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourF
                                 </label>
                                 <textarea
                                     rows={3}
-                                    value={day.description}
+                                    aria-label={`Day ${day.id} description`} value={day.description}
                                     onChange={(e) => updateDay(index, 'description', e.target.value)}
                                     placeholder="Describe what happens on this day"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] resize-none bg-white"
@@ -263,14 +164,14 @@ function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourF
                                         <div key={actIdx} className="flex items-center gap-2">
                                             <input
                                                 type="text"
-                                                value={activity}
+                                                aria-label={`Day ${day.id} activity ${actIdx + 1}`} value={activity}
                                                 onChange={(e) => updateActivity(index, actIdx, e.target.value)}
                                                 placeholder={`Activity ${actIdx + 1}`}
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-white"
+                                                className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-white"
                                             />
                                             {day.activities.length > 1 && (
                                                 <button
-                                                    onClick={() => removeActivity(index, actIdx)}
+                                                    aria-label="Remove activity" onClick={() => removeActivity(index, actIdx)}
                                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -288,7 +189,7 @@ function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourF
                                     </label>
                                     <input
                                         type="text"
-                                        value={day.meals}
+                                        aria-label={`Day ${day.id} meals`} value={day.meals}
                                         onChange={(e) => updateDay(index, 'meals', e.target.value)}
                                         placeholder="e.g., Breakfast, Lunch, Dinner"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-white"
@@ -300,7 +201,7 @@ function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourF
                                     </label>
                                     <input
                                         type="text"
-                                        value={day.accommodation}
+                                        aria-label={`Day ${day.id} accommodation`} value={day.accommodation}
                                         onChange={(e) => updateDay(index, 'accommodation', e.target.value)}
                                         placeholder="e.g., Desert Camp (Tents)"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-white"
@@ -318,13 +219,13 @@ function DayByDayScheduleTab({ data, updateData, onPrev, onNext }: { data: TourF
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-lime-300 transition-colors text-gray-700 font-medium"
                 >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous ' Basic Info '
+                    Back to essentials
                 </button>
                 <button 
                     onClick={onNext}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-lime-300 transition-colors text-gray-700 font-medium"
                 >
-                    Next ' What's Included '
+                    Continue to inclusions
                     <ChevronRight className="w-4 h-4" />
                 </button>
             </div>
@@ -371,14 +272,14 @@ function WhatsIncludedTab({ data, updateData, onPrev, onNext }: { data: TourForm
                         <div key={idx} className="flex items-center gap-2">
                             <input
                                 type="text"
-                                value={item}
+                                aria-label={`List item ${idx + 1}`} value={item}
                                 onChange={(e) => updateList('included', idx, e.target.value)}
                                 placeholder="e.g., Airport pickup and drop-off"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-gray-50"
+                                className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-gray-50"
                             />
                             {data.included.length > 1 && (
                                 <button
-                                    onClick={() => removeFromList('included', idx)}
+                                    aria-label="Remove item" onClick={() => removeFromList('included', idx)}
                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -410,14 +311,14 @@ function WhatsIncludedTab({ data, updateData, onPrev, onNext }: { data: TourForm
                         <div key={idx} className="flex items-center gap-2">
                             <input
                                 type="text"
-                                value={item}
+                                aria-label={`List item ${idx + 1}`} value={item}
                                 onChange={(e) => updateList('notIncluded', idx, e.target.value)}
                                 placeholder="e.g., International flights"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-gray-50"
+                                className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-gray-50"
                             />
                             {data.notIncluded.length > 1 && (
                                 <button
-                                    onClick={() => removeFromList('notIncluded', idx)}
+                                    aria-label="Remove item" onClick={() => removeFromList('notIncluded', idx)}
                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -433,7 +334,7 @@ function WhatsIncludedTab({ data, updateData, onPrev, onNext }: { data: TourForm
             <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <Shield className="w-6 h-6 text-blue-600" />
+                        <Shield className="w-6 h-6 text-brand" />
                         <h3 className="text-lg font-semibold text-gray-900">Requirements</h3>
                     </div>
                     <button
@@ -449,14 +350,14 @@ function WhatsIncludedTab({ data, updateData, onPrev, onNext }: { data: TourForm
                         <div key={idx} className="flex items-center gap-2">
                             <input
                                 type="text"
-                                value={item}
+                                aria-label={`List item ${idx + 1}`} value={item}
                                 onChange={(e) => updateList('requirements', idx, e.target.value)}
                                 placeholder="e.g., Moderate fitness level required"
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-gray-50"
+                                className="min-w-0 flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-[#375E5E] focus:ring-1 focus:ring-[#375E5E] bg-gray-50"
                             />
                             {data.requirements.length > 1 && (
                                 <button
-                                    onClick={() => removeFromList('requirements', idx)}
+                                    aria-label="Remove item" onClick={() => removeFromList('requirements', idx)}
                                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                 >
                                     <Trash2 className="w-4 h-4" />
@@ -473,13 +374,13 @@ function WhatsIncludedTab({ data, updateData, onPrev, onNext }: { data: TourForm
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-lime-300 transition-colors text-gray-700 font-medium"
                 >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous ' Schedule '
+                    Back to itinerary
                 </button>
                 <button 
                     onClick={onNext}
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-lime-300 transition-colors text-gray-700 font-medium"
                 >
-                    Next ' Images '
+                    Continue to photos
                     <ChevronRight className="w-4 h-4" />
                 </button>
             </div>
@@ -488,9 +389,12 @@ function WhatsIncludedTab({ data, updateData, onPrev, onNext }: { data: TourForm
 }
 
 function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: TourFormData; updateData: (updates: Partial<TourFormData>) => void; onPrev: () => void; onPublish: () => void; loading: boolean }) {
+    const [imageError, setImageError] = useState('');
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files) {
+            if (data.images.length + files.length > 10 || Array.from(files).some(file => file.size > 5 * 1024 * 1024 || !['image/png','image/jpeg','image/webp'].includes(file.type))) { setImageError('Choose up to 10 JPG, PNG, or WebP images, each under 5 MB.'); e.target.value = ''; return; }
+            setImageError('');
             const newImages = Array.from(files).map(file => URL.createObjectURL(file));
             const newFiles = Array.from(files);
             updateData({ 
@@ -501,6 +405,7 @@ function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: Tou
     };
 
     const removeImage = (index: number) => {
+        URL.revokeObjectURL(data.images[index]);
         updateData({ 
             images: data.images.filter((_, idx) => idx !== index),
             imageFiles: data.imageFiles.filter((_, idx) => idx !== index)
@@ -509,12 +414,12 @@ function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: Tou
 
     return (
         <div className="py-6 space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Tour Images</h2>
+            <h2 className="form-section-title">Tour images</h2>{imageError && <Notice tone="error">{imageError}</Notice>}
 
             <div className="space-y-2">
                 <h3 className="text-lg font-medium text-gray-900">Upload Tour Images</h3>
                 <p className="text-sm text-gray-500">
-                    Add at least 3 high-quality images of your tour. The first image will be used as the main cover photo.
+                    Add up to 10 photos to help travelers picture the experience. The first image will be used as the main cover photo.
                 </p>
             </div>
 
@@ -524,12 +429,12 @@ function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: Tou
                     multiple
                     accept="image/png,image/jpeg,image/webp"
                     onChange={handleFileChange}
-                    className="hidden"
+                    aria-label="Upload tour photos" className="sr-only"
                 />
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 md:p-12 text-center hover:border-[#375E5E] transition-colors cursor-pointer bg-gray-50">
-                    <Upload className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 md:p-8 text-center hover:border-[#375E5E] transition-colors cursor-pointer bg-gray-50">
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-4" />
                     <p className="text-base md:text-lg font-medium text-gray-700 mb-1">
-                        Click to upload or drag and drop
+                        Choose tour photos
                     </p>
                     <p className="text-sm text-gray-500">
                         PNG, JPG or WEBP (max. 5MB per image)
@@ -547,8 +452,8 @@ function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: Tou
                                 className="w-full h-40 object-cover rounded-lg border border-gray-200"
                             />
                             <button
-                                onClick={() => removeImage(idx)}
-                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                aria-label={`Remove photo ${idx + 1}`} onClick={() => removeImage(idx)}
+                                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-100 transition-opacity"
                             >
                                 <Trash2 className="w-4 h-4" />
                             </button>
@@ -568,7 +473,7 @@ function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: Tou
                     className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-lime-300 transition-colors text-gray-700 font-medium"
                 >
                     <ChevronLeft className="w-4 h-4" />
-                    Previous ' What's Included '
+                    Back to inclusions
                 </button>
                 <button 
                     onClick={onPublish}
@@ -583,23 +488,35 @@ function ImagesTab({ data, updateData, onPrev, onPublish, loading }: { data: Tou
 }
 
 export function AgencyAddTourProgram() {
+  const { notify } = useFeedback();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('Basic Info');
     const [formData, setFormData] = useState<TourFormData>(initialFormData);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const previews = useRef<string[]>([]);
+    useEffect(() => () => { previews.current.forEach(url => URL.revokeObjectURL(url)); }, []);
 
     const updateFormData = (updates: Partial<TourFormData>) => {
+        if (updates.images) previews.current = updates.images;
         setFormData(prev => ({ ...prev, ...updates }));
     };
 
     const handlePublish = async () => {
+        if (loading) return;
+        setError('');
+        if (!formData.title.trim() || !formData.description.trim() || !formData.location.trim() || !formData.duration.trim() || !formData.groupSize.trim() || !formData.category.trim() || !formData.startDate || !formData.price.trim() || !Number.isFinite(Number(formData.price)) || Number(formData.price) < 0) {
+          setError('Complete the tour essentials before publishing.'); setActiveTab('Basic Info'); return;
+        }
+        if (new Date(formData.startDate + 'T23:59:59') < new Date()) { setError('Choose today or a future departure date.'); setActiveTab('Basic Info'); return; }
+        if (formData.days.some(day => !day.title.trim() || !day.description.trim())) { setError('Give each itinerary day a title and description.'); setActiveTab('Day-by-Day Schedule'); return; }
         try {
             setLoading(true);
             await tourService.createTour(formData as unknown as Record<string, unknown>);
-            alert('Tour created successfully!');
+            notify('Tour created successfully!');
             navigate('/agency/tour-programs');
         } catch (err) {
-            alert(getApiErrorMessage(err));
+            setError(getApiErrorMessage(err));
         } finally {
             setLoading(false);
         }
@@ -634,18 +551,18 @@ export function AgencyAddTourProgram() {
     };
 
     return (
-        <div className='min-h-screen bg-gray-50 p-4 md:p-6'>
-            <div className="space-y-6 max-w-5xl mx-auto">
+        <div className='w-full'>
+            <div className="space-y-6 max-w-4xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                 >
-                    <div className="bg-white p-4 md:p-6 rounded-xl shadow-sm border border-gray-100">
+                    <div className="panel panel-body">
                         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                             <div className="flex items-center gap-4">
                                 <button 
-                                    onClick={() => navigate(-1)}
+                                    aria-label="Back to tour programs" onClick={() => navigate('/agency/tour-programs')}
                                     className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600"
                                 >
                                     <ArrowLeft className="w-5 h-5" />
@@ -667,13 +584,14 @@ export function AgencyAddTourProgram() {
                                 </button>
                             </div>
                         </div>
-                        <div className="flex flex-wrap justify-between border-b border-gray-200">
+                        {error && <div className="mb-5"><Notice tone="error">{error}</Notice></div>}
+                        <div className="segmented-tabs">
                             {["Basic Info", "Day-by-Day Schedule", "What's Included", "Images"].map((tab) => (
                                 <button
-                                    key={tab}
+                                    key={tab} aria-pressed={activeTab === tab} disabled={loading}
                                     onClick={() => setActiveTab(tab)}
                                     className={`
-                                        px-2 md:px-4 py-3 font-medium text-xs md:text-sm transition-all relative
+                                        shrink-0 px-3 py-3 font-medium text-sm transition-colors relative
                                         ${activeTab === tab
                                             ? "text-[#375E5E]"
                                             : "text-gray-500 hover:text-gray-700"
@@ -698,7 +616,7 @@ export function AgencyAddTourProgram() {
                             transition={{ duration: 0.3 }}
                             className="mt-6"
                         >
-                            {renderActiveForm()}
+                            <fieldset disabled={loading}>{renderActiveForm()}</fieldset>
                         </motion.div>
                     </div>
                 </motion.div>

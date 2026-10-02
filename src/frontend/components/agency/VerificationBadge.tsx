@@ -21,7 +21,7 @@ export function VerificationBadge({ verified, size = 'md' }: VerificationBadgePr
     };
 
     return (
-        <div className={`inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 rounded-full font-medium ${sizeClasses[size]}`}>
+        <div className={`inline-flex items-center gap-1.5 bg-brand-soft text-brand-dark rounded-full font-medium ${sizeClasses[size]}`}>
             <CheckCircle className={`${iconSizes[size]} fill-blue-700 text-white`} />
             <span>Verified</span>
         </div>

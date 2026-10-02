@@ -20,7 +20,7 @@ export function SettingsTabs({ activeTab, onTabChange }: SettingsTabsProps) {
                     <button
                         key={tab.id}
                         className={`pb-3 px-1 font-medium flex items-center gap-2 ${activeTab === tab.id
-                                ? "border-b-2 border-blue-500 text-blue-600"
+                                ? "border-b-2 border-brand text-brand"
                                 : "text-gray-600"
                             }`}
                         onClick={() => onTabChange(tab.id)}

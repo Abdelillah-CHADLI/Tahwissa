@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Compass, ArrowLeft, Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ROUTES } from "../../utils/routes";
 import { authService } from "../../services/authService";
@@ -8,28 +8,21 @@ import { useAuth } from "../../contexts/AuthContext";
 import type { LoginRequest } from "../../types/auth";
 
 export default function SignInPage() {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const [email, setEmail] = useState(location.state?.justSignedUp ? location.state?.email || "" : "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
   const { login } = useAuth();
 
   // Check for success message from signup redirect
   const justSignedUp = location.state?.justSignedUp;
-  const signupEmail = location.state?.email;
   const signupMessage = location.state?.message;
 
-  // Pre-fill email if coming from signup
-  useEffect(() => {
-    if (justSignedUp && signupEmail && !email) {
-      setEmail(signupEmail);
-    }
-  }, [justSignedUp, signupEmail, email]);
-
   const handleSignIn = async () => {
+    if (isLoading) return;
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
@@ -84,14 +77,10 @@ export default function SignInPage() {
     navigate(ROUTES.SIGN_UP);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleSignIn();
-    }
-  };
+
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-canvas flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-md mb-8">
         <button
           onClick={handleBackToHome}
@@ -105,11 +94,12 @@ export default function SignInPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        transition={{ duration: 0.2 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white rounded-2xl shadow-lg p-8">
+        <div className="panel p-5 sm:p-7">
           <div className="text-center mb-8">
+            <div className="mb-5 flex items-center justify-center gap-2 text-lg font-bold text-brand-ink"><Compass className="text-brand" size={25} />Tahwissa</div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Welcome Back
             </h1>
@@ -120,7 +110,7 @@ export default function SignInPage() {
 
           {/* Success message from signup */}
           {justSignedUp && signupMessage && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div role="status" className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-800 text-sm text-center">
                 {signupMessage}
               </p>
@@ -129,12 +119,12 @@ export default function SignInPage() {
 
           {/* Error message */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-800 text-sm text-center">{error}</p>
             </div>
           )}
 
-          <div className="space-y-5" onKeyPress={handleKeyPress}>
+          <form className="space-y-5" onSubmit={event => { event.preventDefault(); void handleSignIn(); }}>
             <div>
               <label
                 htmlFor="email"
@@ -145,7 +135,7 @@ export default function SignInPage() {
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  id="email"
+                  id="email" autoComplete="email" required
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -168,7 +158,7 @@ export default function SignInPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  id="password"
+                  id="password" autoComplete="current-password" required
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -178,7 +168,7 @@ export default function SignInPage() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   disabled={isLoading}
                 >
@@ -192,9 +182,9 @@ export default function SignInPage() {
             </div>
 
             <button
-              onClick={handleSignIn}
+              type="submit"
               disabled={isLoading}
-              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg disabled:scale-100 disabled:shadow-md"
+              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 "
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -203,7 +193,7 @@ export default function SignInPage() {
               )}
               {isLoading ? "Signing In..." : "Sign In"}
             </button>
-          </div>
+          </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
             Don't have an account?{" "}

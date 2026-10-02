@@ -1,4 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { PostComposer } from '../../components/community/PostComposer';
+import { Button, Dialog, Notice, PageState } from '../../components/ui';
 import { motion } from 'motion/react';
 import api from '../../services/api';
 import defaultAvatar from '../../assets/imgs/guide.png';
@@ -30,10 +33,14 @@ interface Comment {
 
 const CommunityFeedPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [newPost, setNewPost] = useState({ title: '', text: '', location: '' });
-  const [newPostImageFile, setNewPostImageFile] = useState<File | null>(null);
-  const [newPostImagePreview, setNewPostImagePreview] = useState<string | null>(null);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [error, setError] = useState('');
+  const [reportPost, setReportPost] = useState<number | null>(null);
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportError, setReportError] = useState('');
+  const [commentBusy, setCommentBusy] = useState<number | null>(null);
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -61,20 +68,8 @@ const CommunityFeedPage = () => {
     }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, [currentPage]);
-
-  useEffect(() => {
-    return () => {
-      if (newPostImagePreview) {
-        URL.revokeObjectURL(newPostImagePreview);
-      }
-    };
-  }, [newPostImagePreview]);
-
-  const fetchPosts = async () => {
-    setLoading(true);
+  const fetchPosts = useCallback(async () => {
+    setLoading(true); setError('');
     try {
       const travellerId = getCurrentTravellerId();
       const response = await api.get('/pst/posts', {
@@ -92,65 +87,18 @@ const CommunityFeedPage = () => {
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setError('Stories could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage]);
 
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPost.title.trim() || !newPost.text.trim()) return;
-
-    try {
-      const travellerId = getCurrentTravellerId();
-      if (!travellerId) return;
-
-      const formData = new FormData();
-      formData.append('title', newPost.title);
-      formData.append('text', newPost.text);
-      formData.append('location', newPost.location);
-      formData.append('traveller_id', travellerId);
-      formData.append('stars', '5');
-
-      if (newPostImageFile) {
-        formData.append('images', newPostImageFile);
-      }
-
-      const response = await api.post('/pst/posts', formData);
-      
-      if (response.data.success) {
-        setNewPost({ title: '', text: '', location: '' });
-        setNewPostImageFile(null);
-        setNewPostImagePreview(null);
-        setShowNewPostForm(false);
-        fetchPosts();
-      }
-    } catch (error) {
-      console.error('Error creating post:', error);
-    }
-  };
-
-  const handleNewPostImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-
-    if (newPostImagePreview) {
-      URL.revokeObjectURL(newPostImagePreview);
-    }
-
-    if (!file) {
-      setNewPostImageFile(null);
-      setNewPostImagePreview(null);
-      return;
-    }
-
-    setNewPostImageFile(file);
-    setNewPostImagePreview(URL.createObjectURL(file));
-  };
+  useEffect(() => { void fetchPosts(); }, [fetchPosts]);
 
   const handleLike = async (postId: number) => {
     try {
       const travellerId = getCurrentTravellerId();
-      if (!travellerId) return;
+      if (!travellerId) { setFeedback('Sign in to like a story.'); return; }
 
       const current = posts.find(p => p.post_id === postId);
       const currentlyLiked = Boolean(current?.likedByMe);
@@ -189,7 +137,7 @@ const CommunityFeedPage = () => {
         }));
       }
     } catch (error) {
-      console.error('Error fetching comments:', error);
+      console.error('Error fetching comments:', error); setFeedback('Comments could not be loaded. Close and reopen the comments to retry.');
     } finally {
       setCommentsLoadingByPostId(prev => ({ ...prev, [postId]: false }));
     }
@@ -210,12 +158,13 @@ const CommunityFeedPage = () => {
   const handleAddComment = async (postId: number) => {
     const travellerId = getCurrentTravellerId();
     if (!travellerId) {
-      alert('Please sign in to comment.');
+      setFeedback('Sign in to add a comment.');
       return;
     }
 
     const caption = (commentDraftByPostId[postId] || '').trim();
-    if (!caption) return;
+    if (!caption || commentBusy !== null) return;
+    setCommentBusy(postId);
 
     try {
       const response = await api.post(`/pst/posts/${postId}/comments`, {
@@ -250,37 +199,23 @@ const CommunityFeedPage = () => {
 
     try {
       await navigator.clipboard.writeText(`${shareText} - ${window.location.href}`);
-      alert('Link copied to clipboard.');
+      setFeedback('Link copied to clipboard.');
     } catch {
-      alert('Unable to share or copy link.');
+      setFeedback('Unable to copy the link. You can copy this page’s address from your browser.');
     }
   };
 
-  const handleReport = async (postId: number) => {
-    const reporterId = getCurrentTravellerId();
-    if (!reporterId) {
-      alert('Please sign in to report a post.');
-      return;
-    }
-
-    const reason = window.prompt('Report reason (required):');
-    if (!reason || !reason.trim()) return;
-
-    const reportMessage = window.prompt('Additional details (optional):') || '';
-
+  const submitReport = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    if (reportBusy || !reportPost) return;
+    setReportBusy(true); setReportError('');
     try {
-      const response = await api.post(`/pst/posts/${postId}/report`, {
-        reason: reason.trim(),
-        reporter_id: reporterId,
-        report_message: reportMessage
-      });
-      if (response.data?.success) {
-        alert('Report submitted.');
-      }
-    } catch (error) {
-      console.error('Error reporting post:', error);
-      alert('Failed to submit report.');
-    }
+      const response = await api.post(`/pst/posts/${reportPost}/report`, { reason: data.get('reason'), reporter_id: getCurrentTravellerId(), report_message: data.get('details') });
+      if (!response.data?.success) throw new Error('Report not saved');
+      setReportPost(null); setFeedback('Report submitted. Our team will review this story.');
+    } catch { setReportError('Your report could not be submitted. Please try again.'); }
+    finally { setReportBusy(false); }
   };
 
   const formatDate = (dateString: string) => {
@@ -316,6 +251,9 @@ const CommunityFeedPage = () => {
 
   return (
     <div className="min-h-screen bg-[#f5f8f7] py-5 sm:py-8">
+      <Dialog open={reportPost !== null} onClose={() => setReportPost(null)} title="Report this story" description="Tell our team what needs attention. Your report is private." busy={reportBusy}>
+        <form onSubmit={submitReport} className="space-y-4">{reportError && <Notice tone="error">{reportError}</Notice>}<div><label className="field-label" htmlFor="report-reason">Reason (required)</label><select className="field" id="report-reason" name="reason" required><option value="">Select a reason</option><option>Spam or misleading content</option><option>Harassment or offensive content</option><option>Privacy concern</option><option>Other</option></select></div><div><label className="field-label" htmlFor="report-details">Additional details (optional)</label><textarea className="field" id="report-details" name="details" rows={3} /></div><div className="flex justify-end gap-2"><Button variant="secondary" disabled={reportBusy} onClick={() => setReportPost(null)}>Cancel</Button><Button busy={reportBusy} type="submit">Submit report</Button></div></form>
+      </Dialog>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
           className="mb-6 overflow-hidden rounded-2xl bg-[#245f63] px-5 py-7 text-white sm:px-8 sm:py-9">
@@ -327,117 +265,14 @@ const CommunityFeedPage = () => {
         </motion.div>
 
         <div className="mx-auto max-w-3xl">
-            {/* Create New Post */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 rounded-2xl border border-[#dce9e5] bg-white p-4 shadow-sm sm:p-6"
-            >
-              <h2 className="mb-4 text-lg font-semibold text-[#193e41]">Share your journey</h2>
-              
-              {!showNewPostForm ? (
-                <div 
-                  className="cursor-pointer rounded-xl border-2 border-dashed border-[#a9cbc1] bg-[#f8fbf8] p-6 text-center transition-colors hover:border-[#348086] sm:p-8"
-                  onClick={() => setShowNewPostForm(true)}
-                >
-                  <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Create New Post</h3>
-                  <p className="text-gray-600">Share your travel experiences with the community</p>
-                </div>
-              ) : (
-                <form onSubmit={handleCreatePost} className="space-y-4">
-                  <input
-                    type="text"
-                    placeholder="Title"
-                    value={newPost.title}
-                    onChange={(e) => setNewPost({...newPost, title: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="Location (optional)"
-                    value={newPost.location}
-                    onChange={(e) => setNewPost({...newPost, location: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  />
-                  <textarea
-                    placeholder="Share your experience..."
-                    value={newPost.text}
-                    onChange={(e) => setNewPost({...newPost, text: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                    rows={4}
-                    required
-                  />
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Add an image (optional)</label>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      onChange={handleNewPostImageChange}
-                      className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                    />
-
-                    {newPostImagePreview ? (
-                      <div className="relative">
-                        <img
-                          src={newPostImagePreview}
-                          alt="Selected"
-                          className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (newPostImagePreview) URL.revokeObjectURL(newPostImagePreview);
-                            setNewPostImageFile(null);
-                            setNewPostImagePreview(null);
-                          }}
-                          className="absolute top-2 right-2 px-3 py-1.5 rounded-md bg-white/90 border border-gray-200 text-gray-700 hover:bg-white"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  <div className="flex space-x-3">
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-[#348086] text-white rounded-md hover:bg-[#28676d]"
-                    >
-                      Post
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowNewPostForm(false);
-                        if (newPostImagePreview) URL.revokeObjectURL(newPostImagePreview);
-                        setNewPostImageFile(null);
-                        setNewPostImagePreview(null);
-                      }}
-                      className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
+            {(feedback || location.state?.published) && <div className="mb-4"><Notice>{feedback || 'Your story has been published.'}</Notice></div>}
+            <section className="panel panel-body mb-6">
+              <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold text-brand-ink">Share your journey</h2><p className="mt-1 text-sm text-gray-500">A local tip or a memorable trip can inspire someone’s next adventure.</p></div>{!showNewPostForm && <Button onClick={() => setShowNewPostForm(true)}>Write a story</Button>}</div>
+              {showNewPostForm && <div className="mt-5 border-t border-line pt-5"><PostComposer onCancel={() => setShowNewPostForm(false)} onCreated={() => { setShowNewPostForm(false); setFeedback('Your story has been published.'); void fetchPosts(); }} /></div>}
+            </section>
 
             {/* Posts */}
-            {loading ? (
-              <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#348086]"></div>
-                <p className="mt-2 text-gray-600">Loading posts...</p>
-              </div>
-            ) : posts.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-600">No posts yet. Be the first to share!</p>
-              </div>
-            ) : (
+            {loading ? <PageState kind="loading" title="Loading traveler stories" /> : error ? <PageState kind="error" title="Community unavailable" description={error} action={<Button onClick={() => void fetchPosts()}>Try again</Button>} /> : posts.length === 0 ? <PageState title="Every journey has a story" description="Be the first to share a place, a tip, or a moment from your travels." action={<Link to="/traveler/add-post" className="button button-primary">Share a story</Link>} /> : (
               posts.map((post, index) => (
                 <motion.div
                   key={post.post_id}
@@ -446,7 +281,7 @@ const CommunityFeedPage = () => {
                   transition={{ delay: index * 0.1 }}
                   className="mb-5 overflow-hidden rounded-2xl border border-[#dce9e5] bg-white shadow-sm"
                 >
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     {/* Post Header */}
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex items-center gap-3 min-w-0">
@@ -457,7 +292,7 @@ const CommunityFeedPage = () => {
                         />
                         <div className="min-w-0">
                           <h3 className="font-semibold text-gray-900 truncate">{post.traveller_full_name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-500">
                             {post.location ? (
                               <span className="inline-flex items-center gap-1 truncate">
                                 <MapPin className="w-4 h-4" />
@@ -483,7 +318,7 @@ const CommunityFeedPage = () => {
                       </div>
                     ) : null}
 
-                    <p className="text-gray-700 mb-4 whitespace-pre-line leading-relaxed">{post.text}</p>
+                    <p className="text-gray-700 mb-4 whitespace-pre-line break-words leading-relaxed">{post.text}</p>
                     
                     {post.image_url && (
                       <img
@@ -495,8 +330,9 @@ const CommunityFeedPage = () => {
 
                     {/* Post Actions */}
                     <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-3 sm:gap-6">
                         <button
+                          aria-label="Like story" aria-pressed={!!post.likedByMe}
                           onClick={() => handleLike(post.post_id)}
                           className="flex items-center gap-2 text-gray-700 hover:text-red-600"
                           type="button"
@@ -506,6 +342,7 @@ const CommunityFeedPage = () => {
                         </button>
 
                         <button
+                          aria-label="Show comments" aria-expanded={expandedPostId === post.post_id}
                           onClick={() => toggleComments(post.post_id)}
                           className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
                           type="button"
@@ -529,7 +366,7 @@ const CommunityFeedPage = () => {
                       </div>
 
                       <button
-                        onClick={() => handleReport(post.post_id)}
+                        onClick={() => { if (!getCurrentTravellerId()) { setFeedback('Sign in to report a story.'); return; } setReportError(''); setReportPost(post.post_id); }}
                         className="flex items-center gap-2 text-gray-500 hover:text-gray-900"
                         type="button"
                       >
@@ -575,11 +412,11 @@ const CommunityFeedPage = () => {
                                 setCommentDraftByPostId(prev => ({ ...prev, [post.post_id]: e.target.value }))
                               }
                               placeholder="Write a comment…"
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
+                              aria-label="Write a comment" className="field min-w-0 flex-1"
                             />
                             <button
                               type="button"
-                              onClick={() => handleAddComment(post.post_id)}
+                              disabled={commentBusy !== null || !commentDraftByPostId[post.post_id]?.trim()} onClick={() => handleAddComment(post.post_id)}
                               className="px-4 py-2 bg-[#348086] text-white rounded-md hover:bg-[#28676d]"
                             >
                               Post
@@ -595,7 +432,7 @@ const CommunityFeedPage = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-8">
+              <div className="flex flex-wrap justify-center gap-2 mt-8">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}

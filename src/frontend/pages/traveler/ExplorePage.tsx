@@ -1,3 +1,4 @@
+import { PageState, Button } from '../../components/ui';
 // pages/traveler/ExplorePage.tsx
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +9,7 @@ import TourCard from "../../components/explore/TourCard";
 import { useTours } from "../../services/useTours";
 import type { TourFilters, Tour } from "../../types/explore";
 import { ROUTES } from "../../utils/routes";
+import { tourService } from '../../services/api';
 
 const ExplorePage = () => {
   const navigate = useNavigate();
@@ -18,6 +20,17 @@ const ExplorePage = () => {
     provider: "All Providers",
   });
   const [searchQuery, setSearchQuery] = useState("");
+  const [facets, setFacets] = useState<{ regions: string[]; categories: string[] }>({ regions: [], categories: [] });
+  useEffect(() => {
+    let active = true;
+    // The existing search endpoint returns the catalogue when no criteria are supplied.
+    // Facets must stay independent of filtered/paginated results.
+    void tourService.searchTours({}).then((rows: Array<{ location?: string; category?: string }>) => {
+      const unique = (values: Array<string | undefined>) => [...new Set(values.filter((value): value is string => !!value?.trim()))].sort();
+      if (active) setFacets({ regions: unique(rows.map(row => row.location)), categories: unique(rows.map(row => row.category)) });
+    }).catch(() => { /* Tour results retain their own retryable error state. */ });
+    return () => { active = false; };
+  }, []);
   const searchTimeoutRef = useRef<number | null>(null);
 
   const { tours, loading, error, hasMore, loadMore, refetch } = useTours();
@@ -88,9 +101,9 @@ const ExplorePage = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="border-b border-[#dce9e5] bg-white">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-          <SearchBar onSearch={handleSearch} />
-          <FilterBar filters={filters} setFilters={handleFilterChange} />
-          <PopularTags onTagClick={handleTagClick} />
+          <SearchBar onSearch={handleSearch} value={searchQuery} />
+          <FilterBar filters={filters} setFilters={handleFilterChange} {...facets} />
+          <PopularTags onTagClick={handleTagClick} tags={facets.categories} />
         </div>
       </div>
 
@@ -128,27 +141,7 @@ const ExplorePage = () => {
           </div>
         )}
 
-        {loading && tours.length === 0 ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#348086]"></div>
-          </div>
-        ) : tours.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              No tours found
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Try adjusting your filters or search terms
-            </p>
-            <button
-              onClick={handleClearFilters}
-              className="bg-[#348086] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#2a6970] transition-colors"
-            >
-              Clear all filters
-            </button>
-          </div>
-        ) : (
+        {loading && tours.length === 0 ? <PageState kind="loading" title="Finding your next adventure" /> : tours.length === 0 && !error ? <PageState title="No tours match your search" description="Try another destination, category, or budget." action={<Button onClick={handleClearFilters}>Clear all filters</Button>} /> : (
           <>
             <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 sm:gap-5">
               {tours.map((tour, index) => (

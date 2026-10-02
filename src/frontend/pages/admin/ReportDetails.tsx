@@ -1,3 +1,8 @@
+import { mapReport, type RawReport } from '../../services/adminModels';
+import type { Report } from '../../components/admin/reports/ReportsTable';
+import { getPostReportDetails, getAccReportDetails } from '../../services/adminService';
+import { PageState, Button, StatusBadge } from '../../components/ui';
+import { useFeedback } from '../../components/ui/FeedbackProvider';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -14,23 +19,30 @@ import {
 import { deletePost, deleteAccount, dismissReport } from '../../services/adminService';
 
 export function ReportDetails() {
-    const { type } = useParams<{ type: string }>();
+  const { notify, confirm } = useFeedback();
+    const { type, id } = useParams();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [actionType, setActionType] = useState<'delete' | 'dismiss' | null>(null);
-    const [report, setReport] = useState<any>(null);
+    const [report, setReport] = useState<Report | null>(null);
 
+    const [detailError, setDetailError] = useState('');
     useEffect(() => {
-        const storedData = sessionStorage.getItem('reportDetail');
-        if (storedData) {
-            setReport(JSON.parse(storedData));
-        }
-    }, []);
+      let active = true;
+      async function load() {
+        try {
+          if ((type !== 'post' && type !== 'account') || !id) throw new Error('Invalid report');
+          const result = await (type === 'post' ? getPostReportDetails(Number(id)) : getAccReportDetails(Number(id)));
+          if (active) setReport(mapReport(result.report as RawReport, type));
+        } catch { if (active) setDetailError('This item is unavailable. It may have been removed, or the connection was interrupted.'); }
+      }
+      void load(); return () => { active = false; };
+    }, [type, id]);
 
     const handleDeletePost = async () => {
         if (!report || type !== 'post') return;
 
-        if (!confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
+        if (!await confirm('Are you sure you want to delete this post? This action cannot be undone.')) {
             return;
         }
 
@@ -41,7 +53,7 @@ export function ReportDetails() {
             console.log(' Deleting post for report:', report.reportId);
 
             await deletePost(report.reportId);
-            alert('Post deleted successfully!');
+            notify('Post deleted successfully!');
 
             sessionStorage.removeItem('reportDetail');
 
@@ -49,7 +61,7 @@ export function ReportDetails() {
 
         } catch (error) {
             console.error(' Error deleting post:', error);
-            alert('Failed to delete post. Please try again.');
+            notify('Failed to delete post. Please try again.');
         } finally {
             setLoading(false);
             setActionType(null);
@@ -59,7 +71,7 @@ export function ReportDetails() {
     const handleDeleteAccount = async () => {
         if (!report || type !== 'account') return;
 
-        if (!confirm('Are you sure you want to delete this account? This action cannot be undone and will permanently remove all associated data.')) {
+        if (!await confirm('Are you sure you want to delete this account? This action cannot be undone and will permanently remove all associated data.')) {
             return;
         }
 
@@ -70,7 +82,7 @@ export function ReportDetails() {
             console.log('Deleting account for report:', report.reportId);
 
             await deleteAccount(report.reportId);
-            alert('Account deleted successfully!');
+            notify('Account deleted successfully!');
 
             sessionStorage.removeItem('reportDetail');
 
@@ -78,7 +90,7 @@ export function ReportDetails() {
 
         } catch (error) {
             console.error('Error deleting account:', error);
-            alert('Failed to delete account. Please try again.');
+            notify('Failed to delete account. Please try again.');
         } finally {
             setLoading(false);
             setActionType(null);
@@ -88,7 +100,7 @@ export function ReportDetails() {
     const handleDismiss = async () => {
         if (!report || !type) return;
 
-        if (!confirm('Are you sure you want to dismiss this report?')) {
+        if (!await confirm('Are you sure you want to dismiss this report?')) {
             return;
         }
 
@@ -99,30 +111,22 @@ export function ReportDetails() {
             console.log(' Dismissing report:', report.reportId, 'Type:', type);
 
             await dismissReport(report.reportId, type as 'post' | 'account');
-            alert('Report dismissed successfully!');
+            notify('Report dismissed successfully!');
 
             sessionStorage.removeItem('reportDetail');
             navigate('/admin/reports', { replace: true });
 
         } catch (error) {
             console.error('Error dismissing report:', error);
-            alert('Failed to dismiss report. Please try again.');
+            notify('Failed to dismiss report. Please try again.');
         } finally {
             setLoading(false);
             setActionType(null);
         }
     };
 
-    if (!report) {
-        return (
-            <div className="p-6 flex items-center justify-center min-h-screen">
-                <div className="flex items-center gap-3">
-                    <Loader2 className="w-6 h-6 animate-spin text-gray-600" />
-                    <p className="text-gray-600">Loading report details...</p>
-                </div>
-            </div>
-        );
-    }
+    if (detailError) return <PageState kind="error" title="Details unavailable" description={detailError} action={<Button onClick={() => navigate('/admin/reports')}>Back to reports</Button>} />;
+    if (!report) return <PageState kind="loading" title="Loading details" />;
 
     const getReasonColor = (reason: string) => {
         switch (reason.toLowerCase()) {
@@ -138,11 +142,13 @@ export function ReportDetails() {
     };
 
     return (
-        <div className="p-6 max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="mb-6 flex items-center justify-between">
+            <div className="mb-4"><StatusBadge status={report.status} /></div>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <button
+                        aria-label="Back to reports"
                         onClick={() => navigate('/admin/reports')}
                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                         disabled={loading}
@@ -154,7 +160,7 @@ export function ReportDetails() {
                         <p className="text-gray-600 text-sm">Review report and take appropriate action</p>
                     </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3" hidden={report.status === 'resolved'}>
                     <button
                         onClick={handleDismiss}
                         disabled={loading}
@@ -205,7 +211,7 @@ export function ReportDetails() {
                     <h2 className="text-lg font-bold text-gray-900">Report Information</h2>
                 </div>
 
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
                     <div>
                         <label className="text-sm text-gray-600 block mb-1">Report Type</label>
                         <p className="font-medium text-gray-900">{report.reportType}</p>
@@ -220,7 +226,7 @@ export function ReportDetails() {
                         <label className="text-sm text-gray-600 block mb-1">Location</label>
                         <div className="flex items-center gap-1.5">
                             <MapPin className="w-4 h-4 text-gray-500" />
-                            <span className="text-gray-900">{report.location}</span>
+                            <span className="break-words text-gray-900">{report.location}</span>
                         </div>
                     </div>
                     <div>

@@ -1,3 +1,4 @@
+import { PageState } from '../../components/ui';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -77,7 +78,7 @@ export function AgencyEditTourProgram() {
         <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">Edit tour</h1>
         <p className="mt-2 text-sm text-slate-600">Update the essentials visitors see before booking.</p>
       </div>
-      {loading ? <p className="rounded-2xl bg-white p-6 text-slate-600">Loading tour…</p> : null}
+      {loading ? <PageState kind="loading" title="Loading tour" /> : null}
       {error ? <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</p> : null}
       {form && !loading ? (
         <form onSubmit={save} className="space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
@@ -89,8 +90,8 @@ export function AgencyEditTourProgram() {
               ['group_size', 'Group size', 'text'],
             ] as const).map(([field, label, type]) => (
               <label key={field} className="block text-sm font-medium text-slate-700">
-                {label}
-                <input type={type} value={form[field]}
+                {label}{['tour_title', 'location', 'price', 'start_date'].includes(field) ? ' *' : ''}
+                <input type={type} disabled={saving} value={form[field]}
                   onChange={event => setForm(current => current ? { ...current, [field]: event.target.value } : current)}
                   required={['tour_title', 'location', 'price', 'start_date'].includes(field)}
                   min={type === 'number' ? 0 : undefined}

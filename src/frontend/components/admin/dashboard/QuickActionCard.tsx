@@ -7,14 +7,14 @@ interface QuickActionCardProps {
     onClick?: () => void;
 }
 
-export function QuickActionCard({ label, value, icon: Icon, iconColor, iconBgColor, onClick }: QuickActionCardProps) {
+export function QuickActionCard({ label, value, icon: Icon, iconColor, onClick }: QuickActionCardProps) {
     return (
-        <div
+        <button type="button"
             onClick={onClick}
-            className="bg-white rounded-xl p-6 border border-gray-200 hover:shadow-md transition-all cursor-pointer"
+            className="panel p-5 text-left hover:border-brand transition-colors"
         >
             <div className="flex items-center gap-4">
-                <div className={`${iconBgColor} p-3 rounded-xl`}>
+                <div className={'text-brand'}>
                     <Icon className={`w-5 h-5 ${iconColor}`} />
                 </div>
                 <div>
@@ -22,6 +22,6 @@ export function QuickActionCard({ label, value, icon: Icon, iconColor, iconBgCol
                     <p className="text-2xl font-bold text-gray-900">{value}</p>
                 </div>
             </div>
-        </div>
+        </button>
     );
 }

@@ -1,3 +1,4 @@
+import { PageState } from '../../ui';
 import { Eye } from 'lucide-react';
 
 export interface Report {
@@ -11,7 +12,7 @@ export interface Report {
     accountType?: 'Agency' | 'Guide' | 'Traveller';
     postTitle?: string;
     text?: string;
-    reason: 'Spam' | 'Inappropriate Content' | 'Harassment' | 'Other';
+    reason: string;
     location: string;
     date: string;
     status: 'open' | 'resolved';
@@ -30,7 +31,7 @@ export function ReportsTable({ reports, onViewReport }: ReportsTableProps) {
             case 'Inappropriate Content':
                 return 'bg-red-100 text-red-600';
             case 'Harassment':
-                return 'bg-purple-100 text-purple-600';
+                return 'bg-brand-soft text-brand';
             case 'Other':
                 return 'bg-gray-100 text-gray-600';
             default:
@@ -46,16 +47,14 @@ export function ReportsTable({ reports, onViewReport }: ReportsTableProps) {
 
     if (reports.length === 0) {
         return (
-            <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                <p className="text-gray-500">No reports found</p>
-            </div>
+            <PageState title="No matching reports" description="Try another search term. New community reports will appear here." />
         );
     }
 
     return (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="data-table responsive-table" role="table">
                     <thead>
                         <tr className="bg-gray-50 border-b border-gray-200">
                             <th className="px-6 py-4 text-left text-sm font-semibold text-gray-700">Reporter Name</th>
@@ -74,29 +73,29 @@ export function ReportsTable({ reports, onViewReport }: ReportsTableProps) {
                                 key={report.id}
                                 className="hover:bg-gray-50 transition-colors"
                             >
-                                <td className="px-6 py-4 text-sm text-gray-900 font-medium whitespace-nowrap">
+                                <td data-label="Reported by" className="px-6 py-4 text-sm text-gray-900 font-medium whitespace-nowrap">
                                     {report.reporterName}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                                <td data-label="Reported content" className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                                     {report.reportedName}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Reason" className="px-6 py-4">
                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getReasonColor(report.reason)}`}>
                                         {report.reason}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                <td data-label="Location" className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {report.location}
                                 </td>
-                                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
+                                <td data-label="Date" className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">
                                     {report.date}
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Status" className="px-6 py-4">
                                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(report.status)}`}>
                                         {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td data-label="Action" className="px-6 py-4">
                                     <button
                                         onClick={() => onViewReport(report.reportId, report.reportType)}
                                         className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors"

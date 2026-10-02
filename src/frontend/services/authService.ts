@@ -1,6 +1,5 @@
-import api from './api';
+import api, { getApiErrorMessage } from './api';
 import type { LoginRequest, SignupRequest, AuthResponse, User } from '../types/auth';
-import type { AxiosError } from 'axios';
 
 interface BackendSignupResponse {
   success: boolean;
@@ -33,15 +32,15 @@ const normalizeUserType = (role: string): 'traveller' | 'guide' | 'agency' => {
   return 'traveller';
 };
 
-const determineProfileId = (backendData: any, userType: string): string => {
+const determineProfileId = (backendData: BackendSignupResponse['data'] & { guideId?: string; id?: string }, userType: string): string => {
   switch (userType) {
     case 'agency':
-      return backendData.agencyId || backendData.userId || backendData.id;
+      return backendData.agencyId || backendData.userId;
     case 'guide':
-      return backendData.guideId || backendData.userId || backendData.id;
+      return backendData.guideId || backendData.userId;
     case 'traveller':
     default:
-      return backendData.userId || backendData.id;
+      return backendData.userId;
   }
 };
 
@@ -50,7 +49,7 @@ export const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
 
-      const loginResponse = await api.post('/auth/login', credentials, { withCredentials: true });
+      const loginResponse = await api.post('/auth/login', credentials, { withCredentials: true, timeout: 60000 });
 
       const data = loginResponse.data;
 
@@ -90,17 +89,16 @@ export const authService = {
       };
 
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
       return {
         success: false,
-        message: axiosError.response?.data?.message || 'Login failed'
+        message: getApiErrorMessage(error)
       };
     }
   },
 
   async signup(userData: SignupRequest): Promise<AuthResponse> {
     try {
-      const response = await api.post<BackendSignupResponse>('/auth/signUp', userData);
+      const response = await api.post<BackendSignupResponse>('/auth/signUp', userData, { timeout: 60000 });
       const backendData = response.data.data;
 
       const userType = backendData.role ? 
@@ -131,10 +129,9 @@ export const authService = {
         user: user
       };
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
       return {
         success: false,
-        message: axiosError.response?.data?.message || 'Signup failed'
+        message: getApiErrorMessage(error)
       };
     }
   },

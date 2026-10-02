@@ -35,9 +35,11 @@ api.interceptors.response.use(
 
 export function getApiErrorMessage(err: unknown): string {
   if (axios.isAxiosError(err)) {
-    const data: any = err.response?.data;
+    const data = err.response?.data as { error?: unknown; message?: unknown } | undefined;
     if (typeof data?.error === 'string' && data.error.trim()) return data.error;
     if (typeof data?.message === 'string' && data.message.trim()) return data.message;
+    if (err.code === 'ECONNABORTED') return 'The server is taking longer than expected. Please try again shortly.';
+    if (!err.response) return 'Could not reach Tahwissa. Check your connection and try again shortly.';
     if (typeof err.message === 'string' && err.message.trim()) return err.message;
     return `Request failed${err.response?.status ? ` (${err.response.status})` : ''}`;
   }
@@ -91,7 +93,7 @@ export const tourService = {
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Get tours error:', error);
-      return [];
+      throw error;
     }
   },
 

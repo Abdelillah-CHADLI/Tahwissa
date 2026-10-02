@@ -1,16 +1,14 @@
 interface PopularTagsProps {
   onTagClick: (tag: string) => void;
+  tags: string[];
 }
 
-const PopularTags = ({ onTagClick }: PopularTagsProps) => {
-  const tags = [
-    'Desert Tours', 'Mountain Hiking', 'Coastal Adventures', 
-    'Cultural Tours', 'Historical Sites', 'Food Tours'
-  ];
+const PopularTags = ({ onTagClick, tags }: PopularTagsProps) => {
+  if (!tags.length) return null;
 
   return (
     <div className="flex items-center gap-2 mt-3">
-      <span className="text-xs text-gray-500 whitespace-nowrap">Popular:</span>
+      <span className="text-xs text-gray-500 whitespace-nowrap">Browse:</span>
       <div className="flex gap-1 overflow-x-auto scrollbar-hide flex-1">
         {tags.map((tag) => (
           <button
