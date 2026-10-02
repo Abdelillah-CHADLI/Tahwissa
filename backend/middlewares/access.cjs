@@ -85,7 +85,7 @@ async function requireManager(req, res, next) {
 
 async function requireManagedAgency(req, res, next) {
   try {
-    const directAgencyId = req.body.agency_id || req.params.agency_id;
+    const directAgencyId = req.body?.agency_id || req.params.agency_id;
     if (directAgencyId && String(directAgencyId) !== String(req.managerAgencyId)) {
       return res.status(403).json({ message: 'Access denied.' });
     }

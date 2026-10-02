@@ -17,6 +17,7 @@ const verificationRoutes = require("./routes/verificationRoutes");
 const pstroutes = require('./routes/postroutes');
 
 const allowedOrigins = [
+  'https://tahwissa-orpin.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',
