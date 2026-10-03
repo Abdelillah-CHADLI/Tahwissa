@@ -8,7 +8,7 @@ type StatsCardsProps = {
 
 function StatsCards({ pendingCount, confirmedCount, cancelledCount }: StatsCardsProps) {
     return ( // 3 stats cards for pending, confirmed, declined
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+        <div className="mb-6 grid grid-cols-1 gap-3 min-[480px]:grid-cols-3 sm:gap-4">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
                 <div className="flex items-center justify-between gap-2">
                     <div>

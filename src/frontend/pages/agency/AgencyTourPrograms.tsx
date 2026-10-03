@@ -1,7 +1,7 @@
-import { Button, Dialog, Notice, PageState } from '../../components/ui';
+import { Button, Dialog, Notice, PageHeader, PageState } from '../../components/ui';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, AlertCircle } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { TourCard } from '../../types/tourcard';
 import { bookingService, tourService } from '../../services/api';
 import { getCurrentAgencyUuid, getCurrentProfileType } from '../../utils/session';
@@ -117,35 +117,19 @@ export function AgencyTourPrograms() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">Tour Programs</h1>
-                <button
-                    onClick={() => navigate('/agency/add-tour')}
-                    className="flex items-center gap-2 bg-[#375E5E] text-white px-3 py-2 rounded-lg hover:bg-[#2c4b4b] transition-colors"
-                >
-                    <Plus className="w-4 h-4" />
-                    Create New Tour
-                </button>
-            </div>
+            <PageHeader title="Tour programs" description="Manage your tours, itineraries, and upcoming departures." actions={<Button onClick={() => navigate('/agency/add-tour')}><Plus size={16} />Create tour</Button>} />
 
-            <p className='text-sm text-gray-600'>Manage your tour packages and itineraries</p>
-
-            {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative flex items-center gap-2">
-                    <AlertCircle className="w-5 h-5" />
-                    <span>{error}</span>
-                </div>
-            )}
+            {error && <Notice tone="error">{error} <button type="button" className="ml-2 font-semibold underline" onClick={() => void fetchTours()}>Try again</button></Notice>}
 
             <div className="w-full relative">
                 <form onSubmit={handleSubmit} className="w-full">
                     <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
                     <input
-                        type="text"
+                        type="search"
                         value={query}
                         onChange={handleSearch}
                         aria-label="Search tour programs" placeholder="Search tour programs..."
-                        className="w-full border border-gray-300 rounded-lg px-10 py-2 focus:outline-none focus:ring-2 focus:ring-[#375E5E]"
+                        className="field pl-10"
                     />
                 </form>
             </div>
@@ -153,15 +137,7 @@ export function AgencyTourPrograms() {
             <div className="flex flex-wrap items-center justify-between gap-3"><label className="flex items-center gap-3 text-sm text-gray-600">Category<select className="field w-auto" value={category} onChange={event => setCategory(event.target.value)}><option value="all">All categories</option>{[...new Set(tours.map(tour => tour.category).filter(Boolean))].map(value => <option key={value} value={value}>{value}</option>)}</select></label><p className="text-sm text-gray-500">{filteredTours.length} tour{filteredTours.length === 1 ? '' : 's'}</p></div>
 
             {filteredTours.length === 0 && !error ? (
-                <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                    <p className="text-gray-500">No tours found.</p>
-                    <button
-                        onClick={() => navigate('/agency/add-tour')}
-                        className="mt-4 text-[#375E5E] font-medium hover:underline"
-                    >
-                        Create your first tour
-                    </button>
-                </div>
+                <PageState title={tours.length ? 'No tours match your filters' : 'Your tour collection starts here'} description={tours.length ? 'Try another search or category.' : 'Create a tour to share an itinerary with travelers.'} action={tours.length ? <Button variant="secondary" onClick={() => { setQuery(''); setCategory('all'); }}>Clear filters</Button> : <Button onClick={() => navigate('/agency/add-tour')}>Create a tour</Button>} />
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filteredTours.map(t => (

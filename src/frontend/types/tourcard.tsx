@@ -1,5 +1,6 @@
 import { MapPin, Calendar, Users, MoreVertical, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { StatusBadge } from '../components/ui';
 
 interface TourCardProps {
     image: string;
@@ -46,7 +47,6 @@ export function TourCard({
     };
 
     const displayStatus = getDisplayStatus();
-    const statusColor = displayStatus === "Ended" ? "bg-gray-500" : "bg-green-500";
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -59,30 +59,28 @@ export function TourCard({
     }, []);
 
     return (
-        <div className="panel overflow-hidden">
+        <article className="discovery-card">
             <div className="relative">
-                <img src={image} alt={title} className="w-full h-44 object-cover" />
+                <img src={image} alt={title} className="discovery-card__image" loading="lazy" />
 
                 <div className="absolute top-3 right-3 flex gap-2">
-                    <span className={`${statusColor} text-white text-xs px-2.5 py-1 rounded-md`}>
-                        {displayStatus}
-                    </span>
+                    <StatusBadge status={displayStatus} />
                     <div className="relative" ref={menuRef} onKeyDown={event => { if (event.key === 'Escape') setShowMenu(false); }}>
                         <button 
                             aria-label={`Actions for ${title}`} aria-expanded={showMenu}
-                            className="bg-[#375E5E] text-white p-2 rounded-lg hover:bg-[#2c4b4b] transition-colors"
+                            className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-brand-ink text-white hover:bg-brand-dark"
                             onClick={() => setShowMenu(!showMenu)}
                         >
                             <MoreVertical className="w-4 h-4" />
                         </button>
                         {showMenu && (
-                            <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                            <div className="absolute right-0 z-10 mt-2 w-40 rounded-lg border border-line bg-white shadow-lg">
                                 <button
                                     onClick={() => {
                                         setShowMenu(false);
                                         onDelete?.();
                                     }}
-                                    className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                    className="flex min-h-11 w-full items-center gap-2 rounded-lg px-4 py-2 text-red-700 transition-colors hover:bg-red-50"
                                 >
                                     <Trash2 className="w-4 h-4" />
                                     Delete Tour
@@ -97,8 +95,8 @@ export function TourCard({
                 </span>
             </div>
 
-            <div className="p-5 space-y-3">
-                <h2 className="text-lg leading-6 font-semibold">{title}</h2>
+            <div className="discovery-card__body space-y-3">
+                <h2 className="line-clamp-2 text-lg font-semibold leading-6 text-brand-ink">{title}</h2>
 
                 <div className="flex items-center text-gray-600 gap-2">
                     <MapPin className="w-4 h-4" />
@@ -119,7 +117,7 @@ export function TourCard({
 
                 <hr className="border-line" />
 
-                <div className="flex flex-wrap gap-3 justify-between items-center text-sm">
+                <div className="discovery-card__footer flex-wrap text-sm">
                     <div>
                         <p className="text-gray-600 text-sm">Bookings</p>
                         <p className="font-semibold text-xl">{bookings}</p>
@@ -136,6 +134,6 @@ export function TourCard({
                     </button>
                 </div>
             </div>
-        </div>
+        </article>
     );
 }

@@ -1,32 +1,11 @@
-import { motion } from 'motion/react';
 import { Search } from 'lucide-react';
 
-interface SearchSectionProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  activeTab: string;
+export default function SearchSection({ searchQuery, setSearchQuery, activeTab }: {
+  searchQuery: string; setSearchQuery: (query: string) => void; activeTab: string;
+}) {
+  return <div role="search" className="relative w-full sm:max-w-xl">
+    <label htmlFor="provider-search" className="sr-only">Search {activeTab === 'agencies' ? 'agencies' : 'guides'}</label>
+    <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand" aria-hidden="true" />
+    <input id="provider-search" type="search" placeholder={`Search ${activeTab === 'agencies' ? 'agencies' : 'guides'} by name or location`} value={searchQuery} onChange={event => setSearchQuery(event.target.value)} className="field pl-10" />
+  </div>;
 }
-
-const SearchSection = ({ searchQuery, setSearchQuery, activeTab }: SearchSectionProps) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="border border-gray-200 rounded-xl p-6 mb-6 bg-white"
-    >
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder={`Search ${activeTab === 'agencies' ? 'agencies' : 'guides'} by name, location, or specialty...`}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent bg-gray-50"
-        />
-      </div>
-    </motion.div>
-  );
-};
-
-export default SearchSection;

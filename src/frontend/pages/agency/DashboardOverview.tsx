@@ -53,30 +53,24 @@ export function DashboardOverview() {
       label: "Active Tours",
       value: data.stats.activeTours.toString(),
       change: data.stats.activeTours === 0 ? "No tours yet" : "Active right now",
-      color: "bg-[#375E5E]",
-      trend: "up" as const,
     },
     {
       icon: Calendar,
       label: "Total Bookings",
       value: data.stats.totalBookings.toString(),
       change: 'Across all your tours',
-      color: "bg-[#5D8E8E]",
-      trend: "up" as const,
     },
     {
       icon: Star,
       label: "Average Rating",
       value: data.stats.averageRating.toFixed(1),
       change: `Based on ${data.stats.totalReviews} reviews`,
-      color: "bg-[#D4F58D]",
-      trend: "stable" as const,
     },
   ];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Your overview" description="Keep track of your tours, bookings, and traveler feedback." />
+      <PageHeader title="Your overview" description="Keep track of your tours, bookings, and traveler feedback." actions={<Button onClick={() => navigate('/agency/add-tour')}>Create tour</Button>} />
       {/* Verification Banner */}
       <VerificationBanner
         verified={verified}
@@ -93,17 +87,10 @@ export function DashboardOverview() {
             transition={{ duration: 0.5, delay: index * 0.1 }}
             className="panel p-4 sm:p-5"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div
-                className={`w-9 h-9 rounded-lg ${stat.color} flex items-center justify-center shadow-sm`}
-              >
-                <stat.icon className={`w-4 h-4 ${stat.label === "Average Rating" ? "text-brand-ink" : "text-white"}`} />
-              </div>
-
-            </div>
-            <h3 className="text-2xl font-semibold mb-1 text-gray-900">{stat.value}</h3>
-            <p className="text-sm text-gray-500 mb-2">{stat.label}</p>
-            <p className="text-xs text-gray-400">{stat.change}</p>
+            <stat.icon className="mb-4 h-5 w-5 text-brand" aria-hidden="true" />
+            <h3 className="mb-1 text-2xl font-semibold tracking-tight text-brand-ink">{stat.value}</h3>
+            <p className="text-sm font-medium text-gray-700">{stat.label}</p>
+            <p className="mt-1 text-xs text-gray-500">{stat.change}</p>
           </motion.div>
         ))}
       </div>
@@ -207,35 +194,6 @@ export function DashboardOverview() {
           </div>
         </motion.div>
       </div>
-
-      {/* Quick Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-      >
-        <div className="bg-[#4A7B7B] text-white rounded-xl shadow-sm relative overflow-hidden">
-          <div className="p-5 sm:p-6 relative z-10">
-            <div className="flex items-center justify-between">
-              <div className="max-w-lg">
-                <h3 className="text-xl font-medium mb-2 text-white">
-                  Ready to grow your business?
-                </h3>
-                <p className="text-white/90 mb-6 text-sm">
-                  Create new tour programs and reach more travelers
-                </p>
-                <button
-                  onClick={() => navigate('/agency/add-tour')}
-                  className="px-6 py-2.5 bg-[#D4F58D] text-[#375E5E] rounded-lg hover:bg-[#c3e87b] transition-colors font-bold text-sm"
-                >
-                  Create New Tour
-                </button>
-              </div>
-
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
       {/* Verification Modal */}
       <VerificationModal

@@ -279,7 +279,7 @@ const CommunityFeedPage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="mb-5 overflow-hidden rounded-2xl border border-[#dce9e5] bg-white shadow-sm"
+                  className="panel mb-5 overflow-hidden"
                 >
                   <div className="p-4 sm:p-6">
                     {/* Post Header */}
@@ -329,12 +329,12 @@ const CommunityFeedPage = () => {
                     )}
 
                     {/* Post Actions */}
-                    <div className="flex items-center justify-between pt-4 border-t">
-                      <div className="flex items-center gap-3 sm:gap-6">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+                      <div className="flex flex-wrap items-center gap-3 sm:gap-6">
                         <button
                           aria-label="Like story" aria-pressed={!!post.likedByMe}
                           onClick={() => handleLike(post.post_id)}
-                          className="flex items-center gap-2 text-gray-700 hover:text-red-600"
+                          className="inline-flex min-h-10 items-center gap-2 rounded-md px-1 text-gray-700 hover:text-red-600"
                           type="button"
                         >
                           <Heart className={`w-5 h-5 ${post.likedByMe ? 'text-red-600 fill-red-600' : 'text-gray-700'}`} />
@@ -344,7 +344,7 @@ const CommunityFeedPage = () => {
                         <button
                           aria-label="Show comments" aria-expanded={expandedPostId === post.post_id}
                           onClick={() => toggleComments(post.post_id)}
-                          className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+                          className="inline-flex min-h-10 items-center gap-2 rounded-md px-1 text-gray-700 hover:text-gray-900"
                           type="button"
                         >
                           <MessageCircle className="w-5 h-5" />
@@ -357,7 +357,7 @@ const CommunityFeedPage = () => {
 
                         <button
                           onClick={() => handleShare(post)}
-                          className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+                          className="inline-flex min-h-10 items-center gap-2 rounded-md px-1 text-gray-700 hover:text-gray-900"
                           type="button"
                         >
                           <Share2 className="w-5 h-5" />
@@ -367,7 +367,7 @@ const CommunityFeedPage = () => {
 
                       <button
                         onClick={() => { if (!getCurrentTravellerId()) { setFeedback('Sign in to report a story.'); return; } setReportError(''); setReportPost(post.post_id); }}
-                        className="flex items-center gap-2 text-gray-500 hover:text-gray-900"
+                        className="inline-flex min-h-10 items-center gap-2 rounded-md px-1 text-gray-500 hover:text-gray-900"
                         type="button"
                       >
                         <Flag className="w-5 h-5" />
@@ -417,7 +417,7 @@ const CommunityFeedPage = () => {
                             <button
                               type="button"
                               disabled={commentBusy !== null || !commentDraftByPostId[post.post_id]?.trim()} onClick={() => handleAddComment(post.post_id)}
-                              className="px-4 py-2 bg-[#348086] text-white rounded-md hover:bg-[#28676d]"
+                              className="button button-primary"
                             >
                               Post
                             </button>

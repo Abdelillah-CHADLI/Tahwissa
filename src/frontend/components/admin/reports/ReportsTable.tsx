@@ -1,4 +1,4 @@
-import { PageState } from '../../ui';
+import { PageState, StatusBadge } from '../../ui';
 import { Eye } from 'lucide-react';
 
 export interface Report {
@@ -39,12 +39,6 @@ export function ReportsTable({ reports, onViewReport }: ReportsTableProps) {
         }
     };
 
-    const getStatusColor = (status: string) => {
-        return status === 'open'
-            ? 'bg-red-100 text-red-600'
-            : 'bg-green-100 text-green-600';
-    };
-
     if (reports.length === 0) {
         return (
             <PageState title="No matching reports" description="Try another search term. New community reports will appear here." />
@@ -52,7 +46,7 @@ export function ReportsTable({ reports, onViewReport }: ReportsTableProps) {
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="panel overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="data-table responsive-table" role="table">
                     <thead>
@@ -91,14 +85,12 @@ export function ReportsTable({ reports, onViewReport }: ReportsTableProps) {
                                     {report.date}
                                 </td>
                                 <td data-label="Status" className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(report.status)}`}>
-                                        {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
-                                    </span>
+                                    <StatusBadge status={report.status} />
                                 </td>
                                 <td data-label="Action" className="px-6 py-4">
                                     <button
                                         onClick={() => onViewReport(report.reportId, report.reportType)}
-                                        className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors"
+                                        className="button button-quiet px-2"
                                     >
                                         <Eye className="w-4 h-4" />
                                         <span className="text-sm font-medium">View</span>

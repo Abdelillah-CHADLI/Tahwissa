@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Bell, ClipboardList, Compass, Home, Menu, MessageSquare, Search, Users, X } from 'lucide-react';
+import { Bell, ClipboardList, Compass, Home, LogOut, Menu, MessageSquare, Search, Users, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/authService';
 import { ROUTES } from '../utils/routes';
 
 export default function Header() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -17,6 +18,12 @@ export default function Header() {
     { path: ROUTES.REQUESTS, label: 'My requests', icon: ClipboardList },
   ];
   const isActive = (path: string) => location.pathname === path || (path === ROUTES.HOME && location.pathname === '/');
+  const handleLogout = async () => {
+    try { await authService.logout(); } catch (error) { console.error('Logout failed:', error); }
+    logout();
+    setOpen(false);
+    navigate(ROUTES.HOME);
+  };
   const account = user ? <Link aria-label="Your profile" to={ROUTES.PROFILE} onClick={() => setOpen(false)} className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand text-sm font-semibold text-white">
     {user.profile_picture ? <img src={user.profile_picture} alt="" className="h-full w-full object-cover" /> : (user.firstName?.[0] || user.name?.[0] || 'U').toUpperCase()}
   </Link> : <Link to={ROUTES.SIGN_IN} onClick={() => setOpen(false)} className="button button-primary min-h-9 px-3">Sign in</Link>;
@@ -31,11 +38,13 @@ export default function Header() {
         <div className="flex items-center gap-1.5 sm:gap-3">
           {user && <button aria-label="Notifications" onClick={() => navigate(ROUTES.NOTIFICATIONS)} className="icon-button"><Bell size={19} /></button>}
           {account}
+          {user && <button type="button" onClick={() => void handleLogout()} className="icon-button hidden lg:inline-flex" aria-label="Sign out" title="Sign out"><LogOut size={18} /></button>}
           <button aria-label={open ? 'Close menu' : 'Open menu'} aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(!open)} className="icon-button lg:hidden">{open ? <X size={21} /> : <Menu size={21} />}</button>
         </div>
       </div>
       {open && <nav id="mobile-navigation" aria-label="Mobile navigation" className="grid gap-1 border-t border-line py-3 lg:hidden" onKeyDown={event => { if (event.key === 'Escape') setOpen(false); }}>
         {items.map(item => <Link key={item.path} to={item.path} onClick={() => setOpen(false)} aria-current={isActive(item.path) ? 'page' : undefined} className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium ${isActive(item.path) ? 'bg-brand-soft text-brand-dark' : 'text-gray-600 hover:bg-gray-50'}`}><item.icon size={18} />{item.label}</Link>)}
+        {user && <><Link to={ROUTES.PROFILE} onClick={() => setOpen(false)} className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-gray-600 hover:bg-brand-soft">Your profile</Link><button type="button" onClick={() => void handleLogout()} className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-sm font-medium text-gray-600 hover:bg-brand-soft"><LogOut size={18} />Sign out</button></>}
       </nav>}
     </div>
   </header>;

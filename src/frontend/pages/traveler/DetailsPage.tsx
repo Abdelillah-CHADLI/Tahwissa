@@ -3,7 +3,7 @@ import { ROUTES } from "../../utils/routes";
 import { ArrowLeft, MapPin, Users, Clock, Star, CheckCircle, XCircle, Shield, Calendar, MessageCircle, ShieldCheck, Phone, Mail, Globe, Building2, Loader2, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { tourService, profileService } from "../../services/api";
-import { PageState } from '../../components/ui';
+import { Button, PageState } from '../../components/ui';
 
 interface DaySchedule {
     id: number;
@@ -377,21 +377,7 @@ const DetailsPage = () => {
     if (loading) return <div className="page-shell"><PageState kind="loading" title="Loading tour details" /></div>;
 
     if (error || !tourData) {
-        return (
-            <div className="flex items-center justify-center min-h-[400px]">
-                <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
-                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
-                    <h3 className="text-xl font-bold mb-2">Failed to Load Tour</h3>
-                    <p className="text-sm text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={() => navigate(ROUTES.EXPLORE)}
-                        className="px-4 py-2 bg-[#4d8b8b] text-white rounded-lg hover:bg-[#274345] transition-colors"
-                    >
-                        Back to Explore
-                    </button>
-                </div>
-            </div>
-        );
+        return <div className="page-shell"><PageState kind="error" title="Unable to load this tour" description={error || 'The tour may no longer be available.'} action={<Button onClick={() => navigate(ROUTES.EXPLORE)}>Explore tours</Button>} /></div>;
     }
 
     const provider = providerData;
@@ -411,17 +397,16 @@ const DetailsPage = () => {
 
     return (
         <div className="w-full min-w-0">
-            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4">
-                <button className="rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-md text-shadow-black font-semibold hover:bg-lime-300 flex items-center mb-4 sm:mb-6 transition-colors" onClick={() => navigate(ROUTES.EXPLORE)}>
-                    <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 inline-block mr-2" />
-                    Back to Explore</button>
+            <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 sm:pt-7">
+                <button className="button button-quiet -ml-3" onClick={() => navigate(ROUTES.EXPLORE)}>
+                    <ArrowLeft size={18} aria-hidden="true" /> Back to tours</button>
             </div>
 
-            <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-2 sm:gap-4 lg:gap-6 px-2 sm:px-4 lg:px-6 pb-3 sm:pb-6">
+            <div className="mx-auto grid max-w-7xl min-w-0 grid-cols-1 gap-5 px-4 pb-8 sm:px-6 lg:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)] lg:gap-7">
 
                 <div className="space-y-4 sm:space-y-6">
 
-                    <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
+                    <div className="overflow-hidden rounded-xl bg-white">
                         <img
                             src={String(coverImage)}
                             alt={String(tourData.tour_title || tourData.title || 'Tour')}
@@ -442,48 +427,48 @@ const DetailsPage = () => {
                         )}
                     </div>
 
-                    <div className="border border-gray-200 rounded-xl bg-white shadow-sm p-4 sm:p-6 space-y-4">
-                        <h1 className="text-xl sm:text-2xl font-semibold">{String(tourData.tour_title || tourData.title || 'Untitled Tour')}</h1>
+                    <div className="space-y-4 py-2">
+                        <h1 className="text-2xl font-semibold tracking-tight text-brand-ink sm:text-3xl">{String(tourData.tour_title || tourData.title || 'Untitled Tour')}</h1>
                         <p className="text-gray-600">{parseTourDescription(tourData.tour_details, String(tourData.tour_title || tourData.title || ''))}</p>
 
                         <div className="flex items-center gap-3 flex-wrap">
-                            <span className="bg-[#4d8b8b] text-white text-sm px-4 py-1 rounded-full flex items-center gap-2 hover:bg-[#274345] transition-colors">
+                            <span className="inline-flex items-center gap-2 text-sm text-muted">
                                 <MapPin className="w-4 h-4" />
                                 {String(tourData.location || 'Unknown Location')}
                             </span>
-                            <span className="bg-[#4d8b8b] text-white text-sm px-4 py-1 rounded-full flex items-center gap-2 hover:bg-[#274345] transition-colors">
+                            <span className="inline-flex items-center gap-2 text-sm text-muted">
                                 <Clock className="w-4 h-4" />
                                 {String(tourData.duration || 'N/A')}
                             </span>
-                            <span className="bg-[#4d8b8b] text-white text-sm px-4 py-1 rounded-full flex items-center gap-2 hover:bg-[#274345] transition-colors">
+                            <span className="inline-flex items-center gap-2 text-sm text-muted">
                                 <Users className="w-4 h-4" />
                                 {String(tourData.group_size || tourData.groupSize || 'N/A')}
                             </span>
                         </div>
                         <div className="flex">
-                            <span className="bg-green-100 text-green-800 text-sm px-3 py-1 rounded-full flex items-center gap-2 hover:bg-green-200 transition-colors">
+                            <span className="inline-flex items-center gap-2 text-sm font-medium text-brand-ink">
                                 <Star className="w-4 h-4" />
                                 {Number(tourData.rating || 0).toFixed(1)} ({Number(tourData.review_count || 0)} reviews)
                             </span>
                         </div>
                     </div>
 
-                    <div className="border border-gray-200 rounded-xl bg-white shadow-sm overflow-hidden">
-                        <div className="flex border-b border-gray-200 bg-gray-50">
+                    <div className="panel overflow-hidden">
+                        <div className="flex overflow-x-auto border-b border-line bg-white">
                             <button
                                 aria-pressed={activeTab === 'schedule'} onClick={() => setActiveTab('schedule')}
-                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${activeTab === 'schedule'
-                                    ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                className={`min-h-12 flex-1 whitespace-nowrap px-4 text-center text-sm font-semibold transition-colors ${activeTab === 'schedule'
+                                    ? 'border-b-2 border-brand text-brand'
+                                    : 'text-gray-600 hover:bg-brand-soft hover:text-brand'
                                     }`}
                             >
                                 Day-by-Day Schedule
                             </button>
                             <button
                                 aria-pressed={activeTab === 'included'} onClick={() => setActiveTab('included')}
-                                className={`flex-1 px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base text-center font-semibold transition-all duration-300 ${activeTab === 'included'
-                                    ? 'bg-white text-[#4d8b8b] border-b-2 border-[#4d8b8b]'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                className={`min-h-12 flex-1 whitespace-nowrap px-4 text-center text-sm font-semibold transition-colors ${activeTab === 'included'
+                                    ? 'border-b-2 border-brand text-brand'
+                                    : 'text-gray-600 hover:bg-brand-soft hover:text-brand'
                                     }`}
                             >
                                 What's Included
@@ -504,8 +489,8 @@ const DetailsPage = () => {
                     </div>
                 </div>
                 <div className="space-y-4 h-fit lg:sticky lg:top-20">
-                    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-6">
-                        <h2 className="text-sm font-semibold mb-4">Book This Tour</h2>
+                    <div className="panel p-4 sm:p-6">
+                        <h2 className="mb-4 text-lg font-semibold text-brand-ink">Request this tour</h2>
                         
                         {isEnded && (
                             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
@@ -519,7 +504,7 @@ const DetailsPage = () => {
                         
                         <div className="space-y-4">
                             <div className="flex flex-wrap items-baseline gap-2">
-                                <div className="text-2xl font-bold text-brand">{Number(tourData.price || 0)} DZD</div>
+                                <div className="text-2xl font-bold tracking-tight text-brand-ink">{Number(tourData.price || 0).toLocaleString()} DZD</div>
                                 <div className="text-sm text-gray-600">per person</div>
                             </div>
                         </div>
@@ -552,10 +537,10 @@ const DetailsPage = () => {
                         <button
                             onClick={handleBookNow}
                             disabled={bookingLoading || isEnded}
-                            className={`w-full px-4 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center text-sm disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`button w-full ${
                                 isEnded 
-                                    ? 'bg-gray-400 text-white cursor-not-allowed' 
-                                    : 'bg-[#4d8b8b] text-white hover:bg-[#274345]'
+                                    ? 'bg-gray-400 text-white'
+                                    : 'button-primary'
                             }`}
                         >
                             {bookingLoading ? (
@@ -575,7 +560,7 @@ const DetailsPage = () => {
                                 </>
                             )}
                         </button>
-                        <button disabled={!tourData.agency_id && !tourData.guide_id} onClick={() => navigate(`/traveler/guide-profile/${tourData.agency_id ? 'agency' : 'guide'}/${tourData.agency_id || tourData.guide_id}`, { state: { section: 'contact' } })} className="w-full bg-white text-black mt-3 px-4 py-3 rounded-lg font-semibold border border-gray-300 hover:bg-gray-100 transition-colors flex items-center justify-center text-sm">
+                        <button disabled={!tourData.agency_id && !tourData.guide_id} onClick={() => navigate(`/traveler/guide-profile/${tourData.agency_id ? 'agency' : 'guide'}/${tourData.agency_id || tourData.guide_id}`, { state: { section: 'contact' } })} className="button button-secondary mt-3 w-full">
                             <MessageCircle className="w-5 h-5 mr-2" />
                             Contact provider
                         </button>

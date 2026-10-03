@@ -1,12 +1,12 @@
 import { useFeedback } from '../../components/ui/FeedbackProvider';
 import { useState, useEffect } from "react";
-import { UserPlus, Search, AlertCircle } from "lucide-react";
+import { UserPlus, Search } from "lucide-react";
 import { EmployeeList } from "../../components/agency/admin/EmployeeList";
 import { AddEditModal } from "../../components/agency/admin/AddEditModal";
 import { ViewModal } from "../../components/agency/admin/ViewModal";
 import type { Employee } from "../../types/employee";
 import api from "../../services/api";
-import { PageState } from '../../components/ui';
+import { Button, Notice, PageHeader, PageState } from '../../components/ui';
 
 
 export function AdminPage() {
@@ -178,33 +178,9 @@ export function AdminPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-wrap justify-between items-center gap-3">
-                <div>
-                    <h1 className="text-2xl font-bold">Employee Management</h1>
-                    <p className="text-gray-600">Manage your tour guides and staff</p>
-                </div>
-                <button
-                    onClick={() => { setSelectedEmployee(null); setError(null); setIsAddModalOpen(true); }}
-                    disabled={loading}
-                    className="bg-brand text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-brand-dark disabled:opacity-50"
-                >
-                    <UserPlus className="w-4 h-4" />
-                    Add Employee
-                </button>
-            </div>
+            <PageHeader title="Team" description="Manage guides and staff who support your tours." actions={<Button disabled={loading} onClick={() => { setSelectedEmployee(null); setError(null); setIsAddModalOpen(true); }}><UserPlus size={16} />Add employee</Button>} />
 
-            {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4" />
-                    {error}
-                    <button
-                        onClick={() => setError(null)}
-                        className="ml-auto text-red-700 hover:text-red-900"
-                    >
-                        ×
-                    </button>
-                </div>
-            )}
+            {error && <Notice tone="error">{error} <button type="button" onClick={() => setError(null)} className="ml-2 font-semibold underline">Dismiss</button></Notice>}
 
             <div className="panel panel-body">
                 <div className="flex flex-col gap-3 mb-4 sm:flex-row">
@@ -214,13 +190,13 @@ export function AdminPage() {
                             aria-label="Search team members" placeholder="Search employees..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 p-2 border border-gray-300 rounded-lg"
+                            className="field pl-10"
                         />
                     </div>
                     <select aria-label="Filter by team member status"
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="border border-gray-300 rounded-lg p-2"
+                        className="field sm:w-auto"
                     >
                         <option value="all">All Status</option>
                         <option value="active">Active</option>

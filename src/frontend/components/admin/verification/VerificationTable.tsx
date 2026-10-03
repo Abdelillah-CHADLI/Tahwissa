@@ -1,4 +1,4 @@
-import { PageState } from '../../ui';
+import { PageState, StatusBadge } from '../../ui';
 import { Eye } from 'lucide-react';
 
 export interface VerificationRequest {
@@ -18,19 +18,6 @@ interface VerificationTableProps {
 }
 
 export function VerificationTable({ requests, onViewRequest }: VerificationTableProps) {
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'pending':
-                return 'bg-orange-100 text-orange-600';
-            case 'approved':
-                return 'bg-green-100 text-green-600';
-            case 'rejected':
-                return 'bg-red-100 text-red-600';
-            default:
-                return 'bg-gray-100 text-gray-600';
-        }
-    };
-
     if (requests.length === 0) {
         return (
             <PageState title="No verification requests" description="Try another status or search term. New provider submissions will appear here." />
@@ -38,7 +25,7 @@ export function VerificationTable({ requests, onViewRequest }: VerificationTable
     }
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="panel overflow-hidden">
             <div className="overflow-x-auto">
                 <table className="data-table responsive-table" role="table">
 
@@ -74,14 +61,12 @@ export function VerificationTable({ requests, onViewRequest }: VerificationTable
                                     {request.registrationDate}
                                 </td>
                                 <td data-label="Status" className="px-6 py-4">
-                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(request.status)}`}>
-                                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                                    </span>
+                                    <StatusBadge status={request.status} />
                                 </td>
                                 <td data-label="Action" className="px-6 py-4">
                                     <button
                                         onClick={() => onViewRequest(request)}
-                                        className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors"
+                                        className="button button-quiet px-2"
                                     >
                                         <Eye className="w-4 h-4" />
                                         <span className="text-sm font-medium">View</span>

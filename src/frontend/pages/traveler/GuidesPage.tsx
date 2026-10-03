@@ -1,7 +1,6 @@
-import { PageState, Button } from '../../components/ui';
+import { PageHeader, PageState, Button } from '../../components/ui';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
 import SearchSection from "../../components/guides_agencies/SearchSection";
 import TabNavigation from "../../components/guides_agencies/TabNavigation";
 import AgencyCard from "../../components/guides_agencies/AgencyCard";
@@ -274,37 +273,27 @@ const TravelAgenciesPage = () => {
   const hasMoreGuides = visibleGuides.length < guides.length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+    <div className="min-h-screen bg-canvas">
+      <div className="discovery-toolbar">
+        <div className="mx-auto max-w-6xl px-4 pt-7 sm:px-6 sm:pt-9">
+          <PageHeader eyebrow="People & places" title={getTitle()} description={getDescription()} />
+          <div className="mt-6">
           <SearchSection
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             activeTab={activeTab}
           />
+          </div>
           <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
       </div>
 
-      {/* content */}
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mb-8"
-        >
-          <h1 className="mb-2 text-2xl font-bold text-[#193e41] sm:text-3xl">
-            {getTitle()}
-          </h1>
-          <p className="text-gray-600">{getDescription()}</p>
-
-
-        </motion.div>
+      <div className="page-shell">
+        {!loading && !error && <p className="mb-5 text-sm font-medium text-muted" role="status">{activeTab === 'agencies' ? filteredAgencies.length : filteredGuides.length} {activeTab === 'agencies' ? 'agencies' : 'guides'} shown</p>}
 
         {loading ? <PageState kind="loading" title="Finding local experts" /> : error ? <PageState kind="error" title="Providers unavailable" description="Please check your connection and try again." action={<Button onClick={() => setRetry(value => value + 1)}>Try again</Button>} /> : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="discovery-grid mb-7">
               {activeTab === "agencies" &&
                 filteredAgencies.map((agency, index) => (
                   <AgencyCard

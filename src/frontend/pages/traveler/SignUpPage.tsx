@@ -270,7 +270,7 @@ export default function SignUpPage() {
                       value={agencyName}
                       onChange={(e) => setAgencyName(e.target.value)}
                       placeholder="Your Agency Name"
-                      className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                      className="field bg-white pl-11"
                       disabled={isLoading}
                     />
                   </div>
@@ -292,7 +292,7 @@ export default function SignUpPage() {
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                         placeholder="City, Country"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                        className="field bg-white pl-11"
                         disabled={isLoading}
                       />
                     </div>
@@ -313,7 +313,7 @@ export default function SignUpPage() {
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+213 XXX XXX XXX"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                        className="field bg-white pl-11"
                         disabled={isLoading}
                       />
                     </div>
@@ -339,7 +339,7 @@ export default function SignUpPage() {
                       value={guideName}
                       onChange={(e) => setGuideName(e.target.value)}
                       placeholder="Your Guide Name"
-                      className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                      className="field bg-white pl-11"
                       disabled={isLoading}
                     />
                   </div>
@@ -361,7 +361,7 @@ export default function SignUpPage() {
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
                         placeholder="City, Country"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                        className="field bg-white pl-11"
                         disabled={isLoading}
                       />
                     </div>
@@ -382,7 +382,7 @@ export default function SignUpPage() {
                         value={phoneNumber}
                         onChange={(e) => setPhoneNumber(e.target.value)}
                         placeholder="+213 XXX XXX XXX"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                        className="field bg-white pl-11"
                         disabled={isLoading}
                       />
                     </div>
@@ -409,7 +409,7 @@ export default function SignUpPage() {
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         placeholder="First name"
-                        className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                        className="field bg-white pl-11"
                         disabled={isLoading}
                       />
                     </div>
@@ -428,7 +428,7 @@ export default function SignUpPage() {
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       placeholder="Last name"
-                      className="w-full px-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                      className="field bg-white"
                       disabled={isLoading}
                     />
                   </div>
@@ -457,7 +457,7 @@ export default function SignUpPage() {
                       ? "guide@example.com"
                       : "your.email@example.com"
                   }
-                  className="w-full pl-10 xs:pl-11 pr-4 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                  className="field bg-white pl-11"
                   disabled={isLoading}
                 />
               </div>
@@ -478,13 +478,13 @@ export default function SignUpPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Create a strong password"
-                  className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                  className="field bg-white pl-11 pr-11"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 hover:bg-brand-soft hover:text-brand"
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -510,13 +510,13 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
-                  className="w-full pl-10 xs:pl-11 pr-11 py-2.5 xs:py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#348086] focus:border-transparent transition-all text-sm xs:text-base"
+                  className="field bg-white pl-11 pr-11"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   aria-label={showConfirmPassword ? "Hide confirmation password" : "Show confirmation password"} onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md text-gray-500 hover:bg-brand-soft hover:text-brand"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="w-4 h-4" />
@@ -530,7 +530,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#348086] hover:bg-[#2a6970] disabled:bg-gray-400 text-white py-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300  text-sm xs:text-base min-h-12"
+              className="button button-primary min-h-12 w-full"
             >
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

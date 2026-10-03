@@ -459,8 +459,8 @@ const ProfilePage = ({ onboarding = false }: { onboarding?: boolean }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-canvas py-7 sm:py-10">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
         <motion.button
           variants={itemVariants}
           onClick={handleBackToHome}
@@ -482,7 +482,7 @@ const ProfilePage = ({ onboarding = false }: { onboarding?: boolean }) => {
               key={tab.id} aria-pressed={activeTab === tab.id}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className={`px-4 py-2 font-medium ${activeTab === tab.id ? 'text-brand border-b-2 border-brand' : 'text-gray-600'}`}
+              className="segmented-tab"
               onClick={() => setActiveTab(tab.id)}
             >
               {tab.label}
@@ -679,7 +679,7 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, upl
         <textarea id="profile-bio"
           value={data.bio}
           onChange={(e) => onChange('bio', e.target.value)}
-          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-brand focus:border-blue-500 text-sm"
+          className="field"
           rows={3}
           placeholder="Adventure seeker exploring the beauty of Algeria"
           required
@@ -693,7 +693,7 @@ const ProfileTab = ({ data, onChange, onSubmit, profileImage, onImageUpload, upl
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isLoading}
-          className={`px-6 py-2 bg-brand text-white rounded-md hover:bg-brand-dark disabled:opacity-50`}
+          className="button button-primary"
         >
           {isLoading ? 'Saving...' : 'Save Changes'}
         </motion.button>
@@ -751,7 +751,7 @@ const SecurityTab = ({ data, onChange, onSubmit, isLoading }: SecurityTabProps) 
           whileTap={{ scale: 0.98 }}
           type="submit"
           disabled={isLoading}
-          className="px-6 py-2 bg-brand text-white rounded-md hover:bg-brand-dark disabled:opacity-50"
+          className="button button-primary"
         >
           {isLoading ? 'Updating...' : 'Update Password'}
         </motion.button>
@@ -791,7 +791,7 @@ const AccountTab = ({ onDeleteAccount, currentPassword, onCurrentPasswordChange,
       whileTap={{ scale: 0.95 }}
       onClick={onDeleteAccount}
       disabled={isLoading || !currentPassword.trim()}
-      className="px-6 py-2 bg-red-600 text-white rounded-md disabled:opacity-50"
+      className="button button-danger mt-5"
     >
       {isLoading ? 'Deleting...' : 'Delete My Account'}
     </motion.button>
@@ -819,9 +819,8 @@ const FormField = ({ label, value, onChange, type = 'text', disabled = false, pl
     <label htmlFor={id} className="field-label">
       {label}{required && <span aria-hidden="true"> *</span>}
     </label>
-    <motion.input
+    <input
       id={id}
-      whileFocus={{ scale: disabled ? 1 : 1.02 }}
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}

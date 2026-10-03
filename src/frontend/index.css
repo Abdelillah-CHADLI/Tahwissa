@@ -21,44 +21,56 @@
   --color-accent: #c8f688;
   --color-canvas: #f5f8f7;
   --color-line: #dce5e2;
+  --color-muted: #596b6c;
 }
 
 @layer base {
-  html { color: #1f2937; background: #f5f8f7; }
-  body { margin: 0; min-width: 320px; }
+  html { color: #243638; background: #f5f8f7; scroll-behavior: smooth; }
+  body { margin: 0; min-width: 320px; -webkit-font-smoothing: antialiased; }
   button, input, select, textarea { font: inherit; }
+  img { max-width: 100%; }
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
   button:not(:disabled), [role="button"] { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
-  :focus-visible { outline: 3px solid #348086; outline-offset: 3px; }
+  :focus-visible { outline: 2px solid #348086; outline-offset: 3px; }
+  a, button { -webkit-tap-highlight-color: transparent; }
   ::selection { background: #c8f688; color: #193e41; }
 }
 
 @layer components {
-  .page-shell { @apply mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8; }
-  .page-stack { @apply space-y-6; }
-  .panel { @apply rounded-xl border border-line bg-white shadow-sm; }
+  .page-shell { @apply mx-auto w-full max-w-6xl px-4 py-7 sm:px-6 sm:py-10; }
+  .page-stack { @apply space-y-7; }
+  .panel { @apply rounded-xl border border-line bg-white; box-shadow: 0 2px 12px rgb(25 62 65 / 4%); }
   .panel-body { @apply p-4 sm:p-6; }
-  .field-label { @apply mb-1.5 block text-sm font-medium text-gray-800; }
-  .field { @apply w-full min-w-0 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/15 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500; }
+  .field-label { @apply mb-1.5 block text-sm font-semibold text-brand-ink; }
+  .field { @apply w-full min-w-0 min-h-11 rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand focus:ring-2 focus:ring-brand/15 focus:outline-none disabled:bg-gray-50 disabled:text-gray-500; }
+  .field[aria-invalid="true"] { @apply border-red-500 focus:ring-red-500/15; }
   .field-hint { @apply mt-1.5 text-xs leading-5 text-gray-500; }
   .form-section { @apply space-y-5 border-b border-line pb-6 last:border-0 last:pb-0; }
   .form-section-title { @apply text-base font-semibold text-brand-ink; }
-  .button { @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50; }
+  .button { @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors active:translate-y-px disabled:opacity-50 disabled:transform-none; }
   .button-primary { @apply bg-brand text-white hover:bg-brand-dark; }
-  .button-secondary { @apply border border-line bg-white text-brand-ink hover:bg-brand-soft; }
+  .button-secondary { @apply border border-line bg-white text-brand-ink hover:border-brand/40 hover:bg-brand-soft; }
   .button-quiet { @apply text-brand hover:bg-brand-soft; }
   .button-danger { @apply bg-red-600 text-white hover:bg-red-700; }
-  .icon-button { @apply inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-brand-soft hover:text-brand; }
+  .icon-button { @apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-brand-soft hover:text-brand; }
   .segmented-tabs { @apply flex gap-1 overflow-x-auto border-b border-line; scrollbar-width: thin; }
   .segmented-tab { @apply shrink-0 border-b-2 border-transparent px-3 py-3 text-sm font-medium text-gray-500 transition-colors hover:text-brand; }
   .segmented-tab[aria-pressed="true"] { @apply border-brand text-brand; }
   .data-table { @apply w-full text-left text-sm; }
   .data-table thead { @apply border-b border-line bg-gray-50; }
-  .data-table th { @apply px-4 py-3 text-xs font-semibold text-gray-500; }
+  .data-table th { @apply px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500; }
   .data-table td { @apply px-4 py-4 align-top; }
   .data-table tbody tr { @apply border-b border-line last:border-0 hover:bg-brand-soft/40; }
   .app-dialog { @apply fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-xl border border-line bg-white p-0 text-gray-800 shadow-xl; }
   .app-dialog::backdrop { background: rgb(15 35 36 / 48%); }
+  .discovery-toolbar { @apply border-b border-line bg-white; }
+  .discovery-grid { @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3; }
+  .discovery-card { @apply flex h-full min-w-0 flex-col overflow-hidden rounded-xl border border-line bg-white transition-colors hover:border-brand/40; box-shadow: 0 2px 12px rgb(25 62 65 / 4%); }
+  .discovery-card__image { @apply h-44 w-full object-cover sm:h-48; }
+  .discovery-card__body { @apply flex flex-1 flex-col p-4 sm:p-5; }
+  .discovery-card__footer { @apply mt-auto flex flex-wrap items-end justify-between gap-3 border-t border-line pt-4; }
 }
 
 @keyframes fadeIn {

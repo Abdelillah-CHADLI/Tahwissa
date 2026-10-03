@@ -113,7 +113,7 @@ export function AdminDashboardOverview() {
             {location.state?.message && <Notice tone="success">{location.state.message}</Notice>}
 
             {/* Statistics Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 xl:grid-cols-4 xl:gap-4">
                 {statsData.map((stat, index) => (
                     <StatCard
                         key={index}

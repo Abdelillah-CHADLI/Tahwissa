@@ -13,13 +13,13 @@ interface Tour {
 
 export function BookingSummary(tour: Tour) {
     return (
-        <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Tour summary</h2>
+        <aside className="panel panel-body h-fit md:sticky md:top-4">
+            <h2 className="mb-4 text-lg font-semibold text-brand-ink">Tour summary</h2>
 
             <img
                 src={tour.image}
                 alt={tour.title}
-                className="w-full h-40 object-cover rounded-lg mb-4"
+                className="mb-4 h-40 w-full rounded-lg object-cover"
             />
 
             <h3 className="text-lg font-semibold text-gray-900 mb-2">{tour.title}</h3>
@@ -41,7 +41,7 @@ export function BookingSummary(tour: Tour) {
                 </div>
             </div>
 
-            <div className="mt-4 p-3 bg-teal-50 rounded-lg">
+            <div className="mt-4 rounded-lg bg-brand-soft p-3">
                 <div className="flex items-start gap-2">
                     <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
                     <div>
@@ -52,6 +52,6 @@ export function BookingSummary(tour: Tour) {
                     </div>
                 </div>
             </div>
-        </div>
+        </aside>
     );
 }

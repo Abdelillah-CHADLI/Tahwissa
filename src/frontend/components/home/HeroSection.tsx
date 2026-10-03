@@ -1,118 +1,25 @@
-// components/home/HeroSection.tsx
-import { motion } from "motion/react";
-import { ArrowRight, LogIn, Users, LogOut, User } from "lucide-react";
-import { ROUTES } from "../../utils/routes";
-import homeImg from "../../assets/imgs/home.png";
+import { ArrowRight, MapPin } from 'lucide-react';
+import { ROUTES } from '../../utils/routes';
+import homeImg from '../../assets/imgs/home.png';
 
 interface HeroSectionProps {
   onNavigate: (path: string) => void;
-  user: any;
-  onLogout: () => void;
 }
 
-export default function HeroSection({
-  onNavigate,
-  user,
-  onLogout,
-}: HeroSectionProps) {
-  return (
-    <motion.section
-      className="relative h-[68svh] min-h-[440px] max-h-[680px] overflow-hidden sm:h-[72svh]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-    >
-      <div className="absolute inset-0">
-        <motion.img
-          src={homeImg}
-          alt="Algerian Landscape"
-          className="w-full h-full object-cover"
-          initial={{ scale: 1.2 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-        />
-        <div className="absolute inset-0 bg-linear-to-r from-[#348086]/90 via-[#348086]/50 to-[#348086]/10" />
+export default function HeroSection({ onNavigate }: HeroSectionProps) {
+  return <section className="relative isolate flex min-h-[500px] items-center overflow-hidden bg-brand-ink py-16 sm:min-h-[570px]">
+    <img src={homeImg} alt="Algerian landscape" className="absolute inset-0 -z-20 h-full w-full object-cover" fetchPriority="high" />
+    <div className="absolute inset-0 -z-10 bg-linear-to-r from-[#153b3d]/95 via-[#153b3d]/75 to-[#153b3d]/25" />
+    <div className="mx-auto w-full max-w-6xl px-5 sm:px-6">
+      <div className="max-w-2xl">
+        <p className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-accent"><MapPin size={15} aria-hidden="true" /> Discover Algeria</p>
+        <h1 className="max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-white sm:text-5xl lg:text-6xl">Find your way to somewhere memorable.</h1>
+        <p className="mt-6 max-w-xl text-base leading-7 text-white/90 sm:text-lg">Explore tours across Algeria, meet the people who know each place, and plan a trip that feels like yours.</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button type="button" onClick={() => onNavigate(ROUTES.EXPLORE)} className="button min-h-12 bg-accent px-5 text-brand-ink hover:bg-[#b8e678]">Explore tours <ArrowRight size={18} aria-hidden="true" /></button>
+          <button type="button" onClick={() => onNavigate(ROUTES.GUIDES)} className="button min-h-12 border border-white/70 bg-[#153b3d]/40 px-5 text-white hover:bg-white/15">Meet local guides</button>
+        </div>
       </div>
-
-      <div className="relative z-10 container mx-auto flex h-full max-w-6xl flex-col justify-center px-5 sm:px-6">
-        <motion.div
-          className="max-w-2xl text-center lg:text-left"
-          initial={{ x: -100, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-        >
-          <motion.h1
-            className="mb-4 max-w-2xl text-3xl font-bold leading-[1.12] text-white sm:text-4xl lg:text-5xl"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
-          >
-            Your Gateway to Authentic Algerian Travel
-          </motion.h1>
-
-          <motion.p
-            className="mb-6 max-w-xl text-sm leading-relaxed text-white/95 sm:text-base lg:text-lg"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.6, ease: "easeOut" }}
-          >
-            Connect with local guides, discover tours, and join a
-            community of travelers exploring the beauty of Algeria - from Sahara
-            deserts to Mediterranean shores, from ancient ruins to mountain
-            peaks.
-          </motion.p>
-
-          <motion.div
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start"
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
-          >
-            <button
-              onClick={() => onNavigate(ROUTES.EXPLORE)}
-              className="bg-[#cbf492] hover:bg-[#b8e678] text-gray-900 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
-            >
-              Start Exploring <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-
-            {!user && (
-              <>
-                <button
-                  onClick={() => onNavigate(ROUTES.SIGN_IN)}
-                  className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                >
-                  <LogIn className="w-4 h-4 sm:w-5 sm:h-5" /> Sign In
-                </button>
-
-                <button
-                  onClick={() => onNavigate(ROUTES.SIGN_UP)}
-                  className="bg-white border-2 border-[#348086] text-[#348086] hover:bg-[#348086] hover:text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                >
-                  <Users className="w-4 h-4 sm:w-5 sm:h-5" /> Sign Up
-                </button>
-              </>
-            )}
-
-            {user && (
-              <>
-                <button
-                  onClick={() => onNavigate(ROUTES.PROFILE)}
-                  className="bg-white/10 backdrop-blur-sm border border-white text-white hover:bg-white/20 px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                >
-                  <User className="w-4 h-4 sm:w-5 sm:h-5" /> Profile
-                </button>
-
-                <button
-                  onClick={onLogout}
-                  className="bg-white border-2 border-red-500 text-red-500 hover:bg-red-500 hover:text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
-                >
-                  <LogOut className="w-4 h-4 sm:w-5 sm:h-5" /> Sign Out
-                </button>
-              </>
-            )}
-          </motion.div>
-        </motion.div>
-      </div>
-    </motion.section>
-  );
+    </div>
+  </section>;
 }
